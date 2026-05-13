@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Espace Boulanger — Fidélité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08160E;
+  --card:     #142B1A;
+  --card2:    #1C3A24;
+  --gold:     #D4A843;
+  --gold2:    #F0C96A;
+  --sage:     #5A8A6A;
+  --sage-l:   #7AAE88;
+  --text:     #EDF2EB;
+  --dim:      #7A9A82;
+  --border:   rgba(90,138,106,0.25);
+  --gold-dim: rgba(212,168,67,0.15);
+  --green:    #4ecb9e;
+  --red:      #f07070;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(90,138,106,0.07) 0%,transparent 70%);pointer-events:none}
+
+/* ── HEADER ── */
+.hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(8,22,14,0.93);backdrop-filter:blur(14px);z-index:50}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-logo{width:38px;height:38px;background:var(--card2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.hdr-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600}
+.hdr-sub{font-size:11px;color:var(--dim);margin-top:1px}
+.live{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);border-radius:99px;font-size:11px;color:var(--gold2)}
+.live-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:lp 2s ease-in-out infinite}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:rgba(8,22,14,0.95);position:sticky;top:71px;z-index:40}
+.tab{flex:1;padding:13px;text-align:center;font-size:13px;font-weight:500;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.on{color:var(--text);border-bottom-color:var(--gold)}
+.tab-icon{font-size:16px;display:block;margin-bottom:3px}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px 16px 48px;max-width:480px;margin:0 auto}
+.panel.on{display:block}
+
+/* ── VALIDATION PANEL ── */
+.vsection{margin-bottom:20px}
+.vlbl{font-size:12px;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+
+.code-input{width:100%;padding:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:20px;font-weight:600;text-align:center;letter-spacing:.12em;text-transform:uppercase;outline:none;transition:border-color .2s}
+.code-input:focus{border-color:rgba(90,138,106,.6)}
+.code-input::placeholder{font-size:14px;letter-spacing:0;font-weight:400;color:rgba(255,255,255,.2)}
+
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--dim);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.scan-btn{width:100%;padding:14px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25);border-radius:14px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.scan-btn:active{background:rgba(212,168,67,.18)}
+
+.btn-validate{width:100%;padding:16px;background:linear-gradient(135deg,#1D9E75,#2EC98F);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;box-shadow:0 6px 20px rgba(29,158,117,.25);transition:all .2s}
+.btn-validate:active{transform:scale(.98)}
+.btn-validate:disabled{opacity:.5;cursor:default}
+
+/* ── RESULT CARDS ── */
+.result{display:none;flex-direction:column;align-items:center;text-align:center;padding:8px 0 16px}
+.result.show{display:flex}
+.res-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px}
+.ri-ok{background:rgba(78,203,158,.12);border:2px solid rgba(78,203,158,.4)}
+.ri-used{background:rgba(212,168,67,.1);border:2px solid rgba(212,168,67,.3)}
+.ri-bad{background:rgba(240,112,112,.1);border:2px solid rgba(240,112,112,.3)}
+.res-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.rt-ok{color:var(--green)}.rt-used{color:var(--gold2)}.rt-bad{color:var(--red)}
+.res-gain{display:inline-block;padding:6px 16px;background:rgba(78,203,158,.1);border:1px solid rgba(78,203,158,.25);border-radius:99px;font-size:15px;font-weight:600;color:var(--green);margin-bottom:10px}
+.res-desc{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:20px;max-width:280px}
+.code-badge{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:17px;font-weight:600;color:var(--gold2);letter-spacing:.1em;margin-bottom:20px}
+
+.btn-confirm{width:100%;padding:15px;background:linear-gradient(135deg,#1D9E75,#2EC98F);color:#fff;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(29,158,117,.25);margin-bottom:10px}
+.btn-reset{width:100%;padding:13px;background:transparent;border:1px solid var(--border);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dim);cursor:pointer;transition:all .2s}
+.btn-reset:active{background:rgba(255,255,255,.03)}
+
+/* ── QR SCANNER ── */
+.scanner-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.scanner-overlay.show{display:flex}
+.scan-box{width:260px;height:260px;border:2px solid var(--gold);border-radius:16px;position:relative;overflow:hidden}
+.scan-box video{width:100%;height:100%;object-fit:cover}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:sl 2s ease-in-out infinite}
+@keyframes sl{0%{top:0}50%{top:calc(100% - 2px)}100%{top:0}}
+.scan-lbl{color:var(--dim);font-size:13px;margin-top:20px;text-align:center}
+.scan-close{margin-top:20px;padding:11px 28px;background:transparent;border:1px solid var(--border);border-radius:99px;color:var(--dim);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+
+/* ── DASHBOARD PANEL ── */
+.period-row{display:flex;gap:6px;margin-bottom:20px}
+.pb{padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.pb.on{background:var(--card2);border-color:var(--sage);color:var(--text)}
+
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.kc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;animation:up .4s ease forwards;opacity:0}
+.kc:nth-child(1){animation-delay:.05s}.kc:nth-child(2){animation-delay:.1s}.kc:nth-child(3){animation-delay:.15s}.kc:nth-child(4){animation-delay:.2s}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.kc-icon{font-size:18px;margin-bottom:8px}
+.kc-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1;margin-bottom:3px}
+.kc-lbl{font-size:12px;color:var(--dim)}
+.kc-t{font-size:11px;margin-top:5px;color:var(--green)}
+
+.sec{font-size:11px;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px}
+
+.block{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;animation:up .4s .2s ease forwards;opacity:0}
+
+.grow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(90,138,106,.08)}
+.grow:last-child{border-bottom:none}
+.ge{width:34px;height:34px;background:var(--card2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.gn{font-size:13px;font-weight:500}
+.gs{font-size:11px;color:var(--dim);margin-top:1px}
+.gbw{flex:1;background:rgba(255,255,255,.05);border-radius:99px;height:3px;overflow:hidden;margin-top:5px}
+.gb{height:3px;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--sage-l));transition:width 1s ease}
+.gc{font-size:13px;font-weight:600;color:var(--gold2);min-width:22px;text-align:right}
+
+.crow{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(90,138,106,.06);gap:10px}
+.crow:last-child{border-bottom:none}
+.ccode{font-size:11px;font-weight:600;color:var(--gold2);letter-spacing:.05em;min-width:100px}
+.cname{font-size:12px;color:var(--text);flex:1;line-height:1.4}
+.cs{font-size:10px;font-weight:500;padding:3px 7px;border-radius:99px}
+.cs-w{background:rgba(212,168,67,.12);color:var(--gold2)}
+.cs-u{background:rgba(78,203,158,.12);color:var(--green)}
+
+.rbtn{width:100%;padding:13px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--dim);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s}
+
+.spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px}
+.spinner{width:26px;height:26px;border:2px solid rgba(255,255,255,.08);border-top-color:var(--gold);border-radius:50%;animation:rot .8s linear infinite;margin-bottom:12px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.spin-lbl{font-size:13px;color:var(--dim)}
+
+.loader-inline{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:rot .6s linear infinite;margin:0 auto}
+</style>
+</head>
+<body>
+
+<!-- QR Scanner -->
+<div class="scanner-overlay" id="scannerOverlay">
+  <div class="scan-box">
+    <video id="scanVideo" autoplay playsinline muted></video>
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-lbl">Pointez vers le QR code du client</div>
+  <button class="scan-close" onclick="closeScanner()">Fermer</button>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logo">🥖</div>
+    <div>
+      <div class="hdr-name" id="commerceName">Boulangerie</div>
+      <div class="hdr-sub">Espace boulanger</div>
+    </div>
+  </div>
+  <div class="live"><div class="live-dot"></div>En direct</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab on" onclick="switchTab('validation', this)">
+    <span class="tab-icon">📷</span>Valider
+  </div>
+  <div class="tab" onclick="switchTab('dashboard', this)">
+    <span class="tab-icon">📊</span>Stats
+  </div>
+</div>
+
+<!-- ══ PANEL : VALIDATION ══ -->
+<div class="panel on" id="panel-validation">
+
+  <!-- Input section -->
+  <div id="inputSection">
+    <div class="vsection">
+      <div class="vlbl">Saisir le code client</div>
+      <input class="code-input" id="codeInput" type="text" placeholder="BG-XXXX-XXXX" maxlength="12" oninput="fmtCode(this)">
+    </div>
+    <div class="divider">ou</div>
+    <button class="scan-btn" onclick="openScanner()">📷 Scanner le QR code</button>
+    <button class="btn-validate" id="validateBtn" onclick="validateCode()">
+      <span id="btnTxt">Valider le coupon</span>
+      <div class="loader-inline" id="btnLoader"></div>
+    </button>
+  </div>
+
+  <!-- Result: VALID -->
+  <div class="result" id="resValid">
+    <div class="res-icon ri-ok">✓</div>
+    <div class="res-title rt-ok">Coupon valide !</div>
+    <div class="res-gain" id="gainTxt">—</div>
+    <div class="res-desc">Ce coupon est authentique et n'a pas encore été utilisé.<br>Remettez le gain et confirmez.</div>
+    <div class="code-badge" id="validCode">—</div>
+    <button class="btn-confirm" onclick="confirmUsed()">✓ Gain remis au client</button>
+    <button class="btn-reset" onclick="resetVal()">Annuler</button>
+  </div>
+
+  <!-- Result: USED -->
+  <div class="result" id="resUsed">
+    <div class="res-icon ri-used">⚠️</div>
+    <div class="res-title rt-used">Déjà utilisé</div>
+    <div class="res-desc">Ce coupon a déjà été validé. Ne pas remettre le gain.</div>
+    <div class="code-badge" id="usedCode">—</div>
+    <button class="btn-reset" onclick="resetVal()">Scanner un autre code</button>
+  </div>
+
+  <!-- Result: INVALID -->
+  <div class="result" id="resInvalid">
+    <div class="res-icon ri-bad">✗</div>
+    <div class="res-title rt-bad">Code invalide</div>
+    <div class="res-desc">Ce code n'existe pas. Vérifiez la saisie ou demandez au client de montrer son email.</div>
+    <button class="btn-reset" onclick="resetVal()">Réessayer</button>
+  </div>
+
+</div>
+
+<!-- ══ PANEL : DASHBOARD ══ -->
+<div class="panel" id="panel-dashboard">
+  <div class="period-row">
+    <button class="pb on" onclick="setPeriod(7,this)">7 jours</button>
+    <button class="pb" onclick="setPeriod(30,this)">30 jours</button>
+    <button class="pb" onclick="setPeriod(0,this)">Tout</button>
+  </div>
+  <div id="dashContent">
+    <div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Chargement...</div></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwWS91T-VKMdDtWzAK9chX9mD7xdU5Hh5q-Us4x4NLczYnpssNaan9W_cgQG1C1OlQg/exec';
+const GAINS_CFG  = [
+  {name:'Croissant Artisanal',emoji:'🥐',prob:'50%'},
+  {name:'Baguette Tradition', emoji:'🥖',prob:'48%'},
+  {name:'Pâtisserie du Jour', emoji:'🍰',prob:'2%'},
+];
+
+const params   = new URLSearchParams(window.location.search);
+const commerce = params.get('commerce') || 'Boulangerie Premium';
+document.getElementById('commerceName').textContent = commerce;
+
+let currentCode = '';
+let videoStream = null;
+let coupons = [], utilises = [];
+let period  = 7;
+let dashLoaded = false;
+
+// ── TABS ─────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('panel-' + tab).classList.add('on');
+  if (tab === 'dashboard' && !dashLoaded) { loadDash(); dashLoaded = true; }
+}
+
+// ── VALIDATION ───────────────────────────────────────────
+function fmtCode(input) {
+  let v = input.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (v.length > 2) v = v.slice(0,2) + '-' + v.slice(2);
+  if (v.length > 7) v = v.slice(0,7) + '-' + v.slice(7);
+  input.value = v.slice(0,12);
+}
+
+// Auto-fill from URL param ?code=BG-XXXX-XXXX
+window.addEventListener('load', () => {
+  const code = params.get('code');
+  const gain = params.get('gain');
+  if (code) {
+    document.getElementById('codeInput').value = code;
+    currentCode = code;
+    if (gain) document.getElementById('gainTxt').textContent = decodeURIComponent(gain);
+    validateCode();
+  }
+});
+
+async function validateCode() {
+  const input = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!input || input.length < 12) { alert('Entrez un code complet (BG-XXXX-XXXX)'); return; }
+  currentCode = input;
+  showLoader(true);
+  try {
+    const res  = await fetch(`${SHEETS_URL}?action=check&code=${encodeURIComponent(currentCode)}`);
+    const data = await res.json();
+    showLoader(false);
+    if (data.status === 'valid') {
+      document.getElementById('gainTxt').textContent = data.gain || 'Votre gain';
+      document.getElementById('validCode').textContent = currentCode;
+      showRes('resValid');
+    } else if (data.status === 'used') {
+      document.getElementById('usedCode').textContent = currentCode;
+      showRes('resUsed');
+    } else {
+      showRes('resInvalid');
+    }
+  } catch(e) {
+    showLoader(false);
+    // Fallback démo
+    document.getElementById('gainTxt').textContent = 'Baguette Tradition';
+    document.getElementById('validCode').textContent = currentCode;
+    showRes('resValid');
+  }
+}
+
+async function confirmUsed() {
+  try { await fetch(`${SHEETS_URL}?action=use&code=${encodeURIComponent(currentCode)}`); } catch(e) {}
+  dashLoaded = false; // reset dash pour refresh
+  resetVal();
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(78,203,158,.15);border:1px solid rgba(78,203,158,.4);border-radius:16px;padding:20px 32px;text-align:center;color:#4ecb9e;font-size:16px;font-weight:600;z-index:999;backdrop-filter:blur(8px)';
+  flash.textContent = '✓ Validé avec succès !';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 2000);
+}
+
+function showRes(id) {
+  document.getElementById('inputSection').style.display = 'none';
+  ['resValid','resUsed','resInvalid'].forEach(r => document.getElementById(r).classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+}
+
+function resetVal() {
+  document.getElementById('inputSection').style.display = 'block';
+  ['resValid','resUsed','resInvalid'].forEach(r => document.getElementById(r).classList.remove('show'));
+  document.getElementById('codeInput').value = '';
+  currentCode = '';
+  showLoader(false);
+}
+
+function showLoader(on) {
+  document.getElementById('btnTxt').style.display    = on ? 'none' : 'block';
+  document.getElementById('btnLoader').style.display = on ? 'block' : 'none';
+  document.getElementById('validateBtn').disabled    = on;
+}
+
+// ── QR SCANNER ───────────────────────────────────────────
+async function openScanner() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    document.getElementById('scanVideo').srcObject = videoStream;
+    document.getElementById('scannerOverlay').classList.add('show');
+  } catch(e) { alert('Impossible d\'accéder à la caméra. Saisissez le code manuellement.'); }
+}
+
+function closeScanner() {
+  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  document.getElementById('scannerOverlay').classList.remove('show');
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+async function loadDash() {
+  document.getElementById('dashContent').innerHTML = '<div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Chargement...</div></div>';
+  try {
+    const res  = await fetch(`${SHEETS_URL}?action=dashboard&commerce=${encodeURIComponent(commerce)}`);
+    const data = await res.json();
+    coupons  = data.coupons  || [];
+    utilises = data.utilises || [];
+  } catch(e) {
+    const t = new Date().toLocaleDateString('fr-FR');
+    coupons  = [
+      {code:'BG-AB12-CD34',gain:'Croissant Artisanal',prenom:'Marie',date:t,statut:'En attente'},
+      {code:'BG-EF56-GH78',gain:'Baguette Tradition', prenom:'Paul', date:t,statut:'Utilisé'},
+      {code:'BG-IJ90-KL12',gain:'Baguette Tradition', prenom:'Léa',  date:t,statut:'En attente'},
+      {code:'BG-MN34-OP56',gain:'Croissant Artisanal',prenom:'Tom',  date:t,statut:'Utilisé'},
+    ];
+    utilises = [{code:'BG-EF56-GH78',date:t},{code:'BG-MN34-OP56',date:t}];
+  }
+  renderDash();
+}
+
+function setPeriod(d, btn) {
+  period = d;
+  document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDash();
+}
+
+function filterP(items) {
+  if (!period) return items;
+  const ms = period * 864e5;
+  return items.filter(it => {
+    if (!it.date) return true;
+    const p = it.date.split('/');
+    if (p.length < 3) return true;
+    return Date.now() - new Date(p[2], p[1]-1, p[0]).getTime() <= ms;
+  });
+}
+
+function renderDash() {
+  const list  = filterP(coupons);
+  const total = list.length;
+  const used  = list.filter(c => c.statut === 'Utilisé').length;
+  const wait  = total - used;
+  const taux  = total > 0 ? Math.round(used/total*100)+'%' : '—';
+
+  const gc = {}; GAINS_CFG.forEach(g => gc[g.name] = 0);
+  list.forEach(c => { if (gc[c.gain] !== undefined) gc[c.gain]++; });
+  const maxG = Math.max(...Object.values(gc), 1);
+
+  document.getElementById('dashContent').innerHTML = `
+    <div class="kpi-grid">
+      <div class="kc"><div class="kc-icon">📱</div><div class="kc-val">${total}</div><div class="kc-lbl">Participations</div><div class="kc-t">↑ Scans total</div></div>
+      <div class="kc"><div class="kc-icon">✅</div><div class="kc-val">${used}</div><div class="kc-lbl">Gains réclamés</div><div class="kc-t">↑ Retours boutique</div></div>
+      <div class="kc"><div class="kc-icon">⏳</div><div class="kc-val">${wait}</div><div class="kc-lbl">En attente</div><div class="kc-t" style="color:var(--dim)">Non réclamés</div></div>
+      <div class="kc"><div class="kc-icon">📊</div><div class="kc-val">${taux}</div><div class="kc-lbl">Taux retour</div><div class="kc-t">↑ Fidélisation</div></div>
+    </div>
+
+    <div class="sec">Répartition des gains</div>
+    <div class="block">
+      ${GAINS_CFG.map(g => `
+        <div class="grow">
+          <div class="ge">${g.emoji}</div>
+          <div style="flex:1">
+            <div class="gn">${g.name}</div>
+            <div class="gs">Probabilité ${g.prob}</div>
+            <div class="gbw"><div class="gb" style="width:${Math.round(gc[g.name]/maxG*100)}%"></div></div>
+          </div>
+          <div class="gc">${gc[g.name]}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sec">Derniers coupons</div>
+    <div class="block">
+      ${list.length === 0
+        ? `<div style="padding:20px;text-align:center;color:var(--dim);font-size:13px">Aucun coupon</div>`
+        : [...list].reverse().slice(0,10).map(c => `
+          <div class="crow">
+            <div class="ccode">${c.code}</div>
+            <div class="cname">${c.gain}<br><span style="font-size:10px;color:var(--dim)">${c.prenom} · ${c.date}</span></div>
+            <div class="cs ${c.statut==='Utilisé'?'cs-u':'cs-w'}">${c.statut==='Utilisé'?'✓':'⏳'}</div>
+          </div>`).join('')}
+    </div>
+
+    <button class="rbtn" onclick="loadDash()">↻ Actualiser</button>
+  `;
+}
+</script>
+</body>
+</html>
