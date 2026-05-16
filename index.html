@@ -177,7 +177,7 @@ body::before{content:'';position:fixed;top:-200px;left:50%;transform:translateX(
   <div id="inputSection">
     <div class="vsection">
       <div class="vlbl">Saisir le code client</div>
-      <input class="code-input" id="codeInput" type="text" placeholder="BG-XXXX-XXXX" maxlength="12" oninput="fmtCode(this)">
+      <input class="code-input" id="codeInput" type="text" placeholder="123456" maxlength="6" inputmode="numeric" oninput="fmtCode(this)">
     </div>
     <div class="divider">ou</div>
     <button class="scan-btn" onclick="openScanner()">📷 Scanner le QR code</button>
@@ -259,13 +259,10 @@ function switchTab(tab, el) {
 
 // ── VALIDATION ───────────────────────────────────────────
 function fmtCode(input) {
-  let v = input.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if (v.length > 2) v = v.slice(0,2) + '-' + v.slice(2);
-  if (v.length > 7) v = v.slice(0,7) + '-' + v.slice(7);
-  input.value = v.slice(0,12);
+  input.value = input.value.replace(/[^0-9]/g,'').slice(0,6);
 }
 
-// Auto-fill from URL param ?code=BG-XXXX-XXXX
+// Auto-fill from URL param ?code=6 chiffres
 window.addEventListener('load', () => {
   const code = params.get('code');
   const gain = params.get('gain');
@@ -279,7 +276,7 @@ window.addEventListener('load', () => {
 
 async function validateCode() {
   const input = document.getElementById('codeInput').value.trim().toUpperCase();
-  if (!input || input.length < 12) { alert('Entrez un code complet (BG-XXXX-XXXX)'); return; }
+  if (!input || input.length !== 6) { alert('Entrez un code à 6 chiffres'); return; }
   currentCode = input;
   showLoader(true);
   try {
