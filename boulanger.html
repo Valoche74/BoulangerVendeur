@@ -411,13 +411,8 @@ async function loadDash() {
     utilises = data.utilises || [];
   } catch(e) {
     const t = new Date().toLocaleDateString('fr-FR');
-    coupons  = [
-      {code:'BG-AB12-CD34',gain:'Croissant Artisanal',prenom:'Marie',date:t,statut:'En attente'},
-      {code:'BG-EF56-GH78',gain:'Baguette Tradition', prenom:'Paul', date:t,statut:'Utilisé'},
-      {code:'BG-IJ90-KL12',gain:'Baguette Tradition', prenom:'Léa',  date:t,statut:'En attente'},
-      {code:'BG-MN34-OP56',gain:'Croissant Artisanal',prenom:'Tom',  date:t,statut:'Utilisé'},
-    ];
-    utilises = [{code:'BG-EF56-GH78',date:t},{code:'BG-MN34-OP56',date:t}];
+    coupons  = [];
+    utilises = [];
   }
   renderDash();
 }
