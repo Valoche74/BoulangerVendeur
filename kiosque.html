@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0B0D">
+<title>Caisse Fidélité — Falman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   KIOSQUE VENDEUR — écran tactile (Raspberry Pi + ACR1552U)
+   3 onglets : Fidélité · Validation · Tableau de bord
+   Branché sur le MÊME Apps Script (actions fid_* + check/use/dashboard)
+   100% natif, XMLHttpRequest (pas fetch — fiabilité Apps Script).
+   Le scan NFC remplira l'identifiant via window.kioskScan() (bridge Python, J+2).
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0A0B0D;--surface:#121419;--surface-2:#181B22;--surface-3:#20242D;
+  --border:rgba(255,255,255,.08);--border-2:rgba(255,255,255,.14);
+  --text:#F3F4F6;--dim:#9AA1AD;--mut:#5C636E;
+  --accent:#6366F1;--accent-2:#818CF8;--accent-dim:rgba(99,102,241,.16);
+  --ok:#34D399;--ok-dim:rgba(52,211,153,.14);
+  --warn:#FBBF24;--warn-dim:rgba(251,191,36,.14);
+  --bad:#FB7185;--bad-dim:rgba(251,113,133,.14);
+  --gold:#F5D07A;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  background:var(--bg);color:var(--text);min-height:100%;display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
+body::before{content:'';position:fixed;inset:0 0 auto 0;height:300px;z-index:0;pointer-events:none;
+  background:radial-gradient(120% 100% at 50% 0,rgba(99,102,241,.10),transparent 60%)}
+svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── HEADER ── */
+.hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(10,11,13,.7)}
+.hdr-l{display:flex;align-items:center;gap:11px}
+.hdr-mk{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#4F46E5);display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.4)}
+.hdr-name{font-size:15px;font-weight:600}.hdr-sub{font-size:11px;color:var(--mut);margin-top:1px}
+.sync{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:12px;font-weight:500;color:var(--dim)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.sync-dot.off{background:var(--warn)}
+
+/* ── TABS (gros, tactile) ── */
+.tabs{position:relative;z-index:2;display:flex;gap:8px;padding:10px 14px;background:rgba(10,11,13,.7);border-bottom:1px solid var(--border)}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.tab .ic{width:19px;height:19px}
+.tab.on{background:var(--accent-dim);color:#fff;border-color:rgba(99,102,241,.5)}
+
+/* ── PANELS ── */
+.wrap{position:relative;z-index:2;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.panel{display:none;max-width:760px;margin:0 auto;padding:20px 16px 40px}
+.panel.on{display:block;animation:fade .2s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ── boutons génériques ── */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:18px;border:none;border-radius:15px;
+  font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s,filter .15s,background .15s}
+.btn:active{transform:scale(.98)}
+.btn-accent{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(99,102,241,.32)}
+.btn-accent:active{background:var(--accent-2)}
+.btn-ok{background:var(--ok);color:#04211A}
+.btn-ghost{background:transparent;border:1px solid var(--border-2);color:var(--dim)}
+.btn:disabled{opacity:.5}
+.fld{width:100%;padding:18px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:inherit;font-size:20px;font-weight:600;text-align:center;outline:none}
+.fld:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.lbl{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
+
+/* ── FIDÉLITÉ — idle ── */
+.idle{text-align:center;padding:36px 10px 20px}
+.idle-ic{width:96px;height:96px;margin:0 auto 22px;border-radius:50%;background:var(--accent-dim);display:grid;place-items:center;color:var(--accent-2);position:relative}
+.idle-ic .ic{width:46px;height:46px;stroke-width:1.6}
+.idle-ic::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--accent);opacity:.0;animation:ring 2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.15);opacity:0}}
+.idle h2{font-size:24px;font-weight:700;margin-bottom:8px}
+.idle p{font-size:14px;color:var(--dim);margin-bottom:26px}
+.manual{display:flex;gap:10px;max-width:460px;margin:0 auto}
+.manual .fld{font-size:16px;text-align:left}
+.manual .btn{width:auto;padding:18px 22px}
+.idle-hint{font-size:12px;color:var(--mut);margin-top:16px}
+
+/* ── FIDÉLITÉ — client ── */
+.client-top{display:flex;align-items:center;gap:14px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:18px;margin-bottom:12px}
+.c-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#4F46E5);display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+.c-meta{flex:1;min-width:0}
+.c-name{font-size:20px;font-weight:700;line-height:1.1}
+.c-lvl{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.3);border-radius:99px;padding:3px 10px}
+.c-solde{text-align:right;flex-shrink:0}
+.c-solde .v{font-size:34px;font-weight:800;line-height:1;color:var(--accent-2)}
+.c-solde .l{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px;text-align:center}
+.mc .v{font-size:22px;font-weight:700}.mc .v small{font-size:13px;color:var(--mut);font-weight:600}
+.mc .l{font-size:10.5px;color:var(--dim);margin-top:4px}
+.mc .bar{height:5px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin-top:8px}
+.mc .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),#E2B25A);transition:width .5s}
+
+.add-h{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:6px 2px 11px}
+.quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:560px){.quick{grid-template-columns:repeat(3,1fr)}}
+.qbtn{padding:20px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:19px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
+.qbtn:active{transform:scale(.96);background:var(--accent-dim)}
+.montant{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
+.montant .fld{flex:1}
+.montant .calc{min-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px}
+.montant .calc .v{font-size:22px;font-weight:800;color:var(--accent-2)}
+.montant .calc .l{font-size:10px;color:var(--mut)}
+.client-actions{display:flex;gap:10px;margin-top:16px}
+.client-actions .btn{flex:1}
+
+/* états new / unknown / error */
+.state{text-align:center;padding:34px 12px}
+.state-ic{width:80px;height:80px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center}
+.state-ic.warn{background:var(--warn-dim);color:var(--warn)}.state-ic.bad{background:var(--bad-dim);color:var(--bad)}
+.state-ic .ic{width:38px;height:38px;stroke-width:2}
+.state h2{font-size:21px;font-weight:700;margin-bottom:8px}
+.state p{font-size:14px;color:var(--dim);line-height:1.6;max-width:380px;margin:0 auto 20px}
+.miniform{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto}
+.miniform .fld{font-size:16px;text-align:left}
+
+/* ── VALIDATION ── */
+.v-input{font-size:30px;letter-spacing:.25em;font-weight:700}
+.res{display:none;flex-direction:column;align-items:center;text-align:center;padding:14px 0}
+.res.show{display:flex;animation:fade .25s}
+.res-ic{width:74px;height:74px;border-radius:20px;display:grid;place-items:center;margin-bottom:16px}
+.res-ic .ic{width:34px;height:34px;stroke-width:2.2}
+.ri-ok{background:var(--ok-dim);color:var(--ok)}.ri-used{background:var(--warn-dim);color:var(--warn)}.ri-bad{background:var(--bad-dim);color:var(--bad)}.ri-err{background:var(--surface-3);color:var(--dim)}
+.res h2{font-size:23px;font-weight:700;margin-bottom:6px}
+.res .gain{display:inline-block;padding:7px 16px;background:var(--ok-dim);border:1px solid rgba(52,211,153,.3);border-radius:99px;font-size:15px;font-weight:600;color:var(--ok);margin-bottom:12px}
+.res p{font-size:14px;color:var(--dim);margin-bottom:18px;max-width:300px}
+
+/* ── DASHBOARD ── */
+.kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px}
+.kc .l{font-size:12px;color:var(--dim);margin-bottom:10px}
+.kc .v{font-size:34px;font-weight:800;line-height:1}.kc .v.g{color:var(--accent-2)}
+.sec{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:20px 2px 11px}
+.block{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.row .pts{font-size:16px;font-weight:800;color:var(--ok);min-width:54px;text-align:right}
+.row .pts.neg{color:var(--bad)}
+.row .info{flex:1;min-width:0}.row .info b{font-size:14px;font-weight:600}.row .info span{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
+.empty{padding:26px;text-align:center;color:var(--mut);font-size:14px}
+.updated{font-size:11.5px;color:var(--mut);text-align:center;margin-top:14px}
+
+/* ── TOAST ── */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);display:flex;align-items:center;gap:10px;padding:15px 24px;border-radius:15px;background:var(--surface-3);border:1px solid var(--border-2);color:var(--text);font-size:16px;font-weight:700;box-shadow:0 12px 36px rgba(0,0,0,.5);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast .ic{width:20px;height:20px;color:var(--ok);stroke-width:2.6}
+.toast.reward{background:linear-gradient(135deg,#7c5cff,#6366F1);border-color:transparent}
+.toast.reward .ic{color:#fff}
+
+.spin{width:30px;height:30px;border:3px solid var(--border-2);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite;margin:50px auto}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-mk" id="hdrMk">F</div>
+    <div><div class="hdr-name" id="hdrName">Falman</div><div class="hdr-sub">Caisse fidélité</div></div>
+  </div>
+  <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncTxt">En direct</span></div>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" id="t-fid" onclick="switchTab('fid',this)">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M20.84 4.6a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.07a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.85a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Fidélité
+  </button>
+  <button class="tab" id="t-val" onclick="switchTab('val',this)">
+    <svg class="ic" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Validation
+  </button>
+  <button class="tab" id="t-dash" onclick="switchTab('dash',this)">
+    <svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
+    Tableau de bord
+  </button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ═══ FIDÉLITÉ ═══ -->
+  <section class="panel on" id="panel-fid">
+
+    <!-- idle -->
+    <div id="fidIdle" class="idle">
+      <div class="idle-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M19 7a5 5 0 0 1 0 10"/><path d="M22 5a8 8 0 0 1 0 14"/></svg></div>
+      <h2>Scannez une carte fidélité</h2>
+      <p>Approchez la carte du lecteur, ou saisissez l'identifiant.</p>
+      <div class="manual">
+        <input class="fld" id="manualId" placeholder="card_id (FAL-…) ou UID" onkeydown="if(event.key==='Enter')doIdentify()">
+        <button class="btn btn-accent" onclick="doIdentify()">Identifier</button>
+      </div>
+      <div class="idle-hint">Le lecteur NFC remplira ce champ automatiquement une fois branché.</div>
+    </div>
+
+    <!-- client reconnu -->
+    <div id="fidClient" style="display:none">
+      <div class="client-top">
+        <div class="c-av" id="cAv">–</div>
+        <div class="c-meta"><div class="c-name" id="cName">—</div><span class="c-lvl" id="cLvl">—</span></div>
+        <div class="c-solde"><div class="v" id="cSolde">0</div><div class="l">points</div></div>
+      </div>
+      <div class="mini">
+        <div class="mc"><div class="v" id="cTampons">0<small>/10</small></div><div class="l">Tampons</div></div>
+        <div class="mc"><div class="v" id="cTickets">0</div><div class="l">Tickets ce mois</div></div>
+        <div class="mc"><div class="v" id="cMois">0</div><div class="l">Points ce mois</div><div class="bar"><i id="cBar" style="width:0%"></i></div></div>
+      </div>
+
+      <div class="add-h">Ajouter des points</div>
+      <div class="quick">
+        <button class="qbtn" onclick="addQuick(30)">+30</button>
+        <button class="qbtn" onclick="addQuick(50)">+50</button>
+        <button class="qbtn" onclick="addQuick(80)">+80</button>
+        <button class="qbtn" onclick="addQuick(120)">+120</button>
+        <button class="qbtn" onclick="addQuick(200)">+200</button>
+      </div>
+      <div class="montant">
+        <input class="fld" id="montant" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Montant € (ex. 8,40)" oninput="calcPts()">
+        <div class="calc"><div class="v" id="calcV">0</div><div class="l">points</div></div>
+      </div>
+      <button class="btn btn-accent" onclick="addMontant()">Ajouter selon le montant</button>
+
+      <div class="client-actions">
+        <button class="btn btn-ghost" onclick="doUndo()">↺ Annuler dernière action</button>
+        <button class="btn btn-ghost" onclick="resetFid()">Carte suivante →</button>
+      </div>
+    </div>
+
+    <!-- carte enrôlée mais profil pas créé -->
+    <div id="fidNew" class="state" style="display:none">
+      <div class="state-ic warn"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h2>Carte non activée</h2>
+      <p>Cette carte n'a pas encore de profil. Le client peut faire le parcours sur son téléphone, ou vous créez le profil maintenant&nbsp;:</p>
+      <div class="miniform">
+        <input class="fld" id="nvPrenom" placeholder="Prénom">
+        <input class="fld" id="nvEmail" placeholder="Email (facultatif)">
+        <button class="btn btn-accent" onclick="doActivate()">Créer le profil</button>
+        <button class="btn btn-ghost" onclick="resetFid()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- carte inconnue -->
+    <div id="fidUnknown" class="state" style="display:none">
+      <div class="state-ic bad"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <h2>Carte inconnue</h2>
+      <p>Cette carte n'est pas encore enregistrée. Enrôlez-la pour l'associer à un nouveau client.</p>
+      <div class="miniform">
+        <button class="btn btn-accent" onclick="doEnroll()">Enrôler cette carte</button>
+        <button class="btn btn-ghost" onclick="resetFid()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- erreur réseau -->
+    <div id="fidError" class="state" style="display:none">
+      <div class="state-ic"><svg class="ic" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+      <h2>Connexion impossible</h2>
+      <p>Impossible de joindre le serveur. Vérifiez le Wi-Fi et réessayez.</p>
+      <div class="miniform"><button class="btn btn-accent" onclick="doIdentify(lastQuery)">Réessayer</button><button class="btn btn-ghost" onclick="resetFid()">Annuler</button></div>
+    </div>
+  </section>
+
+  <!-- ═══ VALIDATION CODE ═══ -->
+  <section class="panel" id="panel-val">
+    <div id="valInput">
+      <div class="lbl">Code client (6 chiffres)</div>
+      <input class="fld v-input" id="codeInput" maxlength="6" inputmode="numeric" placeholder="123456" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" onkeydown="if(event.key==='Enter')validateCode()">
+      <button class="btn btn-accent" style="margin-top:14px" id="valBtn" onclick="validateCode()">Vérifier le code</button>
+    </div>
+    <div class="res" id="resValid"><div class="res-ic ri-ok"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><h2 style="color:var(--ok)">Code valide</h2><div class="gain" id="valGain">—</div><p>Coupon authentique, non utilisé. Remettez le gain puis confirmez.</p><button class="btn btn-ok" onclick="useCode()">Gain remis au client</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
+    <div class="res" id="resUsed"><div class="res-ic ri-used"><svg class="ic" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h2 style="color:var(--warn)">Déjà utilisé</h2><p>Ce coupon a déjà été validé. Ne remettez pas le gain une 2ᵉ fois.</p><button class="btn btn-ghost" onclick="resetVal()">Autre code</button></div>
+    <div class="res" id="resInvalid"><div class="res-ic ri-bad"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><h2 style="color:var(--bad)">Code invalide</h2><p>Ce code n'existe pas. Vérifiez la saisie.</p><button class="btn btn-ghost" onclick="resetVal()">Réessayer</button></div>
+    <div class="res" id="resErr"><div class="res-ic ri-err"><svg class="ic" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><h2>Connexion impossible</h2><p>Vérifiez le Wi-Fi et réessayez.</p><button class="btn btn-accent" onclick="validateCode()">Réessayer</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
+  </section>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <section class="panel" id="panel-dash">
+    <div id="dashContent"><div class="spin"></div></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="toastTxt">OK</span></div>
+
+<script>
+(function(){
+'use strict';
+// ── CONFIG : MÊME Apps Script que le site vendeur (redéployer une NOUVELLE VERSION pour exposer fid_*) ──
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbydbdsUOR49i5BO6-eBIgvtFZN0etKi91IOvd3XlAaK8Ylo4AFqjd80w9CSeo_m9B8x/exec';
+const POLL_MS = 4000;
+
+const params = new URLSearchParams(location.search);
+const commerce = params.get('commerce') || 'Falman';
+document.getElementById('hdrName').textContent = commerce;
+document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpperCase();
+
+let currentCard = null;     // card_id du client identifié
+let lastQuery = null;       // dernière requête identify {card_id} ou {uid} (pour réessayer)
+let pollTimer = null, tickTimer = null, lastFetch = 0;
+const $ = id => document.getElementById(id);
+
+/* ── XHR (pas fetch : Safari/Apps Script redirections) ── */
+function api(action, extra){
+  return new Promise((resolve,reject)=>{
+    let url = SHEETS_URL + '?action=' + encodeURIComponent(action);
+    if(extra) for(const k in extra) url += '&' + k + '=' + encodeURIComponent(extra[k]);
+    const x = new XMLHttpRequest();
+    x.open('GET', url, true); x.timeout = 15000;
+    x.onload = ()=>{ try{ resolve(JSON.parse(x.responseText)); }catch(e){ reject(e); } };
+    x.onerror = ()=>reject(new Error('net')); x.ontimeout = ()=>reject(new Error('timeout'));
+    x.send();
+  });
+}
+function setSync(ok){ $('syncDot').classList.toggle('off',!ok); $('syncTxt').textContent = ok?'En direct':'Hors ligne'; }
+
+/* ── TABS ── */
+window.switchTab = function(tab, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on'); $('panel-'+tab).classList.add('on');
+  if(tab==='dash'){ loadDash(false); startPoll(); } else { stopPoll(); }
+  if(tab==='fid' && !currentCard) setTimeout(()=>$('manualId').focus(),50);
+};
+
+/* ════ FIDÉLITÉ ════ */
+function showFid(which){ ['fidIdle','fidClient','fidNew','fidUnknown','fidError'].forEach(s=>$(s).style.display = (s===which?(which==='fidClient'||which==='fidIdle'?'block':'block'):'none')); }
+window.resetFid = function(){ currentCard=null; $('manualId').value=''; showFid('fidIdle'); $('manualId').focus(); };
+
+// appelée par le bridge NFC (J+2) : kioskScan('UID', true) ou un card_id
+window.kioskScan = function(value, isUid){ $('manualId').value = value; doIdentify(isUid ? {uid:value} : null); };
+
+window.doIdentify = function(forced){
+  const raw = forced || $('manualId').value.trim();
+  let query;
+  if(forced && typeof forced==='object'){ query = forced; }
+  else {
+    const v = (typeof raw==='string'?raw:'').trim(); if(!v) return;
+    query = /^FAL-/i.test(v) ? {card_id:v} : {uid:v};   // FAL-… = card_id, sinon UID
+  }
+  lastQuery = query;
+  api('fid_identify', query).then(d=>{
+    setSync(true);
+    if(d.status==='active'){ renderClient(d.client); showFid('fidClient'); }
+    else if(d.status==='new'){ currentCard = d.card_id; showFid('fidNew'); }
+    else { currentCard = null; showFid('fidUnknown'); }
+  }).catch(()=>{ setSync(false); showFid('fidError'); });
+};
+
+function renderClient(c){
+  currentCard = c.card_id;
+  $('cAv').textContent = (c.prenom||'?').trim()[0].toUpperCase();
+  $('cName').textContent = ((c.prenom||'')+' '+(c.nom||'')).trim() || 'Client';
+  $('cLvl').textContent = c.niveau || 'Découverte';
+  $('cSolde').textContent = c.points_solde;
+  $('cTampons').innerHTML = c.tampons + '<small>/10</small>';
+  $('cTickets').textContent = c.tickets_mois;
+  $('cMois').textContent = c.points_mois;
+  const reste = (c.prochain_ticket!=null)? c.prochain_ticket : (100 - (c.points_mois%100));
+  $('cBar').style.width = (100 - (reste/100*100)) + '%';
+  $('montant').value=''; $('calcV').textContent='0';
+}
+
+window.calcPts = function(){ const m = parseFloat($('montant').value.replace(',','.'))||0; $('calcV').textContent = Math.round(m*10); };
+
+function pushPoints(extra){
+  if(!currentCard) return;
+  api('fid_addpoints', Object.assign({card_id:currentCard, source:'kiosque'}, extra)).then(d=>{
+    setSync(true);
+    if(d.status==='ok'){
+      if(d.reward) toast('🎁 Récompense débloquée !', true);
+      else toast('+'+d.points_delta+' points ✓');
+      renderClient(d.client);
+    } else { toast('Erreur : '+(d.message||d.status)); }
+  }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); });
+}
+window.addQuick = function(p){ pushPoints({points:p}); };
+window.addMontant = function(){ const m = parseFloat($('montant').value.replace(',','.'))||0; if(m>0) pushPoints({montant:m}); };
+window.doUndo = function(){ if(!currentCard) return; api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')); };
+window.doActivate = function(){ if(!currentCard) return; api('fid_activate',{card_id:currentCard, prenom:$('nvPrenom').value.trim(), email:$('nvEmail').value.trim()}).then(d=>{ if(d.status==='ok'){ toast('Profil créé ✓'); doIdentify({card_id:currentCard}); } }).catch(()=>toast('Hors ligne')); };
+window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FAL-/i.test(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
+
+/* ════ VALIDATION CODE (avis) ════ */
+let currentCode='';
+window.validateCode = function(){
+  const v = $('codeInput').value.trim(); if(v.length!==6) return;
+  currentCode = v;
+  api('check',{code:v}).then(d=>{ setSync(true); valRes(d.status==='valid'?'resValid':d.status==='used'?'resUsed':'resInvalid'); if(d.status==='valid') $('valGain').textContent=d.gain||'Gain'; })
+    .catch(()=>{ setSync(false); valRes('resErr'); });
+};
+window.useCode = function(){ api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>toast('Hors ligne')); };
+window.resetVal = function(){ $('valInput').style.display='block'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $('codeInput').value=''; };
+function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $(id).classList.add('show'); }
+
+/* ════ DASHBOARD ════ */
+function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(document.visibilityState==='visible' && $('panel-dash').classList.contains('on')) loadDash(true); },POLL_MS); }
+function stopPoll(){ if(pollTimer){clearInterval(pollTimer);pollTimer=null;} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && $('panel-dash').classList.contains('on')){ loadDash(true); startPoll(); } else stopPoll(); });
+
+function loadDash(silent){
+  if(!silent) $('dashContent').innerHTML='<div class="spin"></div>';
+  api('fid_dashboard',{}).then(d=>{
+    setSync(true);
+    const s=d.stats||{clients:0,passages_aujourdhui:0,points_aujourdhui:0,tickets_mois:0};
+    const rec=d.recents||[];
+    $('dashContent').innerHTML =
+      '<div class="kpi">'
+      +'<div class="kc"><div class="l">Passages aujourd\'hui</div><div class="v g">'+s.passages_aujourdhui+'</div></div>'
+      +'<div class="kc"><div class="l">Points distribués (jour)</div><div class="v">'+s.points_aujourdhui+'</div></div>'
+      +'<div class="kc"><div class="l">Clients fidélité</div><div class="v">'+s.clients+'</div></div>'
+      +'<div class="kc"><div class="l">Tickets ce mois</div><div class="v g">'+s.tickets_mois+'</div></div>'
+      +'</div>'
+      +'<div class="sec">Dernières transactions</div>'
+      +'<div class="block">'+ (rec.length? rec.map(r=>{
+          const neg = r.points<0;
+          return '<div class="row"><div class="info"><b>'+esc(r.card_id)+'</b><span>'+esc(r.type)+' · '+esc(r.datetime)+'</span></div><div class="pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.points+'</div></div>';
+        }).join('') : '<div class="empty">Aucune transaction pour le moment</div>')
+      +'</div>'
+      +'<div class="updated" id="updated">Mis à jour à l\'instant</div>';
+    lastFetch=Date.now(); startTick();
+  }).catch(()=>{ setSync(false); if(!silent) $('dashContent').innerHTML='<div class="empty">Connexion impossible — vérifiez le Wi-Fi.</div>'; });
+}
+function startTick(){ stopTick(); tickTimer=setInterval(()=>{ const el=$('updated'); if(!el)return; const s=Math.floor((Date.now()-lastFetch)/1000); el.textContent='Mis à jour '+(s<3?"à l'instant":s<60?('il y a '+s+' s'):('il y a '+Math.floor(s/60)+' min')); },1000); }
+function stopTick(){ if(tickTimer){clearInterval(tickTimer);tickTimer=null;} }
+
+/* ── TOAST ── */
+let tT=null;
+function toast(msg,reward){ const t=$('toast'); $('toastTxt').textContent=msg; t.classList.toggle('reward',!!reward); t.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove('show'),2300); }
+window.esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+window.toast = toast;
+
+/* ── auto-scan via URL (?card=… ou ?uid=…) pour le bridge ── */
+const pCard=params.get('card'), pUid=params.get('uid');
+if(pCard) doIdentify({card_id:pCard}); else if(pUid) doIdentify({uid:pUid}); else setTimeout(()=>$('manualId').focus(),100);
+})();
+</script>
+</body>
+</html>
