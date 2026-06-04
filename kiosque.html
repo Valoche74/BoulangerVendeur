@@ -208,7 +208,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
         <div class="c-solde"><div class="v" id="cSolde">0</div><div class="l">points</div></div>
       </div>
       <div class="mini">
-        <div class="mc"><div class="v" id="cTampons">0<small>/10</small></div><div class="l">Tampons</div></div>
+        <div class="mc"><div class="v" id="cStatut">0</div><div class="l">Pts statut</div></div>
         <div class="mc"><div class="v" id="cTickets">0</div><div class="l">Tickets ce mois</div></div>
         <div class="mc"><div class="v" id="cMois">0</div><div class="l">Points ce mois</div><div class="bar"><i id="cBar" style="width:0%"></i></div></div>
       </div>
@@ -357,7 +357,7 @@ function renderClient(c){
   $('cName').textContent = ((c.prenom||'')+' '+(c.nom||'')).trim() || 'Client';
   $('cLvl').textContent = c.niveau || 'Découverte';
   $('cSolde').textContent = c.points_solde;
-  $('cTampons').innerHTML = c.tampons + '<small>/10</small>';
+  $('cStatut').textContent = c.points_statut;
   $('cTickets').textContent = c.tickets_mois;
   $('cMois').textContent = c.points_mois;
   const reste = (c.prochain_ticket!=null)? c.prochain_ticket : (100 - (c.points_mois%100));
@@ -372,8 +372,7 @@ function pushPoints(extra){
   api('fid_addpoints', Object.assign({card_id:currentCard, source:'kiosque'}, extra)).then(d=>{
     setSync(true);
     if(d.status==='ok'){
-      if(d.reward) toast('🎁 Récompense débloquée !', true);
-      else toast('+'+d.points_delta+' points ✓');
+      toast('+'+d.points_delta+' points ✓');
       renderClient(d.client);
     } else { toast('Erreur : '+(d.message||d.status)); }
   }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); });
