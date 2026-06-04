@@ -102,6 +102,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 @media(max-width:560px){.quick{grid-template-columns:repeat(3,1fr)}}
 .qbtn{padding:20px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:19px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
 .qbtn:active{transform:scale(.96);background:var(--accent-dim)}
+.qbtn:disabled{opacity:.45;cursor:default}
 .montant{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
 .montant .fld{flex:1}
 .montant .calc{min-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px}
@@ -273,7 +274,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
       <input class="fld v-input" id="codeInput" maxlength="6" inputmode="numeric" placeholder="123456" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" onkeydown="if(event.key==='Enter')validateCode()">
       <button class="btn btn-accent" style="margin-top:14px" id="valBtn" onclick="validateCode()">Vérifier le code</button>
     </div>
-    <div class="res" id="resValid"><div class="res-ic ri-ok"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><h2 style="color:var(--ok)">Code valide</h2><div class="gain" id="valGain">—</div><p>Coupon authentique, non utilisé. Remettez le gain puis confirmez.</p><button class="btn btn-ok" onclick="useCode()">Gain remis au client</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
+    <div class="res" id="resValid"><div class="res-ic ri-ok"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><h2 style="color:var(--ok)">Code valide</h2><div class="gain" id="valGain">—</div><p>Coupon authentique, non utilisé. Remettez le gain puis confirmez.</p><button class="btn btn-ok" onclick="useCode(this)">Gain remis au client</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
     <div class="res" id="resUsed"><div class="res-ic ri-used"><svg class="ic" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h2 style="color:var(--warn)">Déjà utilisé</h2><p>Ce coupon a déjà été validé. Ne remettez pas le gain une 2ᵉ fois.</p><button class="btn btn-ghost" onclick="resetVal()">Autre code</button></div>
     <div class="res" id="resInvalid"><div class="res-ic ri-bad"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><h2 style="color:var(--bad)">Code invalide</h2><p>Ce code n'existe pas. Vérifiez la saisie.</p><button class="btn btn-ghost" onclick="resetVal()">Réessayer</button></div>
     <div class="res" id="resErr"><div class="res-ic ri-err"><svg class="ic" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><h2>Connexion impossible</h2><p>Vérifiez le Wi-Fi et réessayez.</p><button class="btn btn-accent" onclick="validateCode()">Réessayer</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
@@ -322,6 +323,8 @@ function api(action, extra, retry){
   });
 }
 function setSync(ok){ $('syncDot').classList.toggle('off',!ok); $('syncTxt').textContent = ok?'En direct':'Hors ligne'; }
+// désactive (→ opacité réduite) les boutons d'action client pendant un appel serveur
+function setBusy(on){ document.querySelectorAll('#fidClient .qbtn, #fidClient .btn').forEach(b=>{ b.disabled = on; }); }
 
 /* ── TABS ── */
 window.switchTab = function(tab, el){
@@ -374,17 +377,18 @@ window.calcPts = function(){ const m = parseFloat($('montant').value.replace(','
 
 function pushPoints(extra){
   if(!currentCard) return;
+  setBusy(true);
   api('fid_addpoints', Object.assign({card_id:currentCard, source:'kiosque'}, extra)).then(d=>{
     setSync(true);
     if(d.status==='ok'){
       toast('+'+d.points_delta+' points ✓');
       renderClient(d.client);
     } else { toast('Erreur : '+(d.message||d.status)); }
-  }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); });
+  }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); }).then(()=>setBusy(false));
 }
 window.addQuick = function(p){ pushPoints({points:p}); };
 window.addMontant = function(){ const m = parseFloat($('montant').value.replace(',','.'))||0; if(m>0) pushPoints({montant:m}); };
-window.doUndo = function(){ if(!currentCard) return; api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')); };
+window.doUndo = function(){ if(!currentCard) return; setBusy(true); api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')).then(()=>setBusy(false)); };
 window.doActivate = function(){ if(!currentCard) return; api('fid_activate',{card_id:currentCard, prenom:$('nvPrenom').value.trim(), email:$('nvEmail').value.trim()}).then(d=>{ if(d.status==='ok'){ toast('Profil créé ✓'); doIdentify({card_id:currentCard}); } }).catch(()=>toast('Hors ligne')); };
 window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FAL-/i.test(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
 
@@ -393,10 +397,11 @@ let currentCode='';
 window.validateCode = function(){
   const v = $('codeInput').value.trim(); if(v.length!==6) return;
   currentCode = v;
+  const vb=$('valBtn'); if(vb) vb.disabled=true;
   api('check',{code:v}, true).then(d=>{ setSync(true); valRes(d.status==='valid'?'resValid':d.status==='used'?'resUsed':'resInvalid'); if(d.status==='valid') $('valGain').textContent=d.gain||'Gain'; })
-    .catch(()=>{ setSync(false); valRes('resErr'); });
+    .catch(()=>{ setSync(false); valRes('resErr'); }).then(()=>{ if(vb) vb.disabled=false; });
 };
-window.useCode = function(){ api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>toast('Hors ligne')); };
+window.useCode = function(btn){ if(btn) btn.disabled=true; api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>{ toast('Hors ligne'); if(btn) btn.disabled=false; }); };
 window.resetVal = function(){ $('valInput').style.display='block'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $('codeInput').value=''; };
 function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $(id).classList.add('show'); }
 
