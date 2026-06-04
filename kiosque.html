@@ -305,15 +305,20 @@ let pollTimer = null, tickTimer = null, lastFetch = 0;
 const $ = id => document.getElementById(id);
 
 /* ── XHR (pas fetch : Safari/Apps Script redirections) ── */
-function api(action, extra){
+function api(action, extra, retry){
   return new Promise((resolve,reject)=>{
     let url = SHEETS_URL + '?action=' + encodeURIComponent(action);
     if(extra) for(const k in extra) url += '&' + k + '=' + encodeURIComponent(extra[k]);
-    const x = new XMLHttpRequest();
-    x.open('GET', url, true); x.timeout = 15000;
-    x.onload = ()=>{ try{ resolve(JSON.parse(x.responseText)); }catch(e){ reject(e); } };
-    x.onerror = ()=>reject(new Error('net')); x.ontimeout = ()=>reject(new Error('timeout'));
-    x.send();
+    const attempt = (left)=>{
+      const x = new XMLHttpRequest();
+      x.open('GET', url, true); x.timeout = 20000;
+      const fail = (err)=>{ if(left>0) setTimeout(()=>attempt(left-1), 700); else reject(err); };
+      x.onload = ()=>{ try{ resolve(JSON.parse(x.responseText)); }catch(e){ fail(e); } };
+      x.onerror = ()=>fail(new Error('net'));
+      x.ontimeout = ()=>fail(new Error('timeout'));
+      x.send();
+    };
+    attempt(retry?1:0);   // retry uniquement sur les lectures (identify/dashboard/check)
   });
 }
 function setSync(ok){ $('syncDot').classList.toggle('off',!ok); $('syncTxt').textContent = ok?'En direct':'Hors ligne'; }
@@ -343,7 +348,7 @@ window.doIdentify = function(forced){
     query = /^FAL-/i.test(v) ? {card_id:v} : {uid:v};   // FAL-… = card_id, sinon UID
   }
   lastQuery = query;
-  api('fid_identify', query).then(d=>{
+  api('fid_identify', query, true).then(d=>{
     setSync(true);
     if(d.status==='active'){ renderClient(d.client); showFid('fidClient'); }
     else if(d.status==='new'){ currentCard = d.card_id; showFid('fidNew'); }
@@ -388,7 +393,7 @@ let currentCode='';
 window.validateCode = function(){
   const v = $('codeInput').value.trim(); if(v.length!==6) return;
   currentCode = v;
-  api('check',{code:v}).then(d=>{ setSync(true); valRes(d.status==='valid'?'resValid':d.status==='used'?'resUsed':'resInvalid'); if(d.status==='valid') $('valGain').textContent=d.gain||'Gain'; })
+  api('check',{code:v}, true).then(d=>{ setSync(true); valRes(d.status==='valid'?'resValid':d.status==='used'?'resUsed':'resInvalid'); if(d.status==='valid') $('valGain').textContent=d.gain||'Gain'; })
     .catch(()=>{ setSync(false); valRes('resErr'); });
 };
 window.useCode = function(){ api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>toast('Hors ligne')); };
@@ -402,7 +407,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 
 function loadDash(silent){
   if(!silent) $('dashContent').innerHTML='<div class="spin"></div>';
-  api('fid_dashboard',{}).then(d=>{
+  api('fid_dashboard',{}, true).then(d=>{
     setSync(true);
     const s=d.stats||{clients:0,passages_aujourdhui:0,points_aujourdhui:0,tickets_mois:0};
     const rec=d.recents||[];
