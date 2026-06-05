@@ -442,6 +442,24 @@ function toast(msg,reward){ const t=$('toast'); $('toastTxt').textContent=msg; t
 window.esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 window.toast = toast;
 
+/* ── capture GLOBALE du scan : le lecteur "tape" l'UID + Entrée, même si aucun champ n'est sélectionné ── */
+(function(){
+  let buf='', last=0;
+  document.addEventListener('keydown', function(e){
+    const t=e.target, inField = t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA');
+    const now=Date.now(); if(now-last>300) buf=''; last=now;   // reset si frappe lente (humain) ; le lecteur tape vite
+    if(e.key==='Enter'){
+      const v=buf.trim(); buf='';
+      if(!inField && v.length>=4){
+        if(!$('panel-fid').classList.contains('on')) switchTab('fid', $('t-fid'));
+        doIdentify(/^FAL-/i.test(v) ? {card_id:v} : {uid:v});
+      }
+      return;
+    }
+    if(!inField && e.key.length===1) buf += e.key;
+  });
+})();
+
 /* ── auto-scan via URL (?card=… ou ?uid=…) pour le bridge ── */
 const pCard=params.get('card'), pUid=params.get('uid');
 if(pCard) doIdentify({card_id:pCard}); else if(pUid) doIdentify({uid:pUid}); else setTimeout(()=>$('manualId').focus(),100);
