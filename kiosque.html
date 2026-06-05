@@ -307,8 +307,22 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
   <section class="panel" id="panel-val">
     <div id="valInput">
       <div class="lbl">Code client (6 chiffres)</div>
-      <input class="fld v-input" id="codeInput" maxlength="6" inputmode="numeric" placeholder="123456" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" onkeydown="if(event.key==='Enter')validateCode()">
-      <button class="btn btn-accent" style="margin-top:14px" id="valBtn" onclick="validateCode()">Vérifier le code</button>
+      <input class="fld v-input" id="codeInput" maxlength="6" inputmode="none" readonly placeholder="123456">
+      <div class="kp-grid" style="max-width:620px;margin:14px auto 0">
+        <button onclick="vcPress('1')">1</button>
+        <button onclick="vcPress('2')">2</button>
+        <button onclick="vcPress('3')">3</button>
+        <button onclick="vcPress('4')">4</button>
+        <button onclick="vcPress('5')">5</button>
+        <button onclick="vcPress('6')">6</button>
+        <button onclick="vcPress('7')">7</button>
+        <button onclick="vcPress('8')">8</button>
+        <button onclick="vcPress('9')">9</button>
+        <button class="kp-back" onclick="vcPress('clear')">C</button>
+        <button onclick="vcPress('0')">0</button>
+        <button class="kp-back" onclick="vcPress('back')">⌫</button>
+      </div>
+      <button class="btn btn-accent" style="margin:14px auto 0;max-width:620px;width:100%;display:block" id="valBtn" onclick="validateCode()">Vérifier le code</button>
     </div>
     <div class="res" id="resValid"><div class="res-ic ri-ok"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><h2 style="color:var(--ok)">Code valide</h2><div class="gain" id="valGain">—</div><p>Coupon authentique, non utilisé. Remettez le gain puis confirmez.</p><button class="btn btn-ok" onclick="useCode(this)">Gain remis au client</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
     <div class="res" id="resUsed"><div class="res-ic ri-used"><svg class="ic" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><h2 style="color:var(--warn)">Déjà utilisé</h2><p>Ce coupon a déjà été validé. Ne remettez pas le gain une 2ᵉ fois.</p><button class="btn btn-ghost" onclick="resetVal()">Autre code</button></div>
@@ -438,6 +452,12 @@ window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FA
 
 /* ════ VALIDATION CODE (avis) ════ */
 let currentCode='';
+window.vcPress = function(c){
+  const el=$('codeInput');
+  if(c==='back') el.value=el.value.slice(0,-1);
+  else if(c==='clear') el.value='';
+  else if(el.value.length<6) el.value+=c;
+};
 window.validateCode = function(){
   const v = $('codeInput').value.trim(); if(v.length!==6) return;
   currentCode = v;
