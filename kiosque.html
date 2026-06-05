@@ -143,6 +143,20 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .kc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px}
 .kc .l{font-size:12px;color:var(--dim);margin-bottom:10px}
 .kc .v{font-size:34px;font-weight:800;line-height:1}.kc .v.g{color:var(--accent-2)}
+/* ── Dashboard Vision UI ── */
+.vu-hero{position:relative;overflow:hidden;border-radius:20px;padding:24px;margin-bottom:16px;background:linear-gradient(135deg,#0075FF 0%,#4318FF 52%,#7551FF 100%);box-shadow:0 14px 38px rgba(67,24,255,.42)}
+.vu-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.12)}
+.vu-hero::before{content:'';position:absolute;right:30px;bottom:-50px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)}
+.vu-hero .t{position:relative;font-size:13px;color:rgba(255,255,255,.85);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.vu-hero .big{position:relative;font-size:42px;font-weight:800;color:#fff;line-height:1;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.vu-hero .sub{position:relative;font-size:14px;color:rgba(255,255,255,.9)}
+.vu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:760px){.vu-grid{grid-template-columns:repeat(2,1fr)}}
+.vu-card{position:relative;overflow:hidden;border-radius:18px;padding:18px;background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(20,24,38,.55));border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.vu-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#0075FF,#7551FF);box-shadow:0 6px 16px rgba(67,24,255,.45);margin-bottom:12px}
+.vu-card .ic svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vu-card .l{font-size:12px;color:var(--dim);font-weight:500}
+.vu-card .v{font-size:30px;font-weight:800;color:#fff;line-height:1;margin-top:5px;font-variant-numeric:tabular-nums}
 .sec{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:20px 2px 11px}
 .block{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border)}
@@ -444,11 +458,12 @@ function loadDash(silent){
     const s=d.stats||{clients:0,passages_aujourdhui:0,points_aujourdhui:0,tickets_mois:0};
     const rec=d.recents||[];
     $('dashContent').innerHTML =
-      '<div class="kpi">'
-      +'<div class="kc"><div class="l">Passages aujourd\'hui</div><div class="v g">'+s.passages_aujourdhui+'</div></div>'
-      +'<div class="kc"><div class="l">Points distribués (jour)</div><div class="v">'+s.points_aujourdhui+'</div></div>'
-      +'<div class="kc"><div class="l">Clients fidélité</div><div class="v">'+s.clients+'</div></div>'
-      +'<div class="kc"><div class="l">Tickets ce mois</div><div class="v g">'+s.tickets_mois+'</div></div>'
+      '<div class="vu-hero"><div class="t">Aujourd\'hui</div><div class="big">'+s.passages_aujourdhui+' passages</div><div class="sub">'+s.points_aujourdhui+' points distribués aujourd\'hui</div></div>'
+      +'<div class="vu-grid">'
+      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="l">Clients fidélité</div><div class="v">'+s.clients+'</div></div>'
+      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 0-16 0"/><path d="M2 12h3M19 12h3M12 2v3"/></svg></div><div class="l">Passages (jour)</div><div class="v">'+s.passages_aujourdhui+'</div></div>'
+      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 12h6"/></svg></div><div class="l">Points (jour)</div><div class="v">'+s.points_aujourdhui+'</div></div>'
+      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 8h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M9 8v12"/></svg></div><div class="l">Tickets ce mois</div><div class="v">'+s.tickets_mois+'</div></div>'
       +'</div>'
       +'<div class="sec">Dernières transactions</div>'
       +'<div class="block">'+ (rec.length? rec.map(r=>{
