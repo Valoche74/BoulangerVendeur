@@ -50,7 +50,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 
 /* ── PANELS ── */
 .wrap{position:relative;z-index:2;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.panel{display:none;max-width:760px;margin:0 auto;padding:20px 16px 40px}
+.panel{display:none;max-width:960px;margin:0 auto;padding:22px 20px 48px}
 .panel.on{display:block;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 
@@ -100,14 +100,20 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .add-h{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:6px 2px 11px}
 .quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
 @media(max-width:560px){.quick{grid-template-columns:repeat(3,1fr)}}
-.qbtn{padding:20px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:19px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
+.qbtn{padding:26px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:24px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
 .qbtn:active{transform:scale(.96);background:var(--accent-dim)}
 .qbtn:disabled{opacity:.45;cursor:default}
-.montant{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
-.montant .fld{flex:1}
-.montant .calc{min-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px}
-.montant .calc .v{font-size:22px;font-weight:800;color:var(--accent-2)}
-.montant .calc .l{font-size:10px;color:var(--mut)}
+/* pavé numérique tactile (saisie du montant sans clavier) */
+.keypad{margin-bottom:14px}
+.kp-display{display:flex;align-items:baseline;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.kp-display #kpAmount{font-size:38px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.kp-display .eu{font-size:22px;color:var(--dim);font-weight:700}
+.kp-display .kp-pts{font-size:17px;color:var(--accent-2);font-weight:700;margin-left:6px}
+.kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.kp-grid button{padding:24px 0;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:28px;font-weight:700;cursor:pointer;transition:transform .1s,background .15s}
+.kp-grid button:active{transform:scale(.96);background:var(--accent-dim)}
+.kp-grid .kp-back{color:var(--bad)}
+.kp-add{font-size:18px;padding:20px}
 .client-actions{display:flex;gap:10px;margin-top:16px}
 .client-actions .btn{flex:1}
 
@@ -222,11 +228,24 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
         <button class="qbtn" onclick="addQuick(120)">+120</button>
         <button class="qbtn" onclick="addQuick(200)">+200</button>
       </div>
-      <div class="montant">
-        <input class="fld" id="montant" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Montant € (ex. 8,40)" oninput="calcPts()">
-        <div class="calc"><div class="v" id="calcV">0</div><div class="l">points</div></div>
+      <div class="keypad">
+        <div class="kp-display"><span id="kpAmount">0</span><span class="eu">€</span><span class="kp-pts">= <b id="kpPts">0</b> pts</span></div>
+        <div class="kp-grid">
+          <button onclick="kpPress('1')">1</button>
+          <button onclick="kpPress('2')">2</button>
+          <button onclick="kpPress('3')">3</button>
+          <button onclick="kpPress('4')">4</button>
+          <button onclick="kpPress('5')">5</button>
+          <button onclick="kpPress('6')">6</button>
+          <button onclick="kpPress('7')">7</button>
+          <button onclick="kpPress('8')">8</button>
+          <button onclick="kpPress('9')">9</button>
+          <button onclick="kpPress(',')">,</button>
+          <button onclick="kpPress('0')">0</button>
+          <button class="kp-back" onclick="kpPress('back')">⌫</button>
+        </div>
+        <button class="btn btn-accent kp-add" onclick="addKeypad()">Ajouter <span id="kpAddPts">0</span> pts</button>
       </div>
-      <button class="btn btn-accent" onclick="addMontant()">Ajouter selon le montant</button>
 
       <div class="client-actions">
         <button class="btn btn-ghost" onclick="doUndo()">↺ Annuler dernière action</button>
@@ -370,10 +389,18 @@ function renderClient(c){
   $('cMois').textContent = c.points_mois;
   const reste = (c.prochain_ticket!=null)? c.prochain_ticket : (100 - (c.points_mois%100));
   $('cBar').style.width = (100 - (reste/100*100)) + '%';
-  $('montant').value=''; $('calcV').textContent='0';
+  kpStr=''; kpRender();
 }
 
-window.calcPts = function(){ const m = parseFloat($('montant').value.replace(',','.'))||0; $('calcV').textContent = Math.round(m*10); };
+let kpStr='';
+window.kpPress = function(c){
+  if(c==='back') kpStr=kpStr.slice(0,-1);
+  else if(c===','){ if(kpStr && kpStr.indexOf(',')<0) kpStr+=','; }
+  else { if(kpStr.replace(',','').length<6) kpStr+=c; }
+  kpRender();
+};
+function kpRender(){ $('kpAmount').textContent=kpStr||'0'; const p=Math.round((parseFloat(kpStr.replace(',','.'))||0)*10); $('kpPts').textContent=p; $('kpAddPts').textContent=p; }
+window.addKeypad = function(){ const m=parseFloat(kpStr.replace(',','.'))||0; if(m>0) pushPoints({montant:m}); };
 
 function pushPoints(extra){
   if(!currentCard) return;
@@ -387,7 +414,7 @@ function pushPoints(extra){
   }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); }).then(()=>setBusy(false));
 }
 window.addQuick = function(p){ pushPoints({points:p}); };
-window.addMontant = function(){ const m = parseFloat($('montant').value.replace(',','.'))||0; if(m>0) pushPoints({montant:m}); };
+// (saisie du montant désormais via le pavé numérique → addKeypad)
 window.doUndo = function(){ if(!currentCard) return; setBusy(true); api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')).then(()=>setBusy(false)); };
 window.doActivate = function(){ if(!currentCard) return; api('fid_activate',{card_id:currentCard, prenom:$('nvPrenom').value.trim(), email:$('nvEmail').value.trim()}).then(d=>{ if(d.status==='ok'){ toast('Profil créé ✓'); doIdentify({card_id:currentCard}); } }).catch(()=>toast('Hors ligne')); };
 window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FAL-/i.test(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
