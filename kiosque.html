@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0A0B0D">
+<meta name="theme-color" content="#021024">
 <title>Caisse Fidélité — Falman</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,37 +16,44 @@
    Le scan NFC remplira l'identifiant via window.kioskScan() (bridge Python, J+2).
    ════════════════════════════════════════════════════════════════ */
 :root{
-  --bg:#0A0B0D;--surface:#121419;--surface-2:#181B22;--surface-3:#20242D;
-  --border:rgba(255,255,255,.08);--border-2:rgba(255,255,255,.14);
-  --text:#F3F4F6;--dim:#9AA1AD;--mut:#5C636E;
-  --accent:#6366F1;--accent-2:#818CF8;--accent-dim:rgba(99,102,241,.16);
+  /* Palette bleue (réf. IMAGE/ : #021024 → #052659 → #5483B3 → #7DA0CA → #C1E8FF) */
+  --bg:#021024;--surface:#06183a;--surface-2:#0a2150;--surface-3:#0f2d68;
+  --border:rgba(125,160,202,.16);--border-2:rgba(125,160,202,.30);
+  --text:#EAF4FF;--dim:#9FC0E4;--mut:#5E83B0;
+  --accent:#2D7DFF;--accent-2:#5AA0FF;--accent-dim:rgba(45,125,255,.18);
   --ok:#34D399;--ok-dim:rgba(52,211,153,.14);
   --warn:#FBBF24;--warn-dim:rgba(251,191,36,.14);
   --bad:#FB7185;--bad-dim:rgba(251,113,133,.14);
-  --gold:#F5D07A;
+  --gold:#F5D07A;--ice:#C1E8FF;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{height:100%}
 body{font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
   background:var(--bg);color:var(--text);min-height:100%;display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
-body::before{content:'';position:fixed;inset:0 0 auto 0;height:300px;z-index:0;pointer-events:none;
-  background:radial-gradient(120% 100% at 50% 0,rgba(99,102,241,.10),transparent 60%)}
+/* fond ambiant bleu électrique (recréé en CSS d'après les images de réf.) */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(90% 60% at 50% -10%,rgba(45,125,255,.28),transparent 60%),
+    radial-gradient(70% 50% at 12% 8%,rgba(10,60,160,.32),transparent 55%),
+    radial-gradient(80% 60% at 92% 96%,rgba(20,80,200,.22),transparent 55%),
+    radial-gradient(60% 50% at 50% 120%,rgba(84,131,179,.18),transparent 60%)}
 svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
 /* ── HEADER ── */
-.hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(10,11,13,.7)}
+.hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(2,16,36,.72);backdrop-filter:blur(10px)}
 .hdr-l{display:flex;align-items:center;gap:11px}
-.hdr-mk{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#4F46E5);display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.4)}
+.hdr-mk{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;box-shadow:0 4px 14px rgba(45,125,255,.4)}
 .hdr-name{font-size:15px;font-weight:600}.hdr-sub{font-size:11px;color:var(--mut);margin-top:1px}
 .sync{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:12px;font-weight:500;color:var(--dim)}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .sync-dot.off{background:var(--warn)}
 
 /* ── TABS (gros, tactile) ── */
-.tabs{position:relative;z-index:2;display:flex;gap:8px;padding:10px 14px;background:rgba(10,11,13,.7);border-bottom:1px solid var(--border)}
-.tab{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.tab .ic{width:19px;height:19px}
-.tab.on{background:var(--accent-dim);color:#fff;border-color:rgba(99,102,241,.5)}
+.tabs{position:relative;z-index:2;display:flex;gap:8px;padding:10px 14px;background:rgba(2,16,36,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.tab{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.tab .ic{width:18px;height:18px}
+@media(max-width:600px){.tabs{flex-wrap:wrap}.tab{flex:1 1 calc(50% - 4px)}}
+.tab.on{background:var(--accent-dim);color:#fff;border-color:rgba(45,125,255,.5)}
 
 /* ── PANELS ── */
 .wrap{position:relative;z-index:2;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -58,7 +65,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:18px;border:none;border-radius:15px;
   font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s,filter .15s,background .15s}
 .btn:active{transform:scale(.98)}
-.btn-accent{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(99,102,241,.32)}
+.btn-accent{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(45,125,255,.32)}
 .btn-accent:active{background:var(--accent-2)}
 .btn-ok{background:var(--ok);color:#04211A}
 .btn-ghost{background:transparent;border:1px solid var(--border-2);color:var(--dim)}
@@ -82,7 +89,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 
 /* ── FIDÉLITÉ — client ── */
 .client-top{display:flex;align-items:center;gap:14px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:18px;margin-bottom:12px}
-.c-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#4F46E5);display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+.c-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
 .c-meta{flex:1;min-width:0}
 .c-name{font-size:20px;font-weight:700;line-height:1.1}
 .c-lvl{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.3);border-radius:99px;padding:3px 10px}
@@ -155,7 +162,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .vu-hero .sub{position:relative;font-size:14px;color:rgba(255,255,255,.9)}
 .vu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 @media(max-width:760px){.vu-grid{grid-template-columns:repeat(2,1fr)}}
-.vu-card{position:relative;overflow:hidden;border-radius:18px;padding:18px;background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(20,24,38,.55));border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.vu-card{position:relative;overflow:hidden;border-radius:18px;padding:18px;background:linear-gradient(135deg,rgba(45,125,255,.16),rgba(20,24,38,.55));border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 26px rgba(0,0,0,.35)}
 .vu-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#0075FF,#7551FF);box-shadow:0 6px 16px rgba(67,24,255,.45);margin-bottom:12px}
 .vu-card .ic svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .vu-card .l{font-size:12px;color:var(--dim);font-weight:500}
@@ -174,11 +181,62 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);display:flex;align-items:center;gap:10px;padding:15px 24px;border-radius:15px;background:var(--surface-3);border:1px solid var(--border-2);color:var(--text);font-size:16px;font-weight:700;box-shadow:0 12px 36px rgba(0,0,0,.5);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast .ic{width:20px;height:20px;color:var(--ok);stroke-width:2.6}
-.toast.reward{background:linear-gradient(135deg,#7c5cff,#6366F1);border-color:transparent}
+.toast.reward{background:linear-gradient(135deg,#2D7DFF,#0A3D80);border-color:transparent}
 .toast.reward .ic{color:#fff}
 
 .spin{width:30px;height:30px;border:3px solid var(--border-2);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite;margin:50px auto}
 @keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── LOADER : spinner sur le bouton cliqué (remplace l'effet d'opacité) ── */
+.is-loading{position:relative;color:transparent!important;pointer-events:none}
+.is-loading>*{visibility:hidden}
+.is-loading::after{content:'';position:absolute;top:50%;left:50%;width:24px;height:24px;margin:-12px 0 0 -12px;
+  border:2.6px solid rgba(234,244,255,.28);border-top-color:var(--ice);border-radius:50%;animation:rot .7s linear infinite}
+.qbtn.is-loading::after{border-top-color:var(--accent-2)}
+
+/* ── Badge TIER (par € dépensés) ── */
+.tier-badge{display:inline-flex;align-items:center;gap:6px;margin:5px 0 0 8px;font-size:11px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.05em;padding:3px 11px;border-radius:99px;border:1px solid;vertical-align:middle}
+.tier-bronze{color:#E6A86B;background:rgba(205,127,50,.14);border-color:rgba(205,127,50,.45)}
+.tier-argent{color:#D6E2EF;background:rgba(186,206,224,.14);border-color:rgba(186,206,224,.45)}
+.tier-or{color:#F5D07A;background:rgba(245,208,122,.14);border-color:rgba(245,208,122,.5)}
+.tier-platine{color:#9FE8FF;background:rgba(159,232,255,.13);border-color:rgba(159,232,255,.5);box-shadow:0 0 14px rgba(159,232,255,.25)}
+
+/* ── Cadeaux EN ATTENTE (au scan) — pills néon ── */
+.pend{margin:2px 0 16px}
+.pend-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:0 2px 10px}
+.gift-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;margin-bottom:9px;
+  background:rgba(245,208,122,.07);border:1px solid rgba(245,208,122,.26)}
+.gift-row .gn{flex:1;min-width:0}
+.gift-row .gn b{font-size:15px;font-weight:700;display:block}
+.gift-row .gn span{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums}
+.gbadge{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:5px 11px;border-radius:99px;white-space:nowrap;
+  color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.4);box-shadow:0 0 12px rgba(245,208,122,.18)}
+.gift-row .btn{width:auto;padding:13px 18px;font-size:14px;flex-shrink:0}
+
+/* ── ANTI-GASPI ── */
+.ag-intro{font-size:14px;color:var(--dim);margin:0 2px 16px;line-height:1.6}
+.ag-form{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:20px}
+.ag-form .lbl{margin-top:15px}.ag-form .lbl:first-child{margin-top:0}
+.ag-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ag-card{display:flex;align-items:center;gap:13px;padding:14px 15px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:11px}
+.ag-emoji{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:rgba(45,125,255,.14);border:1px solid var(--border-2);flex-shrink:0}
+.ag-meta{flex:1;min-width:0}.ag-meta .t{font-size:16px;font-weight:700}.ag-meta .s{font-size:12.5px;color:var(--dim);margin-top:3px}
+.ag-price{text-align:right;flex-shrink:0}
+.ag-price .pr{font-size:20px;font-weight:800;color:var(--ok)}.ag-price .or{font-size:12px;color:var(--mut);text-decoration:line-through;margin-top:1px}
+.ag-qty{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#9FE8FF;background:rgba(159,232,255,.12);border:1px solid rgba(159,232,255,.4);border-radius:99px;padding:4px 10px;box-shadow:0 0 12px rgba(159,232,255,.16);margin-left:8px}
+.ag-del{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--bad-dim);border:1px solid rgba(251,113,133,.3);color:var(--bad);cursor:pointer;flex-shrink:0}
+.ag-del svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+/* chips + steppers (saisie 100% tactile, sans clavier) */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:12px 15px;border:1px solid var(--border-2);border-radius:12px;background:var(--surface-2);color:var(--dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.chip.on{background:var(--accent-dim);color:#fff;border-color:var(--accent)}
+.chips.sm{gap:6px}.chips.sm .chip{padding:11px 12px}
+.stepper{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:6px}
+.stepper button{width:46px;height:46px;border:none;border-radius:10px;background:var(--surface-3);color:var(--text);font-size:24px;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .12s}
+.stepper button:active{background:var(--accent-dim)}
+.stepper span{flex:1;text-align:center;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
 </style>
 </head>
@@ -200,6 +258,10 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
   <button class="tab" id="t-val" onclick="switchTab('val',this)">
     <svg class="ic" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
     Validation
+  </button>
+  <button class="tab" id="t-ag" onclick="switchTab('ag',this)">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    Anti-gaspi
   </button>
   <button class="tab" id="t-dash" onclick="switchTab('dash',this)">
     <svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
@@ -228,7 +290,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
     <div id="fidClient" style="display:none">
       <div class="client-top">
         <div class="c-av" id="cAv">–</div>
-        <div class="c-meta"><div class="c-name" id="cName">—</div><span class="c-lvl" id="cLvl">—</span></div>
+        <div class="c-meta"><div class="c-name" id="cName">—</div><span class="c-lvl" id="cLvl">—</span><span class="tier-badge" id="cTier" style="display:none"></span></div>
         <div class="c-solde"><div class="v" id="cSolde">0</div><div class="l">points</div></div>
       </div>
       <div class="mini">
@@ -237,13 +299,16 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
         <div class="mc"><div class="v" id="cMois">0</div><div class="l">Points ce mois</div><div class="bar"><i id="cBar" style="width:0%"></i></div></div>
       </div>
 
+      <!-- cadeaux en attente (à valider directement au scan) -->
+      <div class="pend" id="cPend" style="display:none"></div>
+
       <div class="add-h">Ajouter des points</div>
       <div class="quick">
-        <button class="qbtn" onclick="addQuick(30)">+30</button>
-        <button class="qbtn" onclick="addQuick(50)">+50</button>
-        <button class="qbtn" onclick="addQuick(80)">+80</button>
-        <button class="qbtn" onclick="addQuick(120)">+120</button>
-        <button class="qbtn" onclick="addQuick(200)">+200</button>
+        <button class="qbtn" onclick="addQuick(30,this)">+30</button>
+        <button class="qbtn" onclick="addQuick(50,this)">+50</button>
+        <button class="qbtn" onclick="addQuick(80,this)">+80</button>
+        <button class="qbtn" onclick="addQuick(120,this)">+120</button>
+        <button class="qbtn" onclick="addQuick(200,this)">+200</button>
       </div>
       <div class="keypad">
         <div class="kp-display"><span id="kpAmount">0</span><span class="eu">€</span><span class="kp-pts">= <b id="kpPts">0</b> pts</span></div>
@@ -261,11 +326,11 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
           <button onclick="kpPress('0')">0</button>
           <button class="kp-back" onclick="kpPress('back')">⌫</button>
         </div>
-        <button class="btn btn-accent kp-add" onclick="addKeypad()">Ajouter <span id="kpAddPts">0</span> pts</button>
+        <button class="btn btn-accent kp-add" onclick="addKeypad(this)">Ajouter <span id="kpAddPts">0</span> pts</button>
       </div>
 
       <div class="client-actions">
-        <button class="btn btn-ghost" onclick="doUndo()">↺ Annuler dernière action</button>
+        <button class="btn btn-ghost" onclick="doUndo(this)">↺ Annuler dernière action</button>
         <button class="btn btn-ghost" onclick="resetFid()">Carte suivante →</button>
       </div>
     </div>
@@ -330,6 +395,39 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
     <div class="res" id="resErr"><div class="res-ic ri-err"><svg class="ic" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><h2>Connexion impossible</h2><p>Vérifiez le Wi-Fi et réessayez.</p><button class="btn btn-accent" onclick="validateCode()">Réessayer</button><button class="btn btn-ghost" style="margin-top:10px" onclick="resetVal()">Annuler</button></div>
   </section>
 
+  <!-- ═══ ANTI-GASPILLAGE ═══ -->
+  <section class="panel" id="panel-ag">
+    <p class="ag-intro">🥖 Transformez vos invendus en ventes. Le panier créé s'affiche aussitôt sur la carte fidélité de vos clients.</p>
+    <div class="ag-form">
+      <div class="lbl">Type de panier</div>
+      <div class="chips" id="agChips">
+        <button class="chip on" onclick="agPick(this,'Panier surprise','🎁')">🎁 Surprise</button>
+        <button class="chip" onclick="agPick(this,'Panier viennoiseries','🥐')">🥐 Viennoiseries</button>
+        <button class="chip" onclick="agPick(this,'Panier pains','🥖')">🥖 Pains</button>
+        <button class="chip" onclick="agPick(this,'Panier sandwichs','🥪')">🥪 Sandwichs</button>
+        <button class="chip" onclick="agPick(this,'Panier pâtisseries','🍰')">🍰 Pâtisseries</button>
+      </div>
+      <div class="ag-row2" style="margin-top:6px">
+        <div><div class="lbl">Quantité</div><div class="stepper"><button onclick="agStep('qty',-1)">−</button><span id="agQty">1</span><button onclick="agStep('qty',1)">+</button></div></div>
+        <div><div class="lbl">Retrait avant</div>
+          <div class="chips sm" id="agTimes">
+            <button class="chip on" onclick="agTime(this,'18:00')">18:00</button>
+            <button class="chip" onclick="agTime(this,'18:30')">18:30</button>
+            <button class="chip" onclick="agTime(this,'19:00')">19:00</button>
+            <button class="chip" onclick="agTime(this,'19:30')">19:30</button>
+          </div>
+        </div>
+      </div>
+      <div class="ag-row2" style="margin-top:14px">
+        <div><div class="lbl">Prix réduit</div><div class="stepper"><button onclick="agStep('prix',-1)">−</button><span id="agPrix">3,50&nbsp;€</span><button onclick="agStep('prix',1)">+</button></div></div>
+        <div><div class="lbl">Prix d'origine</div><div class="stepper"><button onclick="agStep('orig',-1)">−</button><span id="agOrig">9,00&nbsp;€</span><button onclick="agStep('orig',1)">+</button></div></div>
+      </div>
+      <button class="btn btn-accent" style="margin-top:18px" id="agCreateBtn" onclick="agCreate(this)">+ Mettre le panier en ligne</button>
+    </div>
+    <div class="add-h">Paniers en ligne aujourd'hui</div>
+    <div id="agList"><div class="empty">Aucun panier en ligne pour le moment.</div></div>
+  </section>
+
   <!-- ═══ DASHBOARD ═══ -->
   <section class="panel" id="panel-dash">
     <div id="dashContent"><div class="spin"></div></div>
@@ -373,8 +471,8 @@ function api(action, extra, retry){
   });
 }
 function setSync(ok){ $('syncDot').classList.toggle('off',!ok); $('syncTxt').textContent = ok?'En direct':'Hors ligne'; }
-// désactive (→ opacité réduite) les boutons d'action client pendant un appel serveur
-function setBusy(on){ document.querySelectorAll('#fidClient .qbtn, #fidClient .btn').forEach(b=>{ b.disabled = on; }); }
+// animation de chargement : spinner sur le bouton cliqué (remplace l'ancien effet d'opacité)
+function setLoading(el,on){ if(el && el.classList) el.classList.toggle('is-loading',!!on); }
 
 /* ── TABS ── */
 window.switchTab = function(tab, el){
@@ -382,6 +480,7 @@ window.switchTab = function(tab, el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   el.classList.add('on'); $('panel-'+tab).classList.add('on');
   if(tab==='dash'){ loadDash(false); startPoll(); } else { stopPoll(); }
+  if(tab==='ag'){ agStRender(); agLoad(); }
   if(tab==='fid' && !currentCard) setTimeout(()=>$('manualId').focus(),50);
 };
 
@@ -403,25 +502,49 @@ window.doIdentify = function(forced){
   lastQuery = query;
   api('fid_identify', query, true).then(d=>{
     setSync(true);
-    if(d.status==='active'){ renderClient(d.client); showFid('fidClient'); }
+    if(d.status==='active'){ renderClient(d.client, d.rewards_pending); showFid('fidClient'); }
     else if(d.status==='new'){ currentCard = d.card_id; showFid('fidNew'); }
     else { currentCard = null; showFid('fidUnknown'); }
   }).catch(()=>{ setSync(false); showFid('fidError'); });
 };
 
-function renderClient(c){
+let currentPending = [];
+function renderClient(c, pending){
   currentCard = c.card_id;
   $('cAv').textContent = (c.prenom||'?').trim()[0].toUpperCase();
   $('cName').textContent = ((c.prenom||'')+' '+(c.nom||'')).trim() || 'Client';
   $('cLvl').textContent = c.niveau || 'Découverte';
+  // badge tier (par € dépensés)
+  const tb = $('cTier');
+  if(c.tier){ tb.style.display=''; tb.textContent = '◆ '+c.tier; tb.className = 'tier-badge tier-'+(c.tier_key||String(c.tier).toLowerCase()); }
+  else { tb.style.display='none'; }
   $('cSolde').textContent = c.points_solde;
   $('cStatut').textContent = c.points_statut;
   $('cTickets').textContent = c.tickets_mois;
   $('cMois').textContent = c.points_mois;
   const reste = (c.prochain_ticket!=null)? c.prochain_ticket : (100 - (c.points_mois%100));
   $('cBar').style.width = (100 - (reste/100*100)) + '%';
+  if(pending !== undefined) currentPending = pending || [];   // mis à jour seulement quand fourni (preserve après +points)
+  renderPending();
   kpStr=''; kpRender();
 }
+function renderPending(){
+  const el = $('cPend'), list = currentPending || [];
+  if(!list.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='';
+  el.innerHTML = '<div class="pend-h"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--gold)"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Cadeaux à remettre ('+list.length+')</div>'
+    + list.map(g => '<div class="gift-row"><div class="gn"><b>'+esc(g.libelle)+'</b><span>code '+esc(g.code)+' · '+esc(g.date)+'</span></div>'
+        + '<span class="gbadge">À remettre</span>'
+        + '<button class="btn btn-ok" onclick="validateGift(\''+g.code+'\',this)">Remettre</button></div>').join('');
+}
+window.validateGift = function(code, btn){
+  setLoading(btn,true);
+  api('use',{code:code}).then(()=>{
+    toast('Cadeau remis ✓', true);
+    currentPending = currentPending.filter(g => g.code !== code);   // retire de la liste, recharge l'affichage
+    renderPending();
+  }).catch(()=>{ toast('Hors ligne — réessayez'); setLoading(btn,false); });
+};
 
 let kpStr='';
 window.kpPress = function(c){
@@ -431,22 +554,22 @@ window.kpPress = function(c){
   kpRender();
 };
 function kpRender(){ $('kpAmount').textContent=kpStr||'0'; const p=Math.round((parseFloat(kpStr.replace(',','.'))||0)*10); $('kpPts').textContent=p; $('kpAddPts').textContent=p; }
-window.addKeypad = function(){ const m=parseFloat(kpStr.replace(',','.'))||0; if(m>0) pushPoints({montant:m}); };
+window.addKeypad = function(btn){ const m=parseFloat(kpStr.replace(',','.'))||0; if(m>0) pushPoints({montant:m}, btn); };
 
-function pushPoints(extra){
+function pushPoints(extra, btn){
   if(!currentCard) return;
-  setBusy(true);
+  setLoading(btn,true);
   api('fid_addpoints', Object.assign({card_id:currentCard, source:'kiosque'}, extra)).then(d=>{
     setSync(true);
     if(d.status==='ok'){
       toast('+'+d.points_delta+' points ✓');
       renderClient(d.client);
     } else { toast('Erreur : '+(d.message||d.status)); }
-  }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); }).then(()=>setBusy(false));
+  }).catch(()=>{ setSync(false); toast('Hors ligne — réessayez'); }).then(()=>setLoading(btn,false));
 }
-window.addQuick = function(p){ pushPoints({points:p}); };
+window.addQuick = function(p, btn){ pushPoints({points:p}, btn); };
 // (saisie du montant désormais via le pavé numérique → addKeypad)
-window.doUndo = function(){ if(!currentCard) return; setBusy(true); api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')).then(()=>setBusy(false)); };
+window.doUndo = function(btn){ if(!currentCard) return; setLoading(btn,true); api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')).then(()=>setLoading(btn,false)); };
 window.doActivate = function(){ if(!currentCard) return; api('fid_activate',{card_id:currentCard, prenom:$('nvPrenom').value.trim(), email:$('nvEmail').value.trim()}).then(d=>{ if(d.status==='ok'){ toast('Profil créé ✓'); doIdentify({card_id:currentCard}); } }).catch(()=>toast('Hors ligne')); };
 window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FAL-/i.test(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
 
@@ -461,13 +584,46 @@ window.vcPress = function(c){
 window.validateCode = function(){
   const v = $('codeInput').value.trim(); if(v.length!==6) return;
   currentCode = v;
-  const vb=$('valBtn'); if(vb) vb.disabled=true;
+  const vb=$('valBtn'); setLoading(vb,true);
   api('check',{code:v}, true).then(d=>{ setSync(true); valRes(d.status==='valid'?'resValid':d.status==='used'?'resUsed':'resInvalid'); if(d.status==='valid') $('valGain').textContent=d.gain||'Gain'; })
-    .catch(()=>{ setSync(false); valRes('resErr'); }).then(()=>{ if(vb) vb.disabled=false; });
+    .catch(()=>{ setSync(false); valRes('resErr'); }).then(()=>{ setLoading(vb,false); });
 };
-window.useCode = function(btn){ if(btn) btn.disabled=true; api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>{ toast('Hors ligne'); if(btn) btn.disabled=false; }); };
+window.useCode = function(btn){ setLoading(btn,true); api('use',{code:currentCode}).then(()=>{ toast('Gain validé ✓'); resetVal(); }).catch(()=>{ toast('Hors ligne'); setLoading(btn,false); }); };
 window.resetVal = function(){ $('valInput').style.display='block'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $('codeInput').value=''; };
 function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $(id).classList.add('show'); }
+
+/* ════ ANTI-GASPILLAGE ════ */
+let agSt = { libelle:'Panier surprise', emoji:'🎁', qty:1, prix:3.5, orig:9, retrait:'18:00' };
+window.agPick = function(el,lib,emo){ agSt.libelle=lib; agSt.emoji=emo; document.querySelectorAll('#agChips .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
+window.agTime = function(el,t){ agSt.retrait=t; document.querySelectorAll('#agTimes .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
+window.agStep = function(k,d){
+  if(k==='qty')      agSt.qty  = Math.max(1, agSt.qty + d);
+  else if(k==='prix')agSt.prix = Math.max(0, Math.round((agSt.prix + d*0.5)*100)/100);
+  else if(k==='orig')agSt.orig = Math.max(0, Math.round((agSt.orig + d*0.5)*100)/100);
+  agStRender();
+};
+function eur(n){ return (Number(n)||0).toFixed(2).replace('.',',')+' €'; }
+function agStRender(){ if($('agQty')){ $('agQty').textContent=agSt.qty; $('agPrix').innerHTML=eur(agSt.prix); $('agOrig').innerHTML=eur(agSt.orig); } }
+function agEmoji(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)return '🥐'; if(lib.indexOf('pain')>=0)return '🥖'; if(lib.indexOf('sandw')>=0)return '🥪'; if(lib.indexOf('atis')>=0)return '🍰'; return '🎁'; }
+window.agCreate = function(btn){
+  setLoading(btn,true);
+  api('ag_create',{libelle:agSt.libelle, qty:agSt.qty, prix_reduit:agSt.prix, prix_origine:agSt.orig, retrait_avant:agSt.retrait}).then(d=>{
+    if(d.status==='ok'){ toast('Panier en ligne ✓', true); agLoad(); } else toast('Erreur : '+(d.message||d.status));
+  }).catch(()=>toast('Hors ligne — réessayez')).then(()=>setLoading(btn,false));
+};
+function agLoad(){
+  api('ag_list',{}, true).then(d=>{
+    const list = d.paniers || [];
+    $('agList').innerHTML = list.length ? list.map(p =>
+      '<div class="ag-card"><div class="ag-emoji">'+agEmoji(p.libelle)+'</div>'
+      + '<div class="ag-meta"><div class="t">'+esc(p.libelle)+'<span class="ag-qty">×'+p.qty+'</span></div>'
+      + '<div class="s">'+(p.retrait_avant?('Retrait avant '+esc(p.retrait_avant)):'Toute la journée')+'</div></div>'
+      + '<div class="ag-price"><div class="pr">'+eur(p.prix_reduit)+'</div>'+(p.prix_origine?('<div class="or">'+eur(p.prix_origine)+'</div>'):'')+'</div>'
+      + '<button class="ag-del" onclick="agDelete(\''+p.id+'\',this)" title="Retirer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div>'
+    ).join('') : '<div class="empty">Aucun panier en ligne aujourd\'hui.</div>';
+  }).catch(()=>{ $('agList').innerHTML='<div class="empty">Connexion impossible — vérifiez le Wi-Fi.</div>'; });
+}
+window.agDelete = function(id, btn){ setLoading(btn,true); api('ag_delete',{id:id}).then(()=>{ toast('Panier retiré'); agLoad(); }).catch(()=>{ toast('Hors ligne'); setLoading(btn,false); }); };
 
 /* ════ DASHBOARD ════ */
 function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(document.visibilityState==='visible' && $('panel-dash').classList.contains('on')) loadDash(true); },POLL_MS); }
