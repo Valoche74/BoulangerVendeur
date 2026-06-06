@@ -40,39 +40,40 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
 /* ── HEADER ── */
-.hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(2,16,36,.72);backdrop-filter:blur(10px)}
+.hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 30px;border-bottom:1px solid var(--border);background:rgba(2,16,36,.72);backdrop-filter:blur(10px)}
 .hdr-l{display:flex;align-items:center;gap:11px}
-.hdr-mk{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;box-shadow:0 4px 14px rgba(45,125,255,.4)}
-.hdr-name{font-size:15px;font-weight:600}.hdr-sub{font-size:11px;color:var(--mut);margin-top:1px}
+.hdr-mk{width:48px;height:48px;border-radius:13px;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;box-shadow:0 4px 14px rgba(45,125,255,.4)}
+.hdr-name{font-size:21px;font-weight:700}.hdr-sub{font-size:13px;color:var(--mut);margin-top:2px}
 .sync{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:12px;font-weight:500;color:var(--dim)}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .sync-dot.off{background:var(--warn)}
 
 /* ── TABS (gros, tactile) ── */
 .tabs{position:relative;z-index:2;display:flex;gap:8px;padding:10px 14px;background:rgba(2,16,36,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-.tab{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
-.tab .ic{width:18px;height:18px}
+.tab{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:19px 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.tab .ic{width:23px;height:23px}
 @media(max-width:600px){.tabs{flex-wrap:wrap}.tab{flex:1 1 calc(50% - 4px)}}
 .tab.on{background:var(--accent-dim);color:#fff;border-color:rgba(45,125,255,.5)}
 
 /* ── PANELS ── */
 .wrap{position:relative;z-index:2;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.panel{display:none;max-width:960px;margin:0 auto;padding:22px 20px 48px}
+.panel{display:none;max-width:1200px;margin:0 auto;padding:30px 28px 64px}
+#panel-dash{max-width:1480px}
 .panel.on{display:block;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 
 /* ── boutons génériques ── */
-.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:18px;border:none;border-radius:15px;
-  font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s,filter .15s,background .15s}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:22px;border:none;border-radius:16px;
+  font-family:inherit;font-size:18px;font-weight:700;cursor:pointer;transition:transform .1s,filter .15s,background .15s}
 .btn:active{transform:scale(.98)}
 .btn-accent{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(45,125,255,.32)}
 .btn-accent:active{background:var(--accent-2)}
 .btn-ok{background:var(--ok);color:#04211A}
 .btn-ghost{background:transparent;border:1px solid var(--border-2);color:var(--dim)}
 .btn:disabled{opacity:.5}
-.fld{width:100%;padding:18px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:inherit;font-size:20px;font-weight:600;text-align:center;outline:none}
+.fld{width:100%;padding:22px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:inherit;font-size:22px;font-weight:600;text-align:center;outline:none}
 .fld:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
-.lbl{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
+.lbl{font-size:14px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:11px}
 
 /* ── FIDÉLITÉ — idle ── */
 .idle{text-align:center;padding:40px 16px;min-height:74vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -80,47 +81,50 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .idle-ic .ic{width:64px;height:64px;stroke-width:1.6}
 .idle-ic::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--accent);opacity:.0;animation:ring 2s ease-out infinite}
 @keyframes ring{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.15);opacity:0}}
-.idle h2{font-size:42px;font-weight:800;margin-bottom:14px}
-.idle p{font-size:20px;color:var(--dim);margin-bottom:36px}
+.idle h2{font-size:52px;font-weight:800;margin-bottom:16px}
+.idle p{font-size:24px;color:var(--dim);margin-bottom:44px}
+/* animation NFC (remplace l'icône phone) */
+.nfc-anim{width:clamp(220px,30vh,320px);margin:0 auto 30px}
+.nfc-anim svg{width:100%;height:auto;display:block}
 .manual{display:flex;gap:14px;max-width:700px;width:100%;margin:0 auto}
 .manual .fld{font-size:24px;text-align:left;padding:22px 20px}
 .manual .btn{width:auto;padding:22px 36px;font-size:19px}
 .idle-hint{font-size:15px;color:var(--mut);margin-top:24px}
 
 /* ── FIDÉLITÉ — client ── */
-.client-top{display:flex;align-items:center;gap:14px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:18px;margin-bottom:12px}
-.c-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+.client-top{display:flex;align-items:center;gap:18px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:20px;margin-bottom:14px}
+.c-av{width:66px;height:66px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-size:26px;font-weight:700;color:#fff;flex-shrink:0}
 .c-meta{flex:1;min-width:0}
-.c-name{font-size:20px;font-weight:700;line-height:1.1}
+.c-name{font-size:26px;font-weight:700;line-height:1.1}
 .c-lvl{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.3);border-radius:99px;padding:3px 10px}
 .c-solde{text-align:right;flex-shrink:0}
-.c-solde .v{font-size:34px;font-weight:800;line-height:1;color:var(--accent-2)}
+.c-solde .v{font-size:46px;font-weight:800;line-height:1;color:var(--accent-2)}
 .c-solde .l{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
 
 .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.mc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px;text-align:center}
-.mc .v{font-size:22px;font-weight:700}.mc .v small{font-size:13px;color:var(--mut);font-weight:600}
-.mc .l{font-size:10.5px;color:var(--dim);margin-top:4px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center}
+.mc .v{font-size:30px;font-weight:700}.mc .v small{font-size:15px;color:var(--mut);font-weight:600}
+.mc .l{font-size:13px;color:var(--dim);margin-top:5px}
 .mc .bar{height:5px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin-top:8px}
 .mc .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),#E2B25A);transition:width .5s}
 
-.add-h{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:6px 2px 11px}
+.add-h{font-size:15px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:10px 2px 14px}
 .quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
 @media(max-width:560px){.quick{grid-template-columns:repeat(3,1fr)}}
-.qbtn{padding:26px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:24px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
+.qbtn{padding:36px 6px;border:1px solid var(--border-2);border-radius:16px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:32px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
 .qbtn:active{transform:scale(.96);background:var(--accent-dim)}
 .qbtn:disabled{opacity:.45;cursor:default}
 /* pavé numérique tactile (saisie du montant sans clavier) */
 .keypad{margin-bottom:14px}
 .kp-display{display:flex;align-items:baseline;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.kp-display #kpAmount{font-size:38px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.kp-display #kpAmount{font-size:48px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
 .kp-display .eu{font-size:22px;color:var(--dim);font-weight:700}
 .kp-display .kp-pts{font-size:17px;color:var(--accent-2);font-weight:700;margin-left:6px}
 .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-.kp-grid button{padding:24px 0;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:28px;font-weight:700;cursor:pointer;transition:transform .1s,background .15s}
+.kp-grid button{padding:30px 0;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:36px;font-weight:700;cursor:pointer;transition:transform .1s,background .15s}
 .kp-grid button:active{transform:scale(.96);background:var(--accent-dim)}
 .kp-grid .kp-back{color:var(--bad)}
-.kp-add{font-size:18px;padding:20px}
+.kp-add{font-size:22px;padding:24px}
 .client-actions{display:flex;gap:10px;margin-top:16px}
 .client-actions .btn{flex:1}
 
@@ -135,10 +139,10 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .miniform .fld{font-size:16px;text-align:left}
 
 /* ── VALIDATION ── */
-#valInput{max-width:620px;margin:8vh auto 0}
-#valInput .lbl{font-size:16px}
-.v-input{font-size:48px;letter-spacing:.3em;font-weight:800;padding:24px}
-#valInput .btn{font-size:20px;padding:22px}
+#valInput{max-width:760px;margin:7vh auto 0}
+#valInput .lbl{font-size:19px}
+.v-input{font-size:64px;letter-spacing:.3em;font-weight:800;padding:30px}
+#valInput .btn{font-size:24px;padding:26px}
 .res{display:none;flex-direction:column;align-items:center;text-align:center;padding:14px 0}
 .res.show{display:flex;animation:fade .25s}
 .res-ic{width:74px;height:74px;border-radius:20px;display:grid;place-items:center;margin-bottom:16px}
@@ -176,6 +180,30 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .row .info{flex:1;min-width:0}.row .info b{font-size:14px;font-weight:600}.row .info span{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
 .empty{padding:26px;text-align:center;color:var(--mut);font-size:14px}
 .updated{font-size:11.5px;color:var(--mut);text-align:center;margin-top:14px}
+/* ── Dashboard v2 (Figma CRM UI) ── */
+.dash-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 18px}
+.dash-head .h{font-size:26px;font-weight:800}
+.dash-head .sub{font-size:14px;color:var(--mut);margin-top:4px}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+@media(max-width:980px){.kgrid{grid-template-columns:repeat(2,1fr)}}
+.kpi{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 22px;box-shadow:0 8px 26px rgba(0,0,0,.28)}
+.kpi .kl{font-size:13.5px;color:var(--dim);font-weight:600}
+.kpi .kv{font-size:40px;font-weight:800;line-height:1;margin:10px 0 8px;font-variant-numeric:tabular-nums}
+.kpi .kd{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:99px}
+.kpi .kd.up{color:var(--ok);background:var(--ok-dim)}.kpi .kd.down{color:var(--bad);background:var(--bad-dim)}.kpi .kd.flat{color:var(--dim);background:var(--surface-3)}
+.kpi .kspark{position:absolute;right:16px;top:18px;width:108px;height:40px;opacity:.95}
+.kpi .kspark svg{width:108px;height:40px;display:block}
+.dash2{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;margin-bottom:18px}
+@media(max-width:980px){.dash2{grid-template-columns:1fr}}
+.card2{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 8px 26px rgba(0,0,0,.28)}
+.card2 .c2h{font-size:17px;font-weight:700}
+.card2 .c2s{font-size:12.5px;color:var(--mut);margin:3px 0 16px}
+.chartwrap svg{width:100%;height:auto;display:block}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.donut-legend{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;width:100%}
+.dleg{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--dim)}
+.dleg i{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.dleg b{color:var(--text);margin-left:auto;font-variant-numeric:tabular-nums}
 
 /* ── TOAST ── */
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);display:flex;align-items:center;gap:10px;padding:15px 24px;border-radius:15px;background:var(--surface-3);border:1px solid var(--border-2);color:var(--text);font-size:16px;font-weight:700;box-shadow:0 12px 36px rgba(0,0,0,.5);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
@@ -208,34 +236,34 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .gift-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;margin-bottom:9px;
   background:rgba(245,208,122,.07);border:1px solid rgba(245,208,122,.26)}
 .gift-row .gn{flex:1;min-width:0}
-.gift-row .gn b{font-size:15px;font-weight:700;display:block}
+.gift-row .gn b{font-size:18px;font-weight:700;display:block}
 .gift-row .gn span{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums}
 .gbadge{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:5px 11px;border-radius:99px;white-space:nowrap;
   color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.4);box-shadow:0 0 12px rgba(245,208,122,.18)}
-.gift-row .btn{width:auto;padding:13px 18px;font-size:14px;flex-shrink:0}
+.gift-row .btn{width:auto;padding:16px 24px;font-size:16px;flex-shrink:0}
 
 /* ── ANTI-GASPI ── */
-.ag-intro{font-size:14px;color:var(--dim);margin:0 2px 16px;line-height:1.6}
-.ag-form{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:20px}
+.ag-intro{font-size:17px;color:var(--dim);margin:0 2px 20px;line-height:1.6}
+.ag-form{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:24px}
 .ag-form .lbl{margin-top:15px}.ag-form .lbl:first-child{margin-top:0}
 .ag-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.ag-card{display:flex;align-items:center;gap:13px;padding:14px 15px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:11px}
-.ag-emoji{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:24px;background:rgba(45,125,255,.14);border:1px solid var(--border-2);flex-shrink:0}
-.ag-meta{flex:1;min-width:0}.ag-meta .t{font-size:16px;font-weight:700}.ag-meta .s{font-size:12.5px;color:var(--dim);margin-top:3px}
+.ag-card{display:flex;align-items:center;gap:16px;padding:18px 18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px}
+.ag-emoji{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;font-size:28px;background:rgba(45,125,255,.14);border:1px solid var(--border-2);flex-shrink:0}
+.ag-meta{flex:1;min-width:0}.ag-meta .t{font-size:19px;font-weight:700}.ag-meta .s{font-size:14px;color:var(--dim);margin-top:4px}
 .ag-price{text-align:right;flex-shrink:0}
-.ag-price .pr{font-size:20px;font-weight:800;color:var(--ok)}.ag-price .or{font-size:12px;color:var(--mut);text-decoration:line-through;margin-top:1px}
+.ag-price .pr{font-size:25px;font-weight:800;color:var(--ok)}.ag-price .or{font-size:13px;color:var(--mut);text-decoration:line-through;margin-top:1px}
 .ag-qty{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#9FE8FF;background:rgba(159,232,255,.12);border:1px solid rgba(159,232,255,.4);border-radius:99px;padding:4px 10px;box-shadow:0 0 12px rgba(159,232,255,.16);margin-left:8px}
-.ag-del{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--bad-dim);border:1px solid rgba(251,113,133,.3);color:var(--bad);cursor:pointer;flex-shrink:0}
-.ag-del svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.ag-del{width:54px;height:54px;border-radius:13px;display:grid;place-items:center;background:var(--bad-dim);border:1px solid rgba(251,113,133,.3);color:var(--bad);cursor:pointer;flex-shrink:0}
+.ag-del svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
 /* chips + steppers (saisie 100% tactile, sans clavier) */
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{padding:12px 15px;border:1px solid var(--border-2);border-radius:12px;background:var(--surface-2);color:var(--dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.chip{padding:16px 21px;border:1px solid var(--border-2);border-radius:13px;background:var(--surface-2);color:var(--dim);font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .chip.on{background:var(--accent-dim);color:#fff;border-color:var(--accent)}
 .chips.sm{gap:6px}.chips.sm .chip{padding:11px 12px}
 .stepper{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:6px}
-.stepper button{width:46px;height:46px;border:none;border-radius:10px;background:var(--surface-3);color:var(--text);font-size:24px;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .12s}
+.stepper button{width:58px;height:58px;border:none;border-radius:12px;background:var(--surface-3);color:var(--text);font-size:30px;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .12s}
 .stepper button:active{background:var(--accent-dim)}
-.stepper span{flex:1;text-align:center;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.stepper span{flex:1;text-align:center;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
 </style>
@@ -276,7 +304,50 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 
     <!-- idle -->
     <div id="fidIdle" class="idle">
-      <div class="idle-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M19 7a5 5 0 0 1 0 10"/><path d="M22 5a8 8 0 0 1 0 14"/></svg></div>
+      <div class="nfc-anim">
+        <svg viewBox="0 0 160 160" role="img" aria-label="Scan NFC">
+          <defs>
+            <linearGradient id="nfcCardFill" x1="48" y1="28" x2="112" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#2b3040"/><stop offset="1" stop-color="#171a23"/></linearGradient>
+            <linearGradient id="nfcReaderFill" x1="32" y1="92" x2="128" y2="132" gradientUnits="userSpaceOnUse"><stop stop-color="#0a2150"/><stop offset="1" stop-color="#06183a"/></linearGradient>
+            <linearGradient id="nfcViolet" x1="52" y1="42" x2="112" y2="114" gradientUnits="userSpaceOnUse"><stop stop-color="#9fc0ff"/><stop offset=".52" stop-color="#5AA0FF"/><stop offset="1" stop-color="#2D7DFF"/></linearGradient>
+            <filter id="nfcShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#000" flood-opacity=".36"/></filter>
+          </defs>
+          <style>
+            .nfc-card{animation:nfcTap 2.15s ease-in-out infinite;transform-origin:80px 56px}
+            .nfc-rl{animation:nfcLight 2.15s ease-in-out infinite}
+            .nfc-wave{opacity:0;animation:nfcWave 2.15s ease-out infinite;transform-origin:80px 94px}
+            .nfc-wave:nth-child(2){animation-delay:.15s}.nfc-wave:nth-child(3){animation-delay:.3s}
+            .nfc-pr{animation:nfcRing 2.15s ease-out infinite;transform-origin:80px 104px}
+            @keyframes nfcTap{0%,100%{transform:translateY(-12px)}44%{transform:translateY(6px)}58%{transform:translateY(2px)}}
+            @keyframes nfcLight{0%,32%,100%{opacity:.3}48%,64%{opacity:1;filter:drop-shadow(0 0 8px rgba(90,160,255,.95))}}
+            @keyframes nfcWave{0%,34%{opacity:0;transform:scale(.9)}48%{opacity:.95}86%{opacity:0;transform:scale(1.16)}100%{opacity:0}}
+            @keyframes nfcRing{0%,36%{opacity:0;transform:scale(.72)}54%{opacity:.42}100%{opacity:0;transform:scale(1.2)}}
+            @media(prefers-reduced-motion:reduce){.nfc-card,.nfc-rl,.nfc-wave,.nfc-pr{animation:none}.nfc-wave{opacity:.78}.nfc-rl{opacity:1}.nfc-pr{opacity:.22}}
+          </style>
+          <g filter="url(#nfcShadow)">
+            <ellipse class="nfc-pr" cx="80" cy="104" rx="50" ry="22" fill="none" stroke="#5AA0FF" stroke-width="2"/>
+            <g fill="none" stroke="url(#nfcViolet)" stroke-width="5" stroke-linecap="round">
+              <path class="nfc-wave" d="M66 90c7-6 21-6 28 0"/>
+              <path class="nfc-wave" d="M57 82c12-11 34-11 46 0"/>
+              <path class="nfc-wave" d="M48 74c17-17 47-17 64 0"/>
+            </g>
+            <g class="nfc-card">
+              <rect x="46" y="30" width="68" height="46" rx="11" fill="url(#nfcCardFill)" stroke="#3a4052" stroke-width="1.5"/>
+              <path d="M58 43h28" stroke="#5AA0FF" stroke-width="4" stroke-linecap="round"/>
+              <path d="M58 56h44" stroke="#fff" stroke-opacity=".13" stroke-width="3" stroke-linecap="round"/>
+              <path d="M58 65h26" stroke="#fff" stroke-opacity=".1" stroke-width="3" stroke-linecap="round"/>
+              <g fill="none" stroke="#9fc0ff" stroke-width="3" stroke-linecap="round"><path d="M95 48c4 4 4 10 0 14"/><path d="M102 42c8 8 8 20 0 28" opacity=".62"/></g>
+            </g>
+            <g>
+              <rect x="30" y="94" width="100" height="42" rx="16" fill="url(#nfcReaderFill)" stroke="#0f2d68" stroke-width="1.5"/>
+              <rect x="52" y="105" width="56" height="15" rx="7.5" fill="#020b1c" opacity=".72"/>
+              <path d="M65 113h30" stroke="#5AA0FF" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+              <circle class="nfc-rl" cx="113" cy="113" r="5.5" fill="#5AA0FF"/>
+              <circle cx="113" cy="113" r="2" fill="#fff"/>
+            </g>
+          </g>
+        </svg>
+      </div>
       <h2>Scannez une carte fidélité</h2>
       <p>Approchez la carte du lecteur, ou saisissez l'identifiant.</p>
       <div class="manual">
@@ -411,10 +482,10 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
         <div><div class="lbl">Quantité</div><div class="stepper"><button onclick="agStep('qty',-1)">−</button><span id="agQty">1</span><button onclick="agStep('qty',1)">+</button></div></div>
         <div><div class="lbl">Retrait avant</div>
           <div class="chips sm" id="agTimes">
-            <button class="chip on" onclick="agTime(this,'18:00')">18:00</button>
-            <button class="chip" onclick="agTime(this,'18:30')">18:30</button>
-            <button class="chip" onclick="agTime(this,'19:00')">19:00</button>
-            <button class="chip" onclick="agTime(this,'19:30')">19:30</button>
+            <button class="chip on" onclick="agTime(this,'18h00')">18h00</button>
+            <button class="chip" onclick="agTime(this,'18h30')">18h30</button>
+            <button class="chip" onclick="agTime(this,'19h00')">19h00</button>
+            <button class="chip" onclick="agTime(this,'19h30')">19h30</button>
           </div>
         </div>
       </div>
@@ -593,7 +664,7 @@ window.resetVal = function(){ $('valInput').style.display='block'; ['resValid','
 function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $(id).classList.add('show'); }
 
 /* ════ ANTI-GASPILLAGE ════ */
-let agSt = { libelle:'Panier surprise', emoji:'🎁', qty:1, prix:3.5, orig:9, retrait:'18:00' };
+let agSt = { libelle:'Panier surprise', emoji:'🎁', qty:1, prix:3.5, orig:9, retrait:'18h00' };
 window.agPick = function(el,lib,emo){ agSt.libelle=lib; agSt.emoji=emo; document.querySelectorAll('#agChips .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
 window.agTime = function(el,t){ agSt.retrait=t; document.querySelectorAll('#agTimes .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
 window.agStep = function(k,d){
@@ -608,7 +679,7 @@ function agEmoji(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)r
 window.agCreate = function(btn){
   setLoading(btn,true);
   api('ag_create',{libelle:agSt.libelle, qty:agSt.qty, prix_reduit:agSt.prix, prix_origine:agSt.orig, retrait_avant:agSt.retrait}).then(d=>{
-    if(d.status==='ok'){ toast('Panier en ligne ✓', true); agLoad(); } else toast('Erreur : '+(d.message||d.status));
+    if(d.status==='ok'){ toast('Panier en ligne ✓'+(d.notified?' · '+d.notified+' client'+(d.notified>1?'s':'')+' notifié'+(d.notified>1?'s':''):''), true); agLoad(); } else toast('Erreur : '+(d.message||d.status));
   }).catch(()=>toast('Hors ligne — réessayez')).then(()=>setLoading(btn,false));
 };
 function agLoad(){
@@ -630,25 +701,62 @@ function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(document.visibi
 function stopPoll(){ if(pollTimer){clearInterval(pollTimer);pollTimer=null;} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && $('panel-dash').classList.contains('on')){ loadDash(true); startPoll(); } else stopPoll(); });
 
+/* ── mini-graphes SVG (dashboard, inspiré Figma CRM UI Charts) ── */
+function dSpark(vals,color){
+  const w=108,h=40; vals=(vals&&vals.length>1)?vals:[0,0];
+  const mx=Math.max.apply(null,vals), mn=Math.min.apply(null,vals), rng=(mx-mn)||1;
+  const pts=vals.map((v,i)=>{ const x=i/(vals.length-1)*w; const y=h-4-((v-mn)/rng)*(h-8); return x.toFixed(1)+' '+y.toFixed(1); });
+  const line='M'+pts.join(' L'); const id='sp'+Math.random().toString(36).slice(2,7);
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".4"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs><path d="'+line+' L'+w+' '+h+' L0 '+h+' Z" fill="url(#'+id+')"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+function dKpi(label,val,spark,delta){
+  let d='';
+  if(delta!=null){ const cls=delta>0?'up':delta<0?'down':'flat'; const ar=delta>0?'▲':delta<0?'▼':'•'; d='<div class="kd '+cls+'">'+ar+' '+Math.abs(delta)+'% vs hier</div>'; }
+  return '<div class="kpi">'+(spark?'<div class="kspark">'+spark+'</div>':'')+'<div class="kl">'+label+'</div><div class="kv">'+val+'</div>'+d+'</div>';
+}
+function dArea(serie){
+  const W=620,H=210,L=12,R=12,T=16,B=28, iw=W-L-R, ih=H-T-B;
+  const mx=Math.max(1,Math.max.apply(null,serie.map(x=>x.passages)));
+  const X=i=>L+(serie.length>1?i/(serie.length-1)*iw:iw/2), Y=v=>T+ih-(v/mx)*ih;
+  const line=serie.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x.passages).toFixed(1)).join(' ');
+  const grid=[0,.25,.5,.75,1].map(f=>{const y=(T+ih-f*ih).toFixed(1);return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="rgba(125,160,202,.12)"/>';}).join('');
+  const dots=serie.map((x,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(x.passages).toFixed(1)+'" r="3.6" fill="#5AA0FF"/>').join('');
+  const labs=serie.map((x,i)=>'<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" fill="#5E83B0" font-size="12" text-anchor="middle">'+x.jour+'</text>').join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'"><defs><linearGradient id="dAreaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D7DFF" stop-opacity=".38"/><stop offset="1" stop-color="#2D7DFF" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+line+' L'+(W-R)+' '+(T+ih)+' L'+L+' '+(T+ih)+' Z" fill="url(#dAreaG)"/><path d="'+line+'" fill="none" stroke="#5AA0FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+dots+labs+'</svg>';
+}
+function dArc(cx,cy,R,r,a1,a2,color){ const Xp=(a,rad)=>cx+rad*Math.cos(a), Yp=(a,rad)=>cy+rad*Math.sin(a), lg=(a2-a1)>Math.PI?1:0; return '<path d="M'+Xp(a1,R).toFixed(2)+' '+Yp(a1,R).toFixed(2)+' A'+R+' '+R+' 0 '+lg+' 1 '+Xp(a2,R).toFixed(2)+' '+Yp(a2,R).toFixed(2)+' L'+Xp(a2,r).toFixed(2)+' '+Yp(a2,r).toFixed(2)+' A'+r+' '+r+' 0 '+lg+' 0 '+Xp(a1,r).toFixed(2)+' '+Yp(a1,r).toFixed(2)+' Z" fill="'+color+'"/>'; }
+function dDonut(tiers){
+  const data=[['Bronze',tiers.bronze||0,'#E6A86B'],['Argent',tiers.argent||0,'#D6E2EF'],['Or',tiers.or||0,'#F5D07A'],['Platine',tiers.platine||0,'#9FE8FF']];
+  const total=data.reduce((s,x)=>s+x[1],0); let a=-Math.PI/2, segs='';
+  if(total>0){ data.forEach(x=>{ if(x[1]>0){ let a2=a+(x[1]/total)*2*Math.PI; if(x[1]===total)a2=a+2*Math.PI-0.001; segs+=dArc(70,70,58,38,a,a2,x[2]); a=a2; } }); }
+  else segs='<circle cx="70" cy="70" r="48" fill="none" stroke="var(--surface-3)" stroke-width="20"/>';
+  const legend=data.map(x=>'<div class="dleg"><i style="background:'+x[2]+'"></i>'+x[0]+'<b>'+x[1]+'</b></div>').join('');
+  return '<div class="donut-wrap"><svg viewBox="0 0 140 140" width="160" height="160">'+segs+'<text x="70" y="66" text-anchor="middle" fill="#EAF4FF" font-size="30" font-weight="800">'+total+'</text><text x="70" y="86" text-anchor="middle" fill="#5E83B0" font-size="12">clients</text></svg><div class="donut-legend">'+legend+'</div></div>';
+}
 function loadDash(silent){
   if(!silent) $('dashContent').innerHTML='<div class="spin"></div>';
   api('fid_dashboard',{}, true).then(d=>{
     setSync(true);
-    const s=d.stats||{clients:0,passages_aujourdhui:0,points_aujourdhui:0,tickets_mois:0};
-    const rec=d.recents||[];
+    const s=d.stats||{}, serie=d.serie7||[], tiers=d.tiers||{}, rec=d.recents||[];
+    const pa=serie.map(x=>x.passages), po=serie.map(x=>x.points);
+    const tdy=pa.length?pa[pa.length-1]:0, prv=pa.length>1?pa[pa.length-2]:0;
+    const dP = prv? Math.round((tdy-prv)/prv*100) : (tdy?100:0);
+    const tdyP=po.length?po[po.length-1]:0, prvP=po.length>1?po[po.length-2]:0;
+    const dPts = prvP? Math.round((tdyP-prvP)/prvP*100) : (tdyP?100:0);
     $('dashContent').innerHTML =
-      '<div class="vu-hero"><div class="t">Aujourd\'hui</div><div class="big">'+s.passages_aujourdhui+' passages</div><div class="sub">'+s.points_aujourdhui+' points distribués aujourd\'hui</div></div>'
-      +'<div class="vu-grid">'
-      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="l">Clients fidélité</div><div class="v">'+s.clients+'</div></div>'
-      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 0-16 0"/><path d="M2 12h3M19 12h3M12 2v3"/></svg></div><div class="l">Passages (jour)</div><div class="v">'+s.passages_aujourdhui+'</div></div>'
-      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 12h6"/></svg></div><div class="l">Points (jour)</div><div class="v">'+s.points_aujourdhui+'</div></div>'
-      +'<div class="vu-card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 8h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M9 8v12"/></svg></div><div class="l">Tickets ce mois</div><div class="v">'+s.tickets_mois+'</div></div>'
+      '<div class="dash-head"><div><div class="h">Tableau de bord</div><div class="sub">'+(s.clients||0)+' clients fidélité · '+(s.passages_aujourdhui||0)+' passages aujourd\'hui</div></div></div>'
+      +'<div class="kgrid">'
+      + dKpi('Passages (jour)', (s.passages_aujourdhui||0), dSpark(pa,'#5AA0FF'), dP)
+      + dKpi('Points distribués', (s.points_aujourdhui||0), dSpark(po,'#34D399'), dPts)
+      + dKpi('Clients fidélité', (s.clients||0), '', null)
+      + dKpi('Paniers anti-gaspi', (s.paniers_actifs||0), '', null)
+      +'</div>'
+      +'<div class="dash2">'
+      +'<div class="card2"><div class="c2h">Activité — 7 derniers jours</div><div class="c2s">Passages par jour</div><div class="chartwrap">'+dArea(serie)+'</div></div>'
+      +'<div class="card2"><div class="c2h">Répartition clients</div><div class="c2s">Par tier (€ cumulés)</div>'+dDonut(tiers)+'</div>'
       +'</div>'
       +'<div class="sec">Dernières transactions</div>'
-      +'<div class="block">'+ (rec.length? rec.map(r=>{
-          const neg = r.points<0;
-          return '<div class="row"><div class="info"><b>'+esc(r.card_id)+'</b><span>'+esc(r.type)+' · '+esc(r.datetime)+'</span></div><div class="pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.points+'</div></div>';
-        }).join('') : '<div class="empty">Aucune transaction pour le moment</div>')
+      +'<div class="block">'+ (rec.length? rec.map(r=>{ const neg=r.points<0; return '<div class="row"><div class="info"><b>'+esc(r.card_id)+'</b><span>'+esc(r.type)+' · '+esc(r.datetime)+'</span></div><div class="pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.points+'</div></div>'; }).join('') : '<div class="empty">Aucune transaction pour le moment</div>')
       +'</div>'
       +'<div class="updated" id="updated">Mis à jour à l\'instant</div>';
     lastFetch=Date.now(); startTick();
