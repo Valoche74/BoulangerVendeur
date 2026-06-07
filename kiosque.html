@@ -519,6 +519,8 @@ const params = new URLSearchParams(location.search);
 const commerce = params.get('commerce') || 'Falman';
 document.getElementById('hdrName').textContent = commerce;
 document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpperCase();
+/* Accent multi-commerce (?type=) — bleu par défaut */
+(function(){ var T={fleuriste:'#C8568E',pizzeria:'#C8442E',vape:'#8A7AF0',restaurant:'#B85A68',primeur:'#E0892E'}; var ty=(params.get('type')||'').toLowerCase(); if(T[ty]){ var hx=function(h,a){h=h.replace('#','');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}; var r=document.documentElement.style; r.setProperty('--accent',T[ty]); r.setProperty('--accent-2',T[ty]); r.setProperty('--accent-dim',hx(T[ty],.18)); } })();
 
 let currentCard = null;     // card_id du client identifié
 let lastQuery = null;       // dernière requête identify {card_id} ou {uid} (pour réessayer)
