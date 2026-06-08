@@ -230,6 +230,16 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .tier-or{color:#F5D07A;background:rgba(245,208,122,.14);border-color:rgba(245,208,122,.5)}
 .tier-platine{color:#9FE8FF;background:rgba(159,232,255,.13);border-color:rgba(159,232,255,.5);box-shadow:0 0 14px rgba(159,232,255,.25)}
 
+/* ── Bascule horizontale Points / Cadeaux (swipe) ── */
+.cnav{display:flex;gap:10px;margin:4px 0 14px}
+.cnav-b{flex:1;padding:15px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--dim);font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.cnav-b.on{background:var(--accent-dim);color:#fff;border-color:var(--accent)}
+.cnav-b span{display:inline-block;min-width:24px;margin-left:8px;padding:2px 8px;border-radius:99px;background:var(--gold);color:#1a1a14;font-size:13px}
+.cnav-b span:empty{display:none}
+.cwipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none}
+.cwipe::-webkit-scrollbar{display:none}
+.cslide{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+
 /* ── Cadeaux EN ATTENTE (au scan) — pills néon ── */
 .pend{margin:2px 0 16px}
 .pend-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin:0 2px 10px}
@@ -371,9 +381,13 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
         <div class="mc"><div class="v" id="cMois">0</div><div class="l">Points ce mois</div><div class="bar"><i id="cBar" style="width:0%"></i></div></div>
       </div>
 
-      <!-- cadeaux en attente (à valider directement au scan) -->
-      <div class="pend" id="cPend" style="display:none"></div>
-
+      <!-- bascule Points / Cadeaux (swipe horizontal) -->
+      <div class="cnav">
+        <button class="cnav-b on" id="nbPoints" onclick="cswitch('points')">➕ Points</button>
+        <button class="cnav-b" id="nbGifts" onclick="cswitch('gifts')">🎁 Cadeaux à remettre<span id="nbGiftN"></span></button>
+      </div>
+      <div class="cwipe" id="cwipe">
+       <section class="cslide" id="slPoints">
       <div class="add-h">Ajouter des points</div>
       <div class="quick">
         <button class="qbtn" onclick="addQuick(30,this)">+30</button>
@@ -399,6 +413,11 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
           <button class="kp-back" onclick="kpPress('back')">⌫</button>
         </div>
         <button class="btn btn-accent kp-add" onclick="addKeypad(this)">Ajouter <span id="kpAddPts">0</span> pts</button>
+      </div>
+       </section>
+       <section class="cslide" id="slGifts">
+         <div class="pend" id="cPend"></div>
+       </section>
       </div>
 
       <div class="client-actions">
@@ -521,6 +540,7 @@ document.getElementById('hdrName').textContent = commerce;
 document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpperCase();
 /* Accent multi-commerce (?type=) — bleu par défaut */
 (function(){ var T={fleuriste:'#C8568E',pizzeria:'#C8442E',vape:'#8A7AF0',restaurant:'#B85A68',primeur:'#E0892E'}; var ty=(params.get('type')||'').toLowerCase(); if(T[ty]){ var hx=function(h,a){h=h.replace('#','');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}; var r=document.documentElement.style; r.setProperty('--accent',T[ty]); r.setProperty('--accent-2',T[ty]); r.setProperty('--accent-dim',hx(T[ty],.18)); } })();
+const CT = (params.get('type')||'boulangerie').toLowerCase();   // commerce courant (anti-gaspi par type)
 
 let currentCard = null;     // card_id du client identifié
 let lastQuery = null;       // dernière requête identify {card_id} ou {uid} (pour réessayer)
@@ -600,14 +620,19 @@ function renderClient(c, pending){
   $('cBar').style.width = (100 - (reste/100*100)) + '%';
   if(pending !== undefined) currentPending = pending || [];   // mis à jour seulement quand fourni (preserve après +points)
   renderPending();
+  var cw=$('cwipe'); if(cw) cw.scrollLeft=0; var pp=$('nbPoints'),gg=$('nbGifts'); if(pp)pp.classList.add('on'); if(gg)gg.classList.remove('on');
   kpStr=''; kpRender();
 }
+window.cswitch = function(w){
+  var g = w==='gifts', a=$('nbPoints'), b=$('nbGifts'), cw=$('cwipe');
+  if(a) a.classList.toggle('on',!g); if(b) b.classList.toggle('on',g);
+  if(cw) cw.scrollTo({left: g? cw.clientWidth : 0, behavior:'smooth'});
+};
 function renderPending(){
-  const el = $('cPend'), list = currentPending || [];
-  if(!list.length){ el.style.display='none'; el.innerHTML=''; return; }
-  el.style.display='';
-  el.innerHTML = '<div class="pend-h"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--gold)"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Cadeaux à remettre ('+list.length+')</div>'
-    + list.map(g => '<div class="gift-row"><div class="gn"><b>'+esc(g.libelle)+'</b><span>code '+esc(g.code)+' · '+esc(g.date)+'</span></div>'
+  const el = $('cPend'), list = currentPending || [], n = list.length;
+  var nb=$('nbGiftN'); if(nb) nb.textContent = n ? String(n) : '';
+  if(!n){ el.innerHTML = '<div class="empty">Aucun cadeau à remettre.</div>'; return; }
+  el.innerHTML = list.map(g => '<div class="gift-row"><div class="gn"><b>'+esc(g.libelle)+'</b><span>code '+esc(g.code)+' · '+esc(g.date)+'</span></div>'
         + '<span class="gbadge">À remettre</span>'
         + '<button class="btn btn-ok" onclick="validateGift(\''+g.code+'\',this)">Remettre</button></div>').join('');
 }
@@ -668,6 +693,21 @@ function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','
 
 /* ════ ANTI-GASPILLAGE ════ */
 let agSt = { libelle:'Panier surprise', emoji:'🎁', qty:1, prix:3.5, orig:9, retrait:'18h00' };
+// Catégories de paniers anti-gaspi PAR commerce (?type=)
+const AG_CATS = {
+  boulangerie:[['Surprise','🎁'],['Viennoiseries','🥐'],['Pains','🥖'],['Sandwichs','🥪'],['Pâtisseries','🍰']],
+  fleuriste:[['Surprise','🎁'],['Bouquets','💐'],['Fleurs','🌷'],['Plantes','🪴'],['Compositions','🎀']],
+  pizzeria:[['Surprise','🎁'],['Pizzas','🍕'],['Parts','🍕'],['Focaccia','🥖'],['Desserts','🍰']],
+  restaurant:[['Surprise','🎁'],['Plats du jour','🍽️'],['Entrées','🥗'],['Desserts','🍰'],['Formules','🍴']],
+  primeur:[['Surprise','🎁'],['Fruits','🍎'],['Légumes','🥕'],['Paniers','🧺'],['Herbes','🌿']],
+  vape:[['Promo flash','⚡'],['Fin de série','🏷️'],['E-liquides','🧪'],['Accessoires','🔩'],['Coils','🔋']]
+};
+function agRenderChips(){
+  var cats = AG_CATS[CT] || AG_CATS.boulangerie, box = $('agChips'); if(!box) return;
+  box.innerHTML = cats.map(function(c,i){ return '<button class="chip'+(i?'':' on')+'" onclick="agPick(this,\'Panier '+c[0].toLowerCase()+'\',\''+c[1]+'\')">'+c[1]+' '+c[0]+'</button>'; }).join('');
+  agSt.libelle = 'Panier '+cats[0][0].toLowerCase(); agSt.emoji = cats[0][1];
+}
+agRenderChips();
 window.agPick = function(el,lib,emo){ agSt.libelle=lib; agSt.emoji=emo; document.querySelectorAll('#agChips .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
 window.agTime = function(el,t){ agSt.retrait=t; document.querySelectorAll('#agTimes .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
 window.agStep = function(k,d){
@@ -678,7 +718,15 @@ window.agStep = function(k,d){
 };
 function eur(n){ return (Number(n)||0).toFixed(2).replace('.',',')+' €'; }
 function agStRender(){ if($('agQty')){ $('agQty').textContent=agSt.qty; $('agPrix').innerHTML=eur(agSt.prix); $('agOrig').innerHTML=eur(agSt.orig); } }
-function agEmoji(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)return '🥐'; if(lib.indexOf('pain')>=0)return '🥖'; if(lib.indexOf('sandw')>=0)return '🥪'; if(lib.indexOf('atis')>=0)return '🍰'; return '🎁'; }
+function agEmoji(lib){ lib=(lib||'').toLowerCase();
+  if(lib.indexOf('vienn')>=0)return '🥐'; if(lib.indexOf('focac')>=0||lib.indexOf('pain')>=0)return '🥖'; if(lib.indexOf('sandw')>=0)return '🥪';
+  if(lib.indexOf('atis')>=0||lib.indexOf('dessert')>=0)return '🍰';
+  if(lib.indexOf('bouquet')>=0||lib.indexOf('composit')>=0)return '💐'; if(lib.indexOf('fleur')>=0)return '🌷'; if(lib.indexOf('plante')>=0)return '🪴';
+  if(lib.indexOf('pizza')>=0||lib.indexOf('part')>=0)return '🍕';
+  if(lib.indexOf('plat')>=0||lib.indexOf('formule')>=0)return '🍽️'; if(lib.indexOf('entr')>=0)return '🥗';
+  if(lib.indexOf('fruit')>=0)return '🍎'; if(lib.indexOf('gum')>=0)return '🥕'; if(lib.indexOf('herbe')>=0)return '🌿'; if(lib.indexOf('panier')>=0)return '🧺';
+  if(lib.indexOf('liquid')>=0)return '🧪'; if(lib.indexOf('coil')>=0||lib.indexOf('rie')>=0||lib.indexOf('accessoir')>=0)return '🔩'; if(lib.indexOf('flash')>=0||lib.indexOf('promo')>=0)return '⚡';
+  return '🎁'; }
 function agImg(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)return 'viennoiserie.png'; if(lib.indexOf('pain')>=0)return 'baguette.png'; if(lib.indexOf('sandw')>=0)return 'sandwich.png'; if(lib.indexOf('atis')>=0)return 'patisserie.png'; return 'gateau.png'; }
 window.agCreate = function(btn){
   setLoading(btn,true);
@@ -690,7 +738,7 @@ function agLoad(){
   api('ag_list',{}, true).then(d=>{
     const list = d.paniers || [];
     $('agList').innerHTML = list.length ? list.map(p =>
-      '<div class="ag-card"><div class="ag-emoji" style="background-image:url(assets/'+agImg(p.libelle)+')"></div>'
+      '<div class="ag-card"><div class="ag-emoji">'+agEmoji(p.libelle)+'</div>'
       + '<div class="ag-meta"><div class="t">'+esc(p.libelle)+'<span class="ag-qty">×'+p.qty+'</span></div>'
       + '<div class="s">'+(p.retrait_avant?('Retrait avant '+esc(p.retrait_avant)):'Toute la journée')+'</div></div>'
       + '<div class="ag-price"><div class="pr">'+eur(p.prix_reduit)+'</div>'+(p.prix_origine?('<div class="or">'+eur(p.prix_origine)+'</div>'):'')+'</div>'
