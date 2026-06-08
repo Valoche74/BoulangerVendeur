@@ -275,6 +275,27 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .stepper button{width:58px;height:58px;border:none;border-radius:12px;background:var(--surface-3);color:var(--text);font-size:30px;font-weight:700;cursor:pointer;flex-shrink:0;transition:background .12s}
 .stepper button:active{background:var(--accent-dim)}
 .stepper span{flex:1;text-align:center;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+/* anti-gaspi v2 : composeur de panier */
+.agp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:560px){.agp-grid{grid-template-columns:repeat(2,1fr)}}
+.agp{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s,background .12s}
+.agp:active{transform:scale(.97);background:var(--accent-dim)}
+.agp .agp-pr{font-size:13px;color:var(--accent-2);font-weight:700}
+.ag-basket{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 14px;min-height:54px}
+.ag-basket .empty{padding:16px;text-align:center}
+.agb-line{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.agb-line:last-child{border-bottom:none}
+.agb-line .n{flex:1;font-size:15px;font-weight:600;min-width:0}
+.agb-line .lp{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+.agb-line .qc{display:flex;align-items:center;gap:10px}
+.agb-line .qc button{width:40px;height:40px;border:none;border-radius:10px;background:var(--surface-3);color:var(--text);font-size:22px;font-weight:700;cursor:pointer}
+.agb-line .qc button:active{background:var(--accent-dim)}
+.agb-line .qc b{min-width:20px;text-align:center;font-size:17px}
+.ag-tot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:13px 15px;border-radius:13px;background:var(--surface-2);font-size:15px;color:var(--dim)}
+.ag-tot b{font-size:23px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.ag-tot.final{background:var(--accent-dim);border:1px solid var(--accent)}
+.ag-tot.final b{color:#fff}
+.agsave{color:var(--ok);font-weight:800;font-size:13px;margin-left:4px}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
 </style>
@@ -490,16 +511,23 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
   <section class="panel" id="panel-ag">
     <p class="ag-intro">🥖 Transformez vos invendus en ventes. Le panier créé s'affiche aussitôt sur la carte fidélité de vos clients.</p>
     <div class="ag-form">
-      <div class="lbl">Type de panier</div>
-      <div class="chips" id="agChips">
-        <button class="chip on" onclick="agPick(this,'Panier surprise','🎁')"><img src="assets/gateau.png" alt="">Surprise</button>
-        <button class="chip" onclick="agPick(this,'Panier viennoiseries','🥐')"><img src="assets/viennoiserie.png" alt="">Viennoiseries</button>
-        <button class="chip" onclick="agPick(this,'Panier pains','🥖')"><img src="assets/baguette.png" alt="">Pains</button>
-        <button class="chip" onclick="agPick(this,'Panier sandwichs','🥪')"><img src="assets/sandwich.png" alt="">Sandwichs</button>
-        <button class="chip" onclick="agPick(this,'Panier pâtisseries','🍰')"><img src="assets/patisserie.png" alt="">Pâtisseries</button>
+      <div class="lbl">Compose le panier (touche les produits)</div>
+      <div class="agp-grid" id="agProducts"></div>
+      <div class="lbl" style="margin-top:16px">Contenu du panier</div>
+      <div id="agBasket" class="ag-basket"><div class="empty">Touche un produit pour l'ajouter.</div></div>
+      <div class="ag-tot"><span>Valeur du panier</span><b id="agOrig">0,00 €</b></div>
+      <div class="lbl" style="margin-top:16px">Réduction anti-gaspi</div>
+      <div class="chips" id="agReducs">
+        <button class="chip on" onclick="agReduc(this,0)">0 %</button>
+        <button class="chip" onclick="agReduc(this,10)">−10 %</button>
+        <button class="chip" onclick="agReduc(this,30)">−30 %</button>
+        <button class="chip" onclick="agReduc(this,40)">−40 %</button>
+        <button class="chip" onclick="agReduc(this,50)">−50 %</button>
+        <button class="chip" onclick="agReduc(this,60)">−60 %</button>
       </div>
-      <div class="ag-row2" style="margin-top:6px">
-        <div><div class="lbl">Quantité</div><div class="stepper"><button onclick="agStep('qty',-1)">−</button><span id="agQty">1</span><button onclick="agStep('qty',1)">+</button></div></div>
+      <div class="ag-tot final"><span>Prix client <span id="agSave" class="agsave"></span></span><b id="agFinal">0,00 €</b></div>
+      <div class="ag-row2" style="margin-top:16px">
+        <div><div class="lbl">Nombre de paniers</div><div class="stepper"><button onclick="agStep(-1)">−</button><span id="agQty">1</span><button onclick="agStep(1)">+</button></div></div>
         <div><div class="lbl">Retrait avant</div>
           <div class="chips sm" id="agTimes">
             <button class="chip on" onclick="agTime(this,'18h00')">18h00</button>
@@ -508,10 +536,6 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
             <button class="chip" onclick="agTime(this,'19h30')">19h30</button>
           </div>
         </div>
-      </div>
-      <div class="ag-row2" style="margin-top:14px">
-        <div><div class="lbl">Prix réduit</div><div class="stepper"><button onclick="agStep('prix',-1)">−</button><span id="agPrix">3,50&nbsp;€</span><button onclick="agStep('prix',1)">+</button></div></div>
-        <div><div class="lbl">Prix d'origine</div><div class="stepper"><button onclick="agStep('orig',-1)">−</button><span id="agOrig">9,00&nbsp;€</span><button onclick="agStep('orig',1)">+</button></div></div>
       </div>
       <button class="btn btn-accent" style="margin-top:18px" id="agCreateBtn" onclick="agCreate(this)">+ Mettre le panier en ligne</button>
     </div>
@@ -574,7 +598,7 @@ window.switchTab = function(tab, el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   el.classList.add('on'); $('panel-'+tab).classList.add('on');
   if(tab==='dash'){ loadDash(false); startPoll(); } else { stopPoll(); }
-  if(tab==='ag'){ agStRender(); agLoad(); }
+  if(tab==='ag'){ agRenderProducts(); agBasket(); agLoad(); }
   if(tab==='fid' && !currentCard) setTimeout(()=>$('manualId').focus(),50);
 };
 
@@ -692,32 +716,36 @@ window.resetVal = function(){ $('valInput').style.display='block'; ['resValid','
 function valRes(id){ $('valInput').style.display='none'; ['resValid','resUsed','resInvalid','resErr'].forEach(r=>$(r).classList.remove('show')); $(id).classList.add('show'); }
 
 /* ════ ANTI-GASPILLAGE ════ */
-let agSt = { libelle:'Panier surprise', emoji:'🎁', qty:1, prix:3.5, orig:9, retrait:'18h00' };
-// Catégories de paniers anti-gaspi PAR commerce (?type=)
-const AG_CATS = {
-  boulangerie:[['Surprise','🎁'],['Viennoiseries','🥐'],['Pains','🥖'],['Sandwichs','🥪'],['Pâtisseries','🍰']],
-  fleuriste:[['Surprise','🎁'],['Bouquets','💐'],['Fleurs','🌷'],['Plantes','🪴'],['Compositions','🎀']],
-  pizzeria:[['Surprise','🎁'],['Pizzas','🍕'],['Parts','🍕'],['Focaccia','🥖'],['Desserts','🍰']],
-  restaurant:[['Surprise','🎁'],['Plats du jour','🍽️'],['Entrées','🥗'],['Desserts','🍰'],['Formules','🍴']],
-  primeur:[['Surprise','🎁'],['Fruits','🍎'],['Légumes','🥕'],['Paniers','🧺'],['Herbes','🌿']],
-  vape:[['Promo flash','⚡'],['Fin de série','🏷️'],['E-liquides','🧪'],['Accessoires','🔩'],['Coils','🔋']]
+function eur(n){ return (Number(n)||0).toFixed(2).replace('.',',')+' €'; }
+// Prix de BASE par produit (fixés par l'agence) — par commerce (?type=) : [nom, prix, emoji]
+const AG_PRODUCTS = {
+  boulangerie:[['Viennoiserie',1.20,'🥐'],['Pain',1.10,'🥖'],['Baguette',1.00,'🥖'],['Sandwich',4.50,'🥪'],['Pâtisserie',3.20,'🍰'],['Boisson',2.00,'🥤']],
+  fleuriste:[['Fleur',2.50,'🌷'],['Bouquet',12.00,'💐'],['Plante',6.00,'🪴'],['Composition',18.00,'🎀'],['Graines',3.50,'🌱']],
+  pizzeria:[['Pizza',11.00,'🍕'],['Part de pizza',3.50,'🍕'],['Focaccia',4.00,'🥖'],['Dessert',4.50,'🍰'],['Boisson',2.50,'🥤']],
+  restaurant:[['Plat',13.00,'🍽️'],['Entrée',7.00,'🥗'],['Dessert',6.00,'🍰'],['Boisson',3.00,'🥤'],['Formule',18.00,'🍴']],
+  primeur:[['Fruits (kg)',3.00,'🍎'],['Légumes (kg)',2.50,'🥕'],['Barquette',4.00,'🍓'],['Herbes',1.50,'🌿'],['Panier',12.00,'🧺']],
+  vape:[['E-liquide',6.00,'🧪'],['Coil',4.00,'🔩'],['Accessoire',5.00,'🔋'],['Pod',20.00,'🎁']]
 };
-function agRenderChips(){
-  var cats = AG_CATS[CT] || AG_CATS.boulangerie, box = $('agChips'); if(!box) return;
-  box.innerHTML = cats.map(function(c,i){ return '<button class="chip'+(i?'':' on')+'" onclick="agPick(this,\'Panier '+c[0].toLowerCase()+'\',\''+c[1]+'\')">'+c[1]+' '+c[0]+'</button>'; }).join('');
-  agSt.libelle = 'Panier '+cats[0][0].toLowerCase(); agSt.emoji = cats[0][1];
+let agB = { items:{}, reduc:0, qty:1, retrait:'18h00' };
+function agProducts(){ return AG_PRODUCTS[CT] || AG_PRODUCTS.boulangerie; }
+function agRenderProducts(){ var P=agProducts(), box=$('agProducts'); if(!box) return;
+  box.innerHTML = P.map(function(p,i){ return '<button class="agp" onclick="agAdd('+i+')">'+p[2]+' '+esc(p[0])+'<span class="agp-pr">'+eur(p[1])+'</span></button>'; }).join('');
 }
-agRenderChips();
-window.agPick = function(el,lib,emo){ agSt.libelle=lib; agSt.emoji=emo; document.querySelectorAll('#agChips .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
-window.agTime = function(el,t){ agSt.retrait=t; document.querySelectorAll('#agTimes .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
-window.agStep = function(k,d){
-  if(k==='qty')      agSt.qty  = Math.max(1, agSt.qty + d);
-  else if(k==='prix')agSt.prix = Math.max(0, Math.round((agSt.prix + d*0.5)*100)/100);
-  else if(k==='orig')agSt.orig = Math.max(0, Math.round((agSt.orig + d*0.5)*100)/100);
-  agStRender();
-};
-function eur(n){ return (Number(n)||0).toFixed(2).replace('.',',')+' €'; }
-function agStRender(){ if($('agQty')){ $('agQty').textContent=agSt.qty; $('agPrix').innerHTML=eur(agSt.prix); $('agOrig').innerHTML=eur(agSt.orig); } }
+function agOrigine(){ var P=agProducts(), s=0; for(var i in agB.items) s += P[i][1]*agB.items[i]; return Math.round(s*100)/100; }
+function agFinal(){ var o=agOrigine(), f=Math.round(o*(1-agB.reduc/100)*100)/100; if($('agFinal'))$('agFinal').innerHTML=eur(f); var sv=$('agSave'); if(sv) sv.textContent = agB.reduc?('−'+agB.reduc+' %'):''; }
+function agBasket(){
+  var P=agProducts(), keys=Object.keys(agB.items), box=$('agBasket'); if(!box) return;
+  box.innerHTML = keys.length ? keys.map(function(i){ var p=P[i], q=agB.items[i];
+      return '<div class="agb-line"><span class="n">'+p[2]+' '+esc(p[0])+'</span><div class="qc"><button onclick="agSub('+i+')">−</button><b>'+q+'</b><button onclick="agAdd('+i+')">+</button></div><span class="lp">'+eur(p[1]*q)+'</span></div>'; }).join('')
+    : '<div class="empty">Touche un produit pour l\'ajouter.</div>';
+  if($('agOrig')) $('agOrig').innerHTML = eur(agOrigine());
+  agFinal();
+}
+window.agAdd  = function(i){ agB.items[i]=(agB.items[i]||0)+1; agBasket(); };
+window.agSub  = function(i){ if(agB.items[i]){ agB.items[i]--; if(agB.items[i]<=0) delete agB.items[i]; } agBasket(); };
+window.agReduc= function(el,pct){ agB.reduc=pct; document.querySelectorAll('#agReducs .chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); agFinal(); };
+window.agStep = function(d){ agB.qty=Math.max(1,agB.qty+d); if($('agQty'))$('agQty').textContent=agB.qty; };
+window.agTime = function(el,t){ agB.retrait=t; document.querySelectorAll('#agTimes .chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); };
 function agEmoji(lib){ lib=(lib||'').toLowerCase();
   if(lib.indexOf('vienn')>=0)return '🥐'; if(lib.indexOf('focac')>=0||lib.indexOf('pain')>=0)return '🥖'; if(lib.indexOf('sandw')>=0)return '🥪';
   if(lib.indexOf('atis')>=0||lib.indexOf('dessert')>=0)return '🍰';
@@ -729,10 +757,18 @@ function agEmoji(lib){ lib=(lib||'').toLowerCase();
   return '🎁'; }
 function agImg(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)return 'viennoiserie.png'; if(lib.indexOf('pain')>=0)return 'baguette.png'; if(lib.indexOf('sandw')>=0)return 'sandwich.png'; if(lib.indexOf('atis')>=0)return 'patisserie.png'; return 'gateau.png'; }
 window.agCreate = function(btn){
+  var P=agProducts(), keys=Object.keys(agB.items);
+  if(!keys.length){ toast('Ajoute au moins un produit au panier'); return; }
+  var lib = keys.map(function(i){ return P[i][2]+' '+P[i][0]+(agB.items[i]>1?(' ×'+agB.items[i]):''); }).join(' · ');
+  var o=agOrigine(), f=Math.round(o*(1-agB.reduc/100)*100)/100;
   setLoading(btn,true);
-  api('ag_create',{libelle:agSt.libelle, qty:agSt.qty, prix_reduit:agSt.prix, prix_origine:agSt.orig, retrait_avant:agSt.retrait}).then(d=>{
-    if(d.status==='ok'){ toast('Panier en ligne ✓'+(d.notified?' · '+d.notified+' client'+(d.notified>1?'s':'')+' notifié'+(d.notified>1?'s':''):''), true); agLoad(); } else toast('Erreur : '+(d.message||d.status));
-  }).catch(()=>toast('Hors ligne — réessayez')).then(()=>setLoading(btn,false));
+  api('ag_create',{libelle:lib, qty:agB.qty, prix_reduit:f, prix_origine:o, retrait_avant:agB.retrait}).then(function(d){
+    if(d.status==='ok'){ toast('Panier en ligne ✓'+(d.notified?(' · '+d.notified+' notifié'+(d.notified>1?'s':'')):''), true);
+      agB={items:{},reduc:0,qty:1,retrait:agB.retrait}; agBasket(); if($('agQty'))$('agQty').textContent='1';
+      document.querySelectorAll('#agReducs .chip').forEach(function(c,k){ c.classList.toggle('on',k===0); });
+      agLoad();
+    } else toast('Erreur : '+(d.message||d.status));
+  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
 };
 function agLoad(){
   api('ag_list',{}, true).then(d=>{
