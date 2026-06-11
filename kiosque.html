@@ -280,7 +280,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
 .ag-form .lbl{margin-top:15px}.ag-form .lbl:first-child{margin-top:0}
 .ag-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ag-card{display:flex;align-items:center;gap:16px;padding:18px 18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px}
-.ag-emoji{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;font-size:28px;background:var(--surface-2);background-size:cover;background-position:center;border:1px solid var(--border-2);flex-shrink:0}
+.ag-emoji{width:66px;height:66px;border-radius:14px;display:grid;place-items:center;font-size:30px;background:var(--surface-2);background-size:contain;background-repeat:no-repeat;background-position:center;border:1px solid var(--border-2);flex-shrink:0}
 .ag-meta{flex:1;min-width:0}.ag-meta .t{font-size:19px;font-weight:700}.ag-meta .s{font-size:14px;color:var(--dim);margin-top:4px}
 .ag-price{text-align:right;flex-shrink:0}
 .ag-price .pr{font-size:25px;font-weight:800;color:var(--ok)}.ag-price .or{font-size:13px;color:var(--mut);text-decoration:line-through;margin-top:1px}
@@ -320,7 +320,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
 .agsave{color:var(--ok);font-weight:800;font-size:13px;margin-left:4px}
 /* ── anti-gaspi v2 : photos produits + contraste couleurs ── */
 .agp{align-items:center;text-align:center;gap:6px}
-.agp-img{width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--surface-3);border:1px solid var(--border-2)}
+.agp-img{width:66px;height:66px;border-radius:14px;object-fit:contain;background:#F2ECE0;border:1px solid var(--border-2);padding:4px}
 .agp-emo{font-size:30px;line-height:1}
 .agp-nm{font-size:14px;font-weight:600;line-height:1.15}
 /* chips sélectionnés bien marqués (avant : tout pareil) */
@@ -872,7 +872,7 @@ function agLoad(){
   api('ag_list',{}, true).then(d=>{
     const list = d.paniers || [];
     $('agList').innerHTML = list.length ? list.map(function(p){ var ph=agPhoto(p.libelle);
-      return '<div class="ag-card"><div class="ag-emoji"'+(ph?(' style="background-image:url(\''+ph+'\')"'):'')+'>'+(ph?'':agEmoji(p.libelle))+'</div>'
+      return '<div class="ag-card"><div class="ag-emoji"'+(ph?(' style="background-image:url(\''+ph+'\');background-color:#F2ECE0"'):'')+'>'+(ph?'':agEmoji(p.libelle))+'</div>'
       + '<div class="ag-meta"><div class="t">'+esc(p.libelle)+'<span class="ag-qty">×'+p.qty+'</span></div>'
       + '<div class="s">'+(p.retrait_avant?('Retrait avant '+esc(p.retrait_avant)):'Toute la journée')+'</div></div>'
       + '<div class="ag-price"><div class="pr">'+eur(p.prix_reduit)+'</div>'+(p.prix_origine?('<div class="or">'+eur(p.prix_origine)+'</div>'):'')+'</div>'
