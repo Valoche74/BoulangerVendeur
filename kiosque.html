@@ -21,6 +21,8 @@
   --border:rgba(125,160,202,.16);--border-2:rgba(125,160,202,.30);
   --text:#EAF4FF;--dim:#9FC0E4;--mut:#5E83B0;
   --accent:#2D7DFF;--accent-2:#5AA0FF;--accent-dim:rgba(45,125,255,.18);
+  /* halos d'ambiance — thémés par commerce (?type=) ; défauts = bleu boulangerie */
+  --amb1:rgba(45,125,255,.28);--amb2:rgba(10,60,160,.32);
   --ok:#34D399;--ok-dim:rgba(52,211,153,.14);
   --warn:#FBBF24;--warn-dim:rgba(251,191,36,.14);
   --bad:#FB7185;--bad-dim:rgba(251,113,133,.14);
@@ -33,8 +35,8 @@ body{font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothi
 /* fond ambiant bleu électrique (recréé en CSS d'après les images de réf.) */
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(90% 60% at 50% -10%,rgba(45,125,255,.28),transparent 60%),
-    radial-gradient(70% 50% at 12% 8%,rgba(10,60,160,.32),transparent 55%),
+    radial-gradient(90% 60% at 50% -10%,var(--amb1),transparent 60%),
+    radial-gradient(70% 50% at 12% 8%,var(--amb2),transparent 55%),
     radial-gradient(80% 60% at 92% 96%,rgba(20,80,200,.22),transparent 55%),
     radial-gradient(60% 50% at 50% 120%,rgba(84,131,179,.18),transparent 60%)}
 svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
@@ -47,6 +49,24 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .sync{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:12px;font-weight:500;color:var(--dim)}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .sync-dot.off{background:var(--warn)}
+.hdr-r{display:flex;align-items:center;gap:12px}
+.lockBtn{width:42px;height:42px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--dim);display:grid;place-items:center;cursor:pointer;transition:background .15s,color .15s}
+.lockBtn:active{background:var(--accent-dim);color:var(--accent-2)}
+.lockBtn .ic{width:20px;height:20px;stroke-width:2}
+.lockBtn.armed{color:var(--ok);border-color:rgba(60,200,120,.4)}
+.lock-ov{position:fixed;inset:0;z-index:120;background:rgba(2,16,36,.86);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px}
+.lock-ov.show{display:flex}
+.lock-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border-2);border-radius:24px;padding:38px 30px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.lock-ico{width:60px;height:60px;margin:0 auto 18px;color:var(--accent-2);stroke-width:1.8;fill:none;stroke:currentColor}
+.lock-title{font-size:24px;font-weight:800;margin-bottom:8px}
+.lock-sub{font-size:15px;color:var(--mut);margin-bottom:22px;line-height:1.5}
+.lock-input{width:100%;padding:16px 18px;font-size:22px;text-align:center;letter-spacing:.18em;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);outline:none}
+.lock-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.lock-err{min-height:20px;color:var(--warn);font-size:13px;font-weight:600;margin:10px 0 4px}
+.lock-btns{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.lock-go{padding:15px;font-size:17px;font-weight:700;border:0;border-radius:14px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 6px 20px rgba(45,125,255,.32)}
+.lock-go:active{background:var(--accent-2)}
+.lock-clear{padding:11px;font-size:14px;font-weight:600;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--dim);cursor:pointer}
 
 /* ── TABS (gros, tactile) ── */
 .tabs{position:relative;z-index:2;display:flex;gap:8px;padding:10px 14px;background:rgba(2,16,36,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
@@ -71,6 +91,8 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .btn-ok{background:var(--ok);color:#04211A}
 .btn-ghost{background:transparent;border:1px solid var(--border-2);color:var(--dim)}
 .btn:disabled{opacity:.5}
+/* ── focus clavier visible (a11y) — ne s'affiche qu'au clavier, pas au tactile ── */
+button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn:focus-visible,.qbtn:focus-visible,.chip:focus-visible,.agp:focus-visible,.kp-grid button:focus-visible,.stepper button:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
 .fld{width:100%;padding:22px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:inherit;font-size:22px;font-weight:600;text-align:center;outline:none}
 .fld:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
 .lbl{font-size:14px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:11px}
@@ -81,8 +103,8 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .idle-ic .ic{width:64px;height:64px;stroke-width:1.6}
 .idle-ic::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--accent);opacity:.0;animation:ring 2s ease-out infinite}
 @keyframes ring{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1.15);opacity:0}}
-.idle h2{font-size:52px;font-weight:800;margin-bottom:16px}
-.idle p{font-size:24px;color:var(--dim);margin-bottom:44px}
+.idle h2{font-size:40px;font-weight:800;margin-bottom:14px}
+.idle p{font-size:20px;color:var(--dim);margin-bottom:40px}
 /* animation NFC (remplace l'icône phone) */
 .nfc-anim{width:clamp(220px,30vh,320px);margin:0 auto 30px}
 .nfc-anim svg{width:100%;height:auto;display:block}
@@ -98,7 +120,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .c-name{font-size:26px;font-weight:700;line-height:1.1}
 .c-lvl{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.3);border-radius:99px;padding:3px 10px}
 .c-solde{text-align:right;flex-shrink:0}
-.c-solde .v{font-size:46px;font-weight:800;line-height:1;color:var(--accent-2)}
+.c-solde .v{font-size:44px;font-weight:800;line-height:1;color:var(--accent-2)}
 .c-solde .l{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
 
 .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
@@ -111,20 +133,20 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 .add-h{font-size:15px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:10px 2px 14px}
 .quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
 @media(max-width:560px){.quick{grid-template-columns:repeat(3,1fr)}}
-.qbtn{padding:36px 6px;border:1px solid var(--border-2);border-radius:16px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:32px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
+.qbtn{padding:26px 6px;border:1px solid var(--border-2);border-radius:16px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:30px;font-weight:800;cursor:pointer;transition:transform .1s,background .15s}
 .qbtn:active{transform:scale(.96);background:var(--accent-dim)}
 .qbtn:disabled{opacity:.45;cursor:default}
 /* pavé numérique tactile (saisie du montant sans clavier) */
 .keypad{margin-bottom:14px}
 .kp-display{display:flex;align-items:baseline;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.kp-display #kpAmount{font-size:48px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.kp-display #kpAmount{font-size:42px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
 .kp-display .eu{font-size:22px;color:var(--dim);font-weight:700}
 .kp-display .kp-pts{font-size:17px;color:var(--accent-2);font-weight:700;margin-left:6px}
 .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-.kp-grid button{padding:30px 0;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:36px;font-weight:700;cursor:pointer;transition:transform .1s,background .15s}
+.kp-grid button{padding:24px 0;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text);font-family:inherit;font-size:30px;font-weight:700;cursor:pointer;transition:transform .1s,background .15s}
 .kp-grid button:active{transform:scale(.96);background:var(--accent-dim)}
 .kp-grid .kp-back{color:var(--bad)}
-.kp-add{font-size:22px;padding:24px}
+.kp-add{font-size:20px;padding:22px}
 .client-actions{display:flex;gap:10px;margin-top:16px}
 .client-actions .btn{flex:1}
 
@@ -141,7 +163,7 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 /* ── VALIDATION ── */
 #valInput{max-width:760px;margin:7vh auto 0}
 #valInput .lbl{font-size:19px}
-.v-input{font-size:64px;letter-spacing:.3em;font-weight:800;padding:30px}
+.v-input{font-size:48px;letter-spacing:.28em;font-weight:800;padding:26px}
 #valInput .btn{font-size:24px;padding:26px}
 .res{display:none;flex-direction:column;align-items:center;text-align:center;padding:14px 0}
 .res.show{display:flex;animation:fade .25s}
@@ -307,8 +329,28 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
     <div class="hdr-mk" id="hdrMk">F</div>
     <div><div class="hdr-name" id="hdrName">Falman</div><div class="hdr-sub">Caisse fidélité</div></div>
   </div>
-  <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncTxt">En direct</span></div>
+  <div class="hdr-r">
+    <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncTxt">En direct</span></div>
+    <button class="lockBtn" id="lockBtn" onclick="openLock()" title="Sécurité caisse" aria-label="Sécurité caisse">
+      <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
+  </div>
 </header>
+
+<!-- 🔐 Écran de verrouillage / réglage du secret vendeur -->
+<div class="lock-ov" id="lockOv" aria-hidden="true">
+  <div class="lock-card">
+    <svg class="lock-ico" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <div class="lock-title">Caisse verrouillée</div>
+    <div class="lock-sub">Saisis le code vendeur pour activer la caisse.</div>
+    <input id="lockInput" class="lock-input" type="password" inputmode="numeric" autocomplete="off" placeholder="Code vendeur" />
+    <div class="lock-err" id="lockErr"></div>
+    <div class="lock-btns">
+      <button class="lock-go" onclick="lockSubmit()">Déverrouiller</button>
+      <button class="lock-clear" onclick="lockClear()">Effacer le code</button>
+    </div>
+  </div>
+</div>
 
 <nav class="tabs">
   <button class="tab on" id="t-fid" onclick="switchTab('fid',this)">
@@ -555,15 +597,42 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 (function(){
 'use strict';
 // ── CONFIG : MÊME Apps Script que le site vendeur (redéployer une NOUVELLE VERSION pour exposer fid_*) ──
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx0N4dLSGtyUMgA_lA8N9O-B3rleX7zHgTFAXZyiV7hEf5ioXAcVI245hHdi4CMKuCn/exec';
+/* Un backend (Apps Script) PAR commerce → route par ?type= (défaut boulangerie) */
+const SHEETS_URLS = {
+  boulangerie:'https://script.google.com/macros/s/AKfycbx0N4dLSGtyUMgA_lA8N9O-B3rleX7zHgTFAXZyiV7hEf5ioXAcVI245hHdi4CMKuCn/exec',
+  fleuriste:'https://script.google.com/macros/s/AKfycbygyQrhmSBzSEFA3LJ65pbbpP1oXZIO44LXG0EnZFYZT0xsx1lIJcoyt5Lmy-8q3NXV/exec',
+  pizzeria:'', vape:'', restaurant:'', primeur:''
+};
+const SHEETS_URL = SHEETS_URLS[(new URLSearchParams(location.search).get('type')||'boulangerie').toLowerCase()] || SHEETS_URLS.boulangerie;
 const POLL_MS = 4000;
+
+/* ── 🔐 SÉCURITÉ KIOSQUE ──────────────────────────────────────────
+   Le secret vendeur n'est JAMAIS en dur ici (sinon visible dans le source) :
+   le commerçant le tape une fois au login, on le garde en localStorage et on
+   l'attache (?secret=) à chaque appel caisse. Le serveur l'ignore tant que la
+   sécu y est désactivée (SECURITY.ENABLED=false) → 100% compatible phase test.
+   REQUIRE_LOGIN=false pendant les tests (kiosque ouvert) ; true en vraie prod. */
+const REQUIRE_LOGIN = false;
+const SECRET_KEY = 'boostavis_kiosk_secret';
+function kioskSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }catch(e){ return ''; } }
+function setKioskSecret(v){ try{ if(v) localStorage.setItem(SECRET_KEY, v); else localStorage.removeItem(SECRET_KEY); }catch(e){} }
 
 const params = new URLSearchParams(location.search);
 const commerce = params.get('commerce') || 'Falman';
 document.getElementById('hdrName').textContent = commerce;
 document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpperCase();
 /* Accent multi-commerce (?type=) — bleu par défaut */
-(function(){ var T={fleuriste:'#C8568E',pizzeria:'#C8442E',vape:'#8A7AF0',restaurant:'#B85A68',primeur:'#E0892E'}; var ty=(params.get('type')||'').toLowerCase(); if(T[ty]){ var hx=function(h,a){h=h.replace('#','');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}; var r=document.documentElement.style; r.setProperty('--accent',T[ty]); r.setProperty('--accent-2',T[ty]); r.setProperty('--accent-dim',hx(T[ty],.18)); } })();
+(function(){
+  /* Palette de marque par verticale [primaire, secondaire] — alignée sur card.html / index.html.
+     primeur assombri (#C9741F) pour garder un contraste suffisant texte blanc sur bouton. */
+  var T={fleuriste:['#C8568E','#E084B0'],pizzeria:['#C8442E','#E2664E'],vape:['#6D5AE0','#8A7AF0'],restaurant:['#9A3F4C','#B85A68'],primeur:['#C9741F','#F0A94E']};
+  var ty=(params.get('type')||'').toLowerCase(), pal=T[ty];
+  if(!pal) return;   // boulangerie (défaut) garde le bleu d'origine
+  var hx=function(h,a){h=h.replace('#','');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';};
+  var r=document.documentElement.style;
+  r.setProperty('--accent',pal[0]); r.setProperty('--accent-2',pal[1]); r.setProperty('--accent-dim',hx(pal[0],.18));
+  r.setProperty('--amb1',hx(pal[0],.26)); r.setProperty('--amb2',hx(pal[1],.20));   // halos de fond thémés
+})();
 const CT = (params.get('type')||'boulangerie').toLowerCase();   // commerce courant (anti-gaspi par type)
 
 let currentCard = null;     // card_id du client identifié
@@ -576,11 +645,13 @@ function api(action, extra, retry){
   return new Promise((resolve,reject)=>{
     let url = SHEETS_URL + '?action=' + encodeURIComponent(action);
     if(extra) for(const k in extra) url += '&' + k + '=' + encodeURIComponent(extra[k]);
+    const _sec = kioskSecret();                                    // 🔐 secret vendeur (vide → param absent ; serveur l'ignore si sécu off)
+    if(_sec) url += '&secret=' + encodeURIComponent(_sec);
     const attempt = (left)=>{
       const x = new XMLHttpRequest();
       x.open('GET', url, true); x.timeout = 20000;
       const fail = (err)=>{ if(left>0) setTimeout(()=>attempt(left-1), 700); else reject(err); };
-      x.onload = ()=>{ try{ resolve(JSON.parse(x.responseText)); }catch(e){ fail(e); } };
+      x.onload = ()=>{ try{ const r = JSON.parse(x.responseText); if(r && r.code==='unauthorized'){ onUnauthorized(); } resolve(r); }catch(e){ fail(e); } };
       x.onerror = ()=>fail(new Error('net'));
       x.ontimeout = ()=>fail(new Error('timeout'));
       x.send();
@@ -795,7 +866,7 @@ function dSpark(vals,color){
   const mx=Math.max.apply(null,vals), mn=Math.min.apply(null,vals), rng=(mx-mn)||1;
   const pts=vals.map((v,i)=>{ const x=i/(vals.length-1)*w; const y=h-4-((v-mn)/rng)*(h-8); return x.toFixed(1)+' '+y.toFixed(1); });
   const line='M'+pts.join(' L'); const id='sp'+Math.random().toString(36).slice(2,7);
-  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".4"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs><path d="'+line+' L'+w+' '+h+' L0 '+h+' Z" fill="url(#'+id+')"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".4"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs><path d="'+line+' L'+w+' '+h+' L0 '+h+' Z" fill="url(#'+id+')"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
 function dKpi(label,val,spark,delta){
   let d='';
@@ -808,9 +879,13 @@ function dArea(serie){
   const X=i=>L+(serie.length>1?i/(serie.length-1)*iw:iw/2), Y=v=>T+ih-(v/mx)*ih;
   const line=serie.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x.passages).toFixed(1)).join(' ');
   const grid=[0,.25,.5,.75,1].map(f=>{const y=(T+ih-f*ih).toFixed(1);return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="rgba(125,160,202,.12)"/>';}).join('');
-  const dots=serie.map((x,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(x.passages).toFixed(1)+'" r="3.6" fill="#5AA0FF"/>').join('');
+  // NB: couleurs thémées via style="" (var() n'est PAS évalué dans un attribut de présentation SVG)
+  const dots=serie.map((x,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(x.passages).toFixed(1)+'" r="3.6" style="fill:var(--accent-2)"/>').join('');
   const labs=serie.map((x,i)=>'<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" fill="#5E83B0" font-size="12" text-anchor="middle">'+x.jour+'</text>').join('');
-  return '<svg viewBox="0 0 '+W+' '+H+'"><defs><linearGradient id="dAreaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D7DFF" stop-opacity=".38"/><stop offset="1" stop-color="#2D7DFF" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+line+' L'+(W-R)+' '+(T+ih)+' L'+L+' '+(T+ih)+' Z" fill="url(#dAreaG)"/><path d="'+line+'" fill="none" stroke="#5AA0FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+dots+labs+'</svg>';
+  // valeur directe sur le dernier point (réduit l'aller-retour œil ↔ axe — direct labeling)
+  const li=serie.length-1, lv=(serie[li]?serie[li].passages:0)|0, total7=serie.reduce((s,x)=>s+(x.passages||0),0);
+  const lastLab = serie.length ? '<text x="'+X(li).toFixed(1)+'" y="'+Math.max(T+11,Y(lv)-10).toFixed(1)+'" style="fill:var(--text)" font-size="13" font-weight="700" text-anchor="end">'+lv+'</text>' : '';
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Passages des 7 derniers jours : total '+total7+', dernier jour '+lv+'"><defs><linearGradient id="dAreaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.38"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>'+grid+'<path d="'+line+' L'+(W-R)+' '+(T+ih)+' L'+L+' '+(T+ih)+' Z" fill="url(#dAreaG)"/><path d="'+line+'" fill="none" style="stroke:var(--accent-2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+dots+labs+lastLab+'</svg>';
 }
 function dArc(cx,cy,R,r,a1,a2,color){ const Xp=(a,rad)=>cx+rad*Math.cos(a), Yp=(a,rad)=>cy+rad*Math.sin(a), lg=(a2-a1)>Math.PI?1:0; return '<path d="M'+Xp(a1,R).toFixed(2)+' '+Yp(a1,R).toFixed(2)+' A'+R+' '+R+' 0 '+lg+' 1 '+Xp(a2,R).toFixed(2)+' '+Yp(a2,R).toFixed(2)+' L'+Xp(a2,r).toFixed(2)+' '+Yp(a2,r).toFixed(2)+' A'+r+' '+r+' 0 '+lg+' 0 '+Xp(a1,r).toFixed(2)+' '+Yp(a1,r).toFixed(2)+' Z" fill="'+color+'"/>'; }
 function dDonut(tiers){
@@ -819,7 +894,8 @@ function dDonut(tiers){
   if(total>0){ data.forEach(x=>{ if(x[1]>0){ let a2=a+(x[1]/total)*2*Math.PI; if(x[1]===total)a2=a+2*Math.PI-0.001; segs+=dArc(70,70,58,38,a,a2,x[2]); a=a2; } }); }
   else segs='<circle cx="70" cy="70" r="48" fill="none" stroke="var(--surface-3)" stroke-width="20"/>';
   const legend=data.map(x=>'<div class="dleg"><i style="background:'+x[2]+'"></i>'+x[0]+'<b>'+x[1]+'</b></div>').join('');
-  return '<div class="donut-wrap"><svg viewBox="0 0 140 140" width="160" height="160">'+segs+'<text x="70" y="66" text-anchor="middle" fill="#EAF4FF" font-size="30" font-weight="800">'+total+'</text><text x="70" y="86" text-anchor="middle" fill="#5E83B0" font-size="12">clients</text></svg><div class="donut-legend">'+legend+'</div></div>';
+  const sum=data.map(x=>x[0]+' '+x[1]).join(', ');
+  return '<div class="donut-wrap"><svg viewBox="0 0 140 140" width="160" height="160" role="img" aria-label="Répartition clients par tier : '+sum+' (total '+total+')">'+segs+'<text x="70" y="66" text-anchor="middle" fill="#EAF4FF" font-size="30" font-weight="800">'+total+'</text><text x="70" y="86" text-anchor="middle" fill="#5E83B0" font-size="12">clients</text></svg><div class="donut-legend">'+legend+'</div></div>';
 }
 function loadDash(silent){
   if(!silent) $('dashContent').innerHTML='<div class="spin"></div>';
@@ -859,6 +935,17 @@ function toast(msg,reward){ const t=$('toast'); $('toastTxt').textContent=msg; t
 window.esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 window.toast = toast;
 
+/* ── 🔐 Verrou caisse / secret vendeur ── */
+function refreshLockBtn(){ const b=$('lockBtn'); if(b) b.classList.toggle('armed', !!kioskSecret()); }
+window.openLock = function(){ $('lockErr').textContent=''; $('lockInput').value=''; $('lockOv').classList.add('show'); $('lockOv').setAttribute('aria-hidden','false'); setTimeout(()=>$('lockInput').focus(),60); };
+function closeLock(){ $('lockOv').classList.remove('show'); $('lockOv').setAttribute('aria-hidden','true'); }
+window.lockSubmit = function(){ const v=$('lockInput').value.trim(); if(!v){ $('lockErr').textContent='Saisis un code.'; return; } setKioskSecret(v); refreshLockBtn(); closeLock(); toast('Caisse déverrouillée'); };
+window.lockClear  = function(){ setKioskSecret(''); refreshLockBtn(); $('lockInput').value=''; $('lockErr').textContent='Code effacé.'; };
+let _unauthShown=false;
+function onUnauthorized(){ if(_unauthShown) return; _unauthShown=true; setTimeout(()=>{_unauthShown=false;},1500); toast('Code vendeur requis ou invalide'); openLock(); }
+$('lockInput').addEventListener('keydown', e=>{ if(e.key==='Enter') lockSubmit(); });
+refreshLockBtn();
+
 /* ── capture GLOBALE du scan : le lecteur "tape" l'UID + Entrée, même si aucun champ n'est sélectionné ── */
 (function(){
   let buf='', last=0;
@@ -876,6 +963,9 @@ window.toast = toast;
     if(!inField && e.key.length===1) buf += e.key;
   });
 })();
+
+/* ── 🔐 login obligatoire en vraie prod (REQUIRE_LOGIN=true) ── */
+if(REQUIRE_LOGIN && !kioskSecret()) openLock();
 
 /* ── auto-scan via URL (?card=… ou ?uid=…) pour le bridge ── */
 const pCard=params.get('card'), pUid=params.get('uid');
