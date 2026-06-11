@@ -274,6 +274,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
   color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.4);box-shadow:0 0 12px rgba(245,208,122,.18)}
 .gift-row .btn{width:auto;padding:16px 24px;font-size:16px;flex-shrink:0}
 
+/* ── PROMO ── */
+.mk-fld{text-align:left;font-size:18px;padding:16px;font-weight:500}
+textarea.mk-fld{resize:none;line-height:1.5;font-family:inherit}
+
 /* ── ANTI-GASPI ── */
 .ag-intro{font-size:17px;color:var(--dim);margin:0 2px 20px;line-height:1.6}
 .ag-form{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:24px}
@@ -378,6 +382,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
   <button class="tab" id="t-ag" onclick="switchTab('ag',this)">
     <svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     Anti-gaspi
+  </button>
+  <button class="tab" id="t-mk" onclick="switchTab('mk',this)">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M3 11l18-7-7 18-2.5-7.5L3 11z"/></svg>
+    Promo
   </button>
   <button class="tab" id="t-dash" onclick="switchTab('dash',this)">
     <svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
@@ -591,6 +599,39 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
     <div id="agList"><div class="empty">Aucun panier en ligne pour le moment.</div></div>
   </section>
 
+  <!-- ═══ PROMO (campagnes email) ═══ -->
+  <section class="panel" id="panel-mk">
+    <p class="ag-intro">📣 Décrivez votre promo, vérifiez l'aperçu, envoyez-la à vos clients fidèles par email.</p>
+    <div class="ag-form">
+      <div class="lbl">Titre de l'offre</div>
+      <input class="fld mk-fld" id="mkTitre" maxlength="90" placeholder="Ex. Toutes les viennoiseries" oninput="mkPrev()">
+      <div class="lbl" style="margin-top:15px">Réduction</div>
+      <div class="chips" id="mkOffres">
+        <button class="chip" onclick="mkOffre(this,'-20 %')">−20 %</button>
+        <button class="chip" onclick="mkOffre(this,'-30 %')">−30 %</button>
+        <button class="chip on" onclick="mkOffre(this,'-50 %')">−50 %</button>
+        <button class="chip" onclick="mkOffre(this,'1 acheté = 1 offert')">1 acheté = 1 offert</button>
+        <button class="chip" onclick="mkOffre(this,'')">Sans</button>
+      </div>
+      <div class="lbl" style="margin-top:15px">Message</div>
+      <textarea class="fld mk-fld" id="mkAccroche" maxlength="180" rows="3" placeholder="Ex. Vendredi seulement : tout à moitié prix dès 16h !" oninput="mkPrev()"></textarea>
+      <div class="lbl" style="margin-top:15px">Ambiance</div>
+      <div class="chips" id="mkTypes">
+        <button class="chip on" onclick="mkType(this,'promo')">🔥 Promo</button>
+        <button class="chip" onclick="mkType(this,'nouveaute')">✨ Nouveauté</button>
+        <button class="chip" onclick="mkType(this,'relance')">👋 Relance</button>
+      </div>
+      <div class="lbl" style="margin-top:15px">Visuel</div>
+      <div class="chips" id="mkImgs"></div>
+      <div class="lbl" style="margin-top:18px">Aperçu de l'email (ce que le client recevra)</div>
+      <iframe id="mkFrame" title="Aperçu email" style="width:100%;height:600px;border:1px solid var(--border-2);border-radius:16px;background:#ffffff"></iframe>
+      <div class="client-actions">
+        <button class="btn btn-ghost" onclick="mkSendTest(this)">📩 M'envoyer l'aperçu</button>
+        <button class="btn btn-accent" id="mkSendBtn" onclick="mkSendAll(this)">🚀 Envoyer aux clients fidèles</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══ DASHBOARD ═══ -->
   <section class="panel" id="panel-dash">
     <div id="dashContent"><div class="spin"></div></div>
@@ -688,6 +729,7 @@ window.switchTab = function(tab, el){
   el.classList.add('on'); $('panel-'+tab).classList.add('on');
   if(tab==='dash'){ loadDash(false); startPoll(); } else { stopPoll(); }
   if(tab==='ag'){ agRenderProducts(); agBasket(); agLoad(); }
+  if(tab==='mk'){ mkRenderImgs(); mkPrev(); }
   if(tab==='fid' && !currentCard) setTimeout(()=>$('manualId').focus(),50);
 };
 
@@ -881,6 +923,91 @@ function agLoad(){
   }).catch(()=>{ $('agList').innerHTML='<div class="empty">Connexion impossible — vérifiez le Wi-Fi.</div>'; });
 }
 window.agDelete = function(id, btn){ setLoading(btn,true); api('ag_delete',{id:id}).then(()=>{ toast('Panier retiré'); agLoad(); }).catch(()=>{ toast('Hors ligne'); setLoading(btn,false); }); };
+
+/* ════ PROMO (campagnes email — composeur vendeur) ════ */
+/* Images servies par GitHub raw (fiable pour les emails : le checkpoint anti-bot Vercel peut bloquer les proxys d'images) */
+const MK_RAW = 'https://raw.githubusercontent.com/Valoche74/boulangerieavisclient/main/assets/';
+const MK_IMGS = {
+  boulangerie:[['🥐 Bannière −50 %','promo/banner-viennoiserie-50.png'],['Viennoiserie','viennoiserie.png'],['Baguette','baguette.png'],['Sandwich','sandwich.png'],['Pâtisserie','patisserie.png'],['Gâteau','gateau.png'],['Café','cafe.png'],['Jus','jus.png']],
+  fleuriste:[['Bouquet','fleuriste/bouquet.png'],['Fleur','fleuriste/fleur.png'],['Plante','fleuriste/plante.png'],['Graines','fleuriste/graines.png']],
+  pizzeria:[['Pizza','pizzeria/pizza.png'],['Tiramisu','pizzeria/tiramisu.png'],['Pain à l\'ail','pizzeria/painail.png'],['Boisson','pizzeria/boisson.png']],
+  vape:[['Pod kit','vape/podkit.png'],['E-liquide','vape/eliquide.png'],['Coil','vape/coil.png']],
+  restaurant:[['Menu','restaurant/menu.png'],['Dessert','restaurant/dessert.png'],['Café gourmand','restaurant/cafegourmand.png'],['Kir','restaurant/kir.png']],
+  primeur:[['Grand panier','primeur/grandpanier.png'],['Fraises','primeur/fraises.png'],['Fruit','primeur/fruit.png'],['Herbes','primeur/herbes.png']]
+};
+/* mêmes couleurs que MK_THEME côté serveur (gabarit identique) */
+const MK_COLORS = { boulangerie:['#C8963E','#2E5A1C'], fleuriste:['#E084B0','#542338'], pizzeria:['#E2664E','#5A1F12'], vape:['#8A7AF0','#241F4D'], restaurant:['#B85A68','#471B22'], primeur:['#F0A94E','#5C3A10'] };
+let mkB = { offre:'-50 %', type:'promo', img:'' };
+
+function mkImgsList(){ return MK_IMGS[CT] || MK_IMGS.boulangerie; }
+function mkRenderImgs(){
+  const box=$('mkImgs'); if(!box || box.childElementCount) return;   // rendu une seule fois
+  const list=mkImgsList();
+  if(!mkB.img && list.length) mkB.img = MK_RAW + list[0][1];
+  box.innerHTML = list.map(function(it,i){ return '<button class="chip'+(i===0?' on':'')+'" onclick="mkImg(this,\''+MK_RAW+it[1]+'\')">'+esc(it[0])+'</button>'; }).join('')
+    + '<button class="chip" onclick="mkImg(this,\'\')">Sans visuel</button>';
+}
+function mkChip(el, boxId){ document.querySelectorAll('#'+boxId+' .chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); }
+window.mkOffre = function(el,v){ mkB.offre=v; mkChip(el,'mkOffres'); mkPrev(); };
+window.mkType  = function(el,v){ mkB.type=v;  mkChip(el,'mkTypes');  mkPrev(); };
+window.mkImg   = function(el,v){ mkB.img=v;   mkChip(el,'mkImgs');   mkPrev(); };
+
+/* Réplique du gabarit serveur (mkEmailHtml_ de Code.gs) — garder les deux synchros */
+function mkEmailHtml(){
+  const col = MK_COLORS[CT] || MK_COLORS.boulangerie, c1=col[0];
+  const titre=esc(($('mkTitre').value||'').trim())||'Une offre vous attend';
+  const accroche=esc(($('mkAccroche').value||'').trim());
+  const offre=esc(mkB.offre), cta='J\'EN PROFITE';
+  const urg = mkB.type==='relance'?'👋 ON NE VOUS A PAS VU DEPUIS LONGTEMPS':mkB.type==='nouveaute'?'✨ NOUVEAU — EN BOUTIQUE MAINTENANT':'⏰ OFFRE LIMITÉE — NE TRAÎNEZ PAS';
+  const ctaS='display:block;background:'+c1+';color:#fff;font-size:22px;font-weight:900;letter-spacing:.03em;padding:20px 10px;border-radius:14px;text-align:center;text-transform:uppercase;border-bottom:4px solid rgba(0,0,0,.25)';
+  return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eee">'
+    +'<div style="background:#D7282F;color:#fff;font-size:13px;font-weight:800;letter-spacing:.08em;text-align:center;padding:11px 14px">'+urg+'</div>'
+    +(mkB.img?('<img src="'+mkB.img+'" alt="" style="width:100%;display:block"/>'):'')
+    +'<div style="padding:26px 26px 30px;text-align:center">'
+    +'<div style="font-size:30px;font-weight:900;color:#111;line-height:1.12;text-transform:uppercase">'+titre+'</div>'
+    +(offre?('<div style="font-size:46px;font-weight:900;color:#D7282F;line-height:1.1;margin-top:8px">'+offre+'</div>'):'')
+    +(accroche?('<p style="font-size:16px;color:#444;line-height:1.6;margin:16px 4px 0">'+accroche+'</p>'):'')
+    +'<div style="margin:24px 0 0"><div style="'+ctaS+'">'+cta+' &rarr;</div></div>'
+    +'<p style="font-size:13px;font-weight:700;color:#888;margin:14px 0 0">Montrez simplement cet email en caisse 🥐</p>'
+    +'</div><div style="background:#F6F6F6;padding:16px 24px;text-align:center"><p style="font-size:11.5px;color:#999;line-height:1.6;margin:0">Cumulez des points fidélité à chaque passage.<br>Désactivable sur votre carte (alertes email).</p></div></div>';
+}
+window.mkPrev = function(){ const f=$('mkFrame'); if(f) f.srcdoc = '<body style="margin:14px;background:#e9e9e9">'+mkEmailHtml()+'</body>'; };
+
+function mkParams(statut){
+  return { titre:($('mkTitre').value||'').trim(), accroche:($('mkAccroche').value||'').trim(),
+    offre:mkB.offre, type:mkB.type, image:mkB.img, cta_txt:'J\'en profite', statut:statut, date_envoi:'2026-01-01' };
+}
+window.mkSendTest = function(btn){
+  if(!($('mkTitre').value||'').trim()){ toast('Donne un titre à ta promo'); return; }
+  setLoading(btn,true);
+  api('mk_create', mkParams('brouillon')).then(function(d){
+    if(d.status!=='ok') throw new Error(d.message||d.status);
+    return api('mk_test',{id:d.id});
+  }).then(function(d){
+    if(d.status==='ok') toast('Aperçu envoyé à '+(d.test_envoye_a||'votre email')+' ✓', true);
+    else toast('Erreur : '+(d.message||d.status));
+  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
+};
+let mkArmed=null;
+window.mkSendAll = function(btn){
+  if(!($('mkTitre').value||'').trim()){ toast('Donne un titre à ta promo'); return; }
+  if(!mkArmed){   // 1er appui = demande de confirmation (anti fausse manip)
+    mkArmed = setTimeout(function(){ mkArmed=null; btn.textContent='🚀 Envoyer aux clients fidèles'; }, 6000);
+    btn.textContent='⚠️ Confirmer l\'envoi à TOUS ?';
+    return;
+  }
+  clearTimeout(mkArmed); mkArmed=null;
+  btn.textContent='🚀 Envoyer aux clients fidèles';
+  setLoading(btn,true);
+  api('mk_create', mkParams('brouillon')).then(function(d){
+    if(d.status!=='ok') throw new Error(d.message||d.status);
+    return api('mk_send',{id:d.id});
+  }).then(function(d){
+    if(d.status==='ok') toast('Promo envoyée à '+d.nb_envoyes+' client(s) 🚀', true);
+    else if(d.status==='quota') toast('Quota email insuffisant aujourd\'hui');
+    else toast('Erreur : '+(d.message||d.status));
+  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
+};
 
 /* ════ DASHBOARD ════ */
 function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(document.visibilityState==='visible' && $('panel-dash').classList.contains('on')) loadDash(true); },POLL_MS); }
