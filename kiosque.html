@@ -318,6 +318,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
 .ag-tot.final{background:var(--accent-dim);border:1px solid var(--accent)}
 .ag-tot.final b{color:#fff}
 .agsave{color:var(--ok);font-weight:800;font-size:13px;margin-left:4px}
+/* ── anti-gaspi v2 : photos produits + contraste couleurs ── */
+.agp{align-items:center;text-align:center;gap:6px}
+.agp-img{width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--surface-3);border:1px solid var(--border-2)}
+.agp-emo{font-size:30px;line-height:1}
+.agp-nm{font-size:14px;font-weight:600;line-height:1.15}
+/* chips sélectionnés bien marqués (avant : tout pareil) */
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 14px var(--accent-dim)}
+/* la réduction = couleur CHAUDE distincte de l'accent (lecture « remise ») */
+#agReducs .chip{font-weight:700}
+#agReducs .chip.on{background:var(--warn);border-color:var(--warn);color:#1c1206;box-shadow:0 4px 16px var(--warn-dim)}
+/* prix client = vert (le « bon prix »), bien détaché de la valeur d'origine */
+.ag-tot.final{background:var(--ok-dim);border:1px solid var(--ok)}
+.ag-tot.final b{color:var(--ok)}
+.ag-tot.final .agsave{color:var(--ok)}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
 </style>
@@ -451,14 +465,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
       </div>
       <div class="cwipe" id="cwipe">
        <section class="cslide" id="slPoints">
-      <div class="add-h">Ajouter des points</div>
-      <div class="quick">
-        <button class="qbtn" onclick="addQuick(30,this)">+30</button>
-        <button class="qbtn" onclick="addQuick(50,this)">+50</button>
-        <button class="qbtn" onclick="addQuick(80,this)">+80</button>
-        <button class="qbtn" onclick="addQuick(120,this)">+120</button>
-        <button class="qbtn" onclick="addQuick(200,this)">+200</button>
-      </div>
       <div class="keypad">
         <div class="kp-display"><span id="kpAmount">0</span><span class="eu">€</span><span class="kp-pts">= <b id="kpPts">0</b> pts</span></div>
         <div class="kp-grid">
@@ -635,6 +641,18 @@ document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpper
 })();
 const CT = (params.get('type')||'boulangerie').toLowerCase();   // commerce courant (anti-gaspi par type)
 
+/* 🥖 Anti-gaspi activable PAR COMMERCE. Mettre un type à false pour masquer l'onglet.
+   On peut aussi forcer via l'URL : ?antigaspi=0 (off) ou ?antigaspi=1 (on). */
+const AG_ENABLED = { boulangerie:true, fleuriste:true, pizzeria:true, restaurant:true, primeur:true, vape:true };
+const _agp = (params.get('antigaspi')||'').toLowerCase();
+const AG_ON = (_agp==='0'||_agp==='off'||_agp==='non') ? false
+            : (_agp==='1'||_agp==='on'||_agp==='oui') ? true
+            : (AG_ENABLED[CT] !== false);
+if(!AG_ON){
+  var _tag=document.getElementById('t-ag'); if(_tag) _tag.style.display='none';
+  var _pag=document.getElementById('panel-ag'); if(_pag) _pag.classList.remove('on');
+}
+
 let currentCard = null;     // card_id du client identifié
 let lastQuery = null;       // dernière requête identify {card_id} ou {uid} (pour réessayer)
 let pollTimer = null, tickTimer = null, lastFetch = 0;
@@ -800,7 +818,9 @@ const AG_PRODUCTS = {
 let agB = { items:{}, reduc:0, qty:1, retrait:'18h00' };
 function agProducts(){ return AG_PRODUCTS[CT] || AG_PRODUCTS.boulangerie; }
 function agRenderProducts(){ var P=agProducts(), box=$('agProducts'); if(!box) return;
-  box.innerHTML = P.map(function(p,i){ return '<button class="agp" onclick="agAdd('+i+')">'+p[2]+' '+esc(p[0])+'<span class="agp-pr">'+eur(p[1])+'</span></button>'; }).join('');
+  box.innerHTML = P.map(function(p,i){ var ph=agPhoto(p[0]);
+    var vis = ph ? '<img class="agp-img" src="'+ph+'" alt="">' : '<span class="agp-emo">'+p[2]+'</span>';
+    return '<button class="agp" onclick="agAdd('+i+')">'+vis+'<span class="agp-nm">'+esc(p[0])+'</span><span class="agp-pr">'+eur(p[1])+'</span></button>'; }).join('');
 }
 function agOrigine(){ var P=agProducts(), s=0; for(var i in agB.items) s += P[i][1]*agB.items[i]; return Math.round(s*100)/100; }
 function agFinal(){ var o=agOrigine(), f=Math.round(o*(1-agB.reduc/100)*100)/100; if($('agFinal'))$('agFinal').innerHTML=eur(f); var sv=$('agSave'); if(sv) sv.textContent = agB.reduc?('−'+agB.reduc+' %'):''; }
@@ -826,7 +846,14 @@ function agEmoji(lib){ lib=(lib||'').toLowerCase();
   if(lib.indexOf('fruit')>=0)return '🍎'; if(lib.indexOf('gum')>=0)return '🥕'; if(lib.indexOf('herbe')>=0)return '🌿'; if(lib.indexOf('panier')>=0)return '🧺';
   if(lib.indexOf('liquid')>=0)return '🧪'; if(lib.indexOf('coil')>=0||lib.indexOf('rie')>=0||lib.indexOf('accessoir')>=0)return '🔩'; if(lib.indexOf('flash')>=0||lib.indexOf('promo')>=0)return '⚡';
   return '🎁'; }
-function agImg(lib){ lib=(lib||'').toLowerCase(); if(lib.indexOf('vienn')>=0)return 'viennoiserie.png'; if(lib.indexOf('pain')>=0)return 'baguette.png'; if(lib.indexOf('sandw')>=0)return 'sandwich.png'; if(lib.indexOf('atis')>=0)return 'patisserie.png'; return 'gateau.png'; }
+// Photo produit — UNIQUEMENT boulangerie (5 PNG présents dans assets/) ; '' sinon → fallback emoji (pas d'image cassée).
+function agPhoto(name){ if(CT!=='boulangerie')return ''; name=(name||'').toLowerCase();
+  if(name.indexOf('vienn')>=0)return 'assets/viennoiserie.png';
+  if(name.indexOf('baguette')>=0||name.indexOf('pain')>=0)return 'assets/baguette.png';
+  if(name.indexOf('sandw')>=0)return 'assets/sandwich.png';
+  if(name.indexOf('tisser')>=0||name.indexOf('dessert')>=0)return 'assets/patisserie.png';
+  if(name.indexOf('surprise')>=0||name.indexOf('gateau')>=0||name.indexOf('gâteau')>=0)return 'assets/gateau.png';
+  return ''; }
 window.agCreate = function(btn){
   var P=agProducts(), keys=Object.keys(agB.items);
   if(!keys.length){ toast('Ajoute au moins un produit au panier'); return; }
@@ -844,13 +871,13 @@ window.agCreate = function(btn){
 function agLoad(){
   api('ag_list',{}, true).then(d=>{
     const list = d.paniers || [];
-    $('agList').innerHTML = list.length ? list.map(p =>
-      '<div class="ag-card"><div class="ag-emoji">'+agEmoji(p.libelle)+'</div>'
+    $('agList').innerHTML = list.length ? list.map(function(p){ var ph=agPhoto(p.libelle);
+      return '<div class="ag-card"><div class="ag-emoji"'+(ph?(' style="background-image:url(\''+ph+'\')"'):'')+'>'+(ph?'':agEmoji(p.libelle))+'</div>'
       + '<div class="ag-meta"><div class="t">'+esc(p.libelle)+'<span class="ag-qty">×'+p.qty+'</span></div>'
       + '<div class="s">'+(p.retrait_avant?('Retrait avant '+esc(p.retrait_avant)):'Toute la journée')+'</div></div>'
       + '<div class="ag-price"><div class="pr">'+eur(p.prix_reduit)+'</div>'+(p.prix_origine?('<div class="or">'+eur(p.prix_origine)+'</div>'):'')+'</div>'
-      + '<button class="ag-del" onclick="agDelete(\''+p.id+'\',this)" title="Retirer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div>'
-    ).join('') : '<div class="empty">Aucun panier en ligne aujourd\'hui.</div>';
+      + '<button class="ag-del" onclick="agDelete(\''+p.id+'\',this)" title="Retirer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div>';
+    }).join('') : '<div class="empty">Aucun panier en ligne aujourd\'hui.</div>';
   }).catch(()=>{ $('agList').innerHTML='<div class="empty">Connexion impossible — vérifiez le Wi-Fi.</div>'; });
 }
 window.agDelete = function(id, btn){ setLoading(btn,true); api('ag_delete',{id:id}).then(()=>{ toast('Panier retiré'); agLoad(); }).catch(()=>{ toast('Hors ligne'); setLoading(btn,false); }); };
@@ -908,19 +935,25 @@ function loadDash(silent){
     const tdyP=po.length?po[po.length-1]:0, prvP=po.length>1?po[po.length-2]:0;
     const dPts = prvP? Math.round((tdyP-prvP)/prvP*100) : (tdyP?100:0);
     $('dashContent').innerHTML =
-      '<div class="dash-head"><div><div class="h">Tableau de bord</div><div class="sub">'+(s.clients||0)+' clients fidélité · '+(s.passages_aujourdhui||0)+' passages aujourd\'hui</div></div></div>'
-      +'<div class="kgrid">'
-      + dKpi('Passages (jour)', (s.passages_aujourdhui||0), dSpark(pa,'#5AA0FF'), dP)
-      + dKpi('Points distribués', (s.points_aujourdhui||0), dSpark(po,'#34D399'), dPts)
-      + dKpi('Clients fidélité', (s.clients||0), '', null)
-      + dKpi('Paniers anti-gaspi', (s.paniers_actifs||0), '', null)
+      '<div class="dash-head"><div><div class="h">Tableau de bord</div><div class="sub">Aujourd\'hui · '+(s.passages_aujourdhui||0)+' passages · '+(s.points_aujourdhui||0)+' pts distribués</div></div></div>'
+      // ① LE + IMPORTANT : les 2 chiffres du JOUR (en grand)
+      +'<div class="kgrid" style="grid-template-columns:repeat(2,1fr)">'
+      + dKpi('Passages aujourd\'hui', (s.passages_aujourdhui||0), dSpark(pa,'#5AA0FF'), dP)
+      + dKpi('Points distribués (jour)', (s.points_aujourdhui||0), dSpark(po,'#34D399'), dPts)
       +'</div>'
+      // ② LA TENDANCE : activité 7 jours (pleine largeur)
+      +'<div class="card2" style="margin-bottom:18px"><div class="c2h">Activité — 7 derniers jours</div><div class="c2s">Passages par jour</div><div class="chartwrap">'+dArea(serie)+'</div></div>'
+      // ③ LA BASE CLIENTS : répartition tiers + total (+ anti-gaspi si activé)
       +'<div class="dash2">'
-      +'<div class="card2"><div class="c2h">Activité — 7 derniers jours</div><div class="c2s">Passages par jour</div><div class="chartwrap">'+dArea(serie)+'</div></div>'
-      +'<div class="card2"><div class="c2h">Répartition clients</div><div class="c2s">Par tier (€ cumulés)</div>'+dDonut(tiers)+'</div>'
+      +  '<div class="card2"><div class="c2h">Base clients fidélité</div><div class="c2s">Répartition par tier (€ cumulés)</div>'+dDonut(tiers)+'</div>'
+      +  '<div style="display:flex;flex-direction:column;gap:14px">'
+      +    dKpi('Clients fidélité', (s.clients||0), '', null)
+      +    (AG_ON ? dKpi('Paniers anti-gaspi actifs', (s.paniers_actifs||0), '', null) : '')
+      +  '</div>'
       +'</div>'
+      // ④ LE MOINS CRITIQUE : journal des 6 dernières opérations
       +'<div class="sec">Dernières transactions</div>'
-      +'<div class="block">'+ (rec.length? rec.map(r=>{ const neg=r.points<0; return '<div class="row"><div class="info"><b>'+esc(r.card_id)+'</b><span>'+esc(r.type)+' · '+esc(r.datetime)+'</span></div><div class="pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.points+'</div></div>'; }).join('') : '<div class="empty">Aucune transaction pour le moment</div>')
+      +'<div class="block">'+ (rec.length? rec.slice(0,6).map(r=>{ const neg=r.points<0; return '<div class="row"><div class="info"><b>'+esc(r.card_id)+'</b><span>'+esc(r.type)+' · '+esc(r.datetime)+'</span></div><div class="pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.points+'</div></div>'; }).join('') : '<div class="empty">Aucune transaction pour le moment</div>')
       +'</div>'
       +'<div class="updated" id="updated">Mis à jour à l\'instant</div>';
     lastFetch=Date.now(); startTick();
