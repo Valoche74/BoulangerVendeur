@@ -274,19 +274,38 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
   color:var(--gold);background:rgba(245,208,122,.12);border:1px solid rgba(245,208,122,.4);box-shadow:0 0 12px rgba(245,208,122,.18)}
 .gift-row .btn{width:auto;padding:16px 24px;font-size:16px;flex-shrink:0}
 
-/* ── PROMO ── */
-.mk-fld{text-align:left;font-size:18px;padding:16px;font-weight:500}
-textarea.mk-fld{resize:none;line-height:1.5;font-family:inherit}
-.mk-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start}
+/* ── PROMO (builder d'affiche) ── */
+.mk-grid{display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start}
 @media(max-width:980px){.mk-grid{grid-template-columns:1fr}}
 .mk-side{position:sticky;top:12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px}
-.mkimg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media(max-width:560px){.mkimg-grid{grid-template-columns:repeat(3,1fr)}}
-.mkimg{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 6px;border:1px solid var(--border-2);border-radius:13px;background:var(--surface-2);color:var(--dim);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
-.mkimg img{width:100%;height:56px;object-fit:contain;background:#F2ECE0;border-radius:9px}
-.mkimg .noimg{width:100%;height:56px;display:grid;place-items:center;font-size:24px;background:var(--surface-3);border-radius:9px}
-.mkimg.on{border-color:var(--accent);background:var(--accent-dim);color:#fff}
+.mkprod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:560px){.mkprod-grid{grid-template-columns:repeat(2,1fr)}}
+.mkprod{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--dim);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.mkprod:active{transform:scale(.97)}
+.mkprod img{width:100%;height:64px;object-fit:contain}
+.mkprod.on{border-color:var(--accent);background:var(--accent-dim);color:#fff}
 .mk-count{margin-top:10px;text-align:center;font-size:13.5px;color:var(--dim);min-height:18px}
+/* affiche "deal digital" (réf. pack promo, palette par --mkdark/--mkmint/--mkaccent/--mklime/--mkacid) */
+.mk-poster{--mkdark:#001b0a;--mkmint:#efffe8;--mkaccent:#04b522;--mklime:#b9ff15;--mkacid:#e8ff25;--ps:96;--py:53;
+  position:relative;width:100%;aspect-ratio:1080/1920;border-radius:26px;overflow:hidden;color:#fff;isolation:isolate;
+  background:radial-gradient(circle at 50% 23%,rgba(4,181,34,.28),transparent 28%),linear-gradient(180deg,var(--mkdark) 0 43%,var(--mkmint) 43% 100%)}
+.mkp-top{position:absolute;z-index:5;top:5%;left:8%;right:8%;display:flex;justify-content:space-between;font-size:10px;font-weight:900}
+.mkp-brand{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.mkp-brand i{width:13px;height:13px;border:2px solid var(--mklime);border-radius:50%}
+.mkp-kicker{position:absolute;z-index:5;top:12%;left:6%;right:6%;margin:0;text-align:center;text-transform:uppercase;font-size:13px;font-weight:900;color:rgba(218,255,194,.92)}
+.mkp-title{position:absolute;z-index:5;top:16.5%;left:6%;right:6%;margin:0;text-align:center;text-transform:uppercase}
+.mkp-l1,.mkp-l2{display:block;font-family:"Arial Black",Impact,Arial,sans-serif}
+.mkp-l1{font-size:clamp(34px,9.5vw,58px);line-height:.93;color:#fff;text-shadow:0 3px 0 rgba(3,66,22,.92)}
+.mkp-l2{margin-top:6px;font-size:clamp(30px,8.5vw,50px);line-height:.9;color:transparent;
+  background:repeating-linear-gradient(-12deg,var(--mkacid) 0 14px,var(--mklime) 14px 28px,var(--mkaccent) 28px 42px);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-stroke:2px rgba(0,28,7,.72);filter:drop-shadow(4px 5px 0 rgba(0,0,0,.55))}
+.mkp-pill{position:absolute;z-index:6;top:33%;left:50%;transform:translateX(-50%);padding:9px 24px;border-radius:999px;background:rgba(255,255,255,.96);color:var(--mkdark);font-size:12px;font-weight:900;text-transform:uppercase;white-space:nowrap}
+.mkp-drip{position:absolute;z-index:2;top:42%;left:-4%;width:108%;height:5%;background:var(--mkdark);border-bottom-left-radius:46% 50%;border-bottom-right-radius:54% 50%}
+.mkp-hero{position:absolute;z-index:4;left:50%;top:calc(var(--py)*1%);width:calc(var(--ps)*1%);margin:0;transform:translate(-50%,-50%);filter:drop-shadow(0 18px 16px rgba(0,22,8,.28))}
+.mkp-hero img{display:block;width:100%;height:auto;object-fit:contain}
+.mkp-cta{position:absolute;z-index:6;left:50%;bottom:13%;width:74%;transform:translateX(-50%);padding:13px 8px;border-radius:999px;background:var(--mkaccent);color:#fff;font-size:clamp(13px,3vw,18px);font-weight:900;text-transform:uppercase;text-align:center}
+.mkp-legal{position:absolute;z-index:5;bottom:8.5%;left:9%;right:9%;margin:0;text-align:center;color:rgba(2,25,8,.76);font-size:9.5px;font-weight:700}
+.mkp-footer{position:absolute;z-index:5;bottom:4.5%;left:9%;right:9%;margin:0;text-align:center;color:rgba(2,25,8,.92);font-size:12px;font-weight:900;text-transform:uppercase}
 .mk-count b{color:var(--accent-2)}
 .mkh-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)}
 .mkh-row:last-child{border-bottom:none}
@@ -624,42 +643,63 @@ textarea.mk-fld{resize:none;line-height:1.5;font-family:inherit}
   <section class="panel" id="panel-mk">
     <div class="mk-grid">
       <div class="ag-form">
-        <div class="lbl">Titre de l'offre</div>
-        <input class="fld mk-fld" id="mkTitre" maxlength="90" placeholder="Ex. Toutes les viennoiseries" oninput="mkPrev()">
-        <div class="lbl" style="margin-top:15px">Réduction</div>
-        <div class="chips" id="mkOffres">
-          <button class="chip" onclick="mkOffre(this,'-20 %')">−20 %</button>
-          <button class="chip" onclick="mkOffre(this,'-30 %')">−30 %</button>
-          <button class="chip on" onclick="mkOffre(this,'-50 %')">−50 %</button>
-          <button class="chip" onclick="mkOffre(this,'1 acheté = 1 offert')">1 acheté = 1 offert</button>
-          <button class="chip" onclick="mkOffre(this,'')">Sans</button>
+        <div class="lbl">Produit</div>
+        <div class="mkprod-grid" id="mkProducts"></div>
+
+        <div class="lbl" style="margin-top:16px">Type d'offre</div>
+        <div class="chips" id="mkOfferTypes">
+          <button class="chip on" onclick="mkSetOffer(this,'buyGet')">Acheté / offert</button>
+          <button class="chip" onclick="mkSetOffer(this,'percent')">Réduction %</button>
         </div>
-        <div class="lbl" style="margin-top:15px">Message</div>
-        <textarea class="fld mk-fld" id="mkAccroche" maxlength="180" rows="3" placeholder="Ex. Vendredi seulement : tout à moitié prix dès 16h !" oninput="mkPrev()"></textarea>
-        <div class="lbl" style="margin-top:15px">Ambiance</div>
-        <div class="chips" id="mkTypes">
-          <button class="chip on" onclick="mkType(this,'promo')">🔥 Promo</button>
-          <button class="chip" onclick="mkType(this,'nouveaute')">✨ Nouveauté</button>
-          <button class="chip" onclick="mkType(this,'relance')">👋 Relance</button>
+
+        <div id="mkBuyGet">
+          <div class="ag-row2" style="margin-top:14px">
+            <div><div class="lbl">Achetés</div><div class="stepper"><button onclick="mkStep('buy',-1)">−</button><span id="mkBuy">1</span><button onclick="mkStep('buy',1)">+</button></div></div>
+            <div><div class="lbl">Offerts</div><div class="stepper"><button onclick="mkStep('free',-1)">−</button><span id="mkFree">1</span><button onclick="mkStep('free',1)">+</button></div></div>
+          </div>
         </div>
-        <div class="lbl" style="margin-top:15px">Visuel</div>
-        <div class="mkimg-grid" id="mkImgs"></div>
-        <div class="lbl" style="margin-top:15px">Envoyer quand ?</div>
+        <div id="mkPercent" style="display:none">
+          <div class="lbl" style="margin-top:14px">Réduction</div>
+          <div class="stepper" style="max-width:280px"><button onclick="mkStep('pct',-5)">−</button><span id="mkPct">20</span><span style="font-size:22px;color:var(--dim)">%</span><button onclick="mkStep('pct',5)">+</button></div>
+        </div>
+
+        <div class="lbl" style="margin-top:16px">Couleur de l'affiche</div>
+        <div class="chips" id="mkThemes">
+          <button class="chip on" onclick="mkSetTheme(this,'green')">🟢 Vert</button>
+          <button class="chip" onclick="mkSetTheme(this,'choco')">🟤 Choco</button>
+          <button class="chip" onclick="mkSetTheme(this,'berry')">🔴 Fraise</button>
+          <button class="chip" onclick="mkSetTheme(this,'blue')">🔵 Bleu</button>
+        </div>
+
+        <div class="lbl" style="margin-top:16px">Envoyer quand ?</div>
         <div class="chips" id="mkWhens">
           <button class="chip on" onclick="mkWhen(this,'now')">🚀 Maintenant</button>
           <button class="chip" onclick="mkWhen(this,'demain')">🗓️ Demain matin (auto)</button>
         </div>
+
         <div class="lbl" style="margin-top:18px">Dernières campagnes</div>
         <div id="mkHist" class="block"><div class="empty">—</div></div>
       </div>
+
       <div class="mk-side">
-        <div class="lbl">Aperçu (ce que le client recevra)</div>
-        <iframe id="mkFrame" title="Aperçu email" style="width:100%;height:560px;border:1px solid var(--border-2);border-radius:16px;background:#ffffff"></iframe>
-        <button class="btn btn-ghost" style="margin-top:12px" onclick="mkSendTest(this)">📩 M'envoyer l'aperçu par email</button>
+        <div class="lbl">Aperçu de l'affiche</div>
+        <div class="mk-poster" id="mkPoster">
+          <div class="mkp-top"><span class="mkp-brand"><i></i>LA FOURNÉE</span><span class="mkp-brand"><i></i>OFFRE FLASH</span></div>
+          <p class="mkp-kicker" id="mkKicker">CROISSANT PUR BEURRE</p>
+          <h3 class="mkp-title"><span class="mkp-l1" id="mkL1">1 ACHETÉ</span><span class="mkp-l2" id="mkL2">1 OFFERT</span></h3>
+          <div class="mkp-pill" id="mkPill">AUJOURD'HUI</div>
+          <div class="mkp-drip"></div>
+          <figure class="mkp-hero"><img id="mkHeroImg" src="" alt=""></figure>
+          <div class="mkp-cta" id="mkCta">PROFITER DE L'OFFRE</div>
+          <p class="mkp-legal" id="mkLegal"></p>
+          <p class="mkp-footer" id="mkFooter"></p>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:12px" onclick="mkSendTest(this)">📩 M'envoyer l'aperçu</button>
         <button class="btn btn-accent" id="mkSendBtn" style="margin-top:10px" onclick="mkSendAll(this)">🚀 Envoyer aux clients fidèles</button>
         <div class="mk-count" id="mkCount">&nbsp;</div>
       </div>
     </div>
+    <canvas id="mkCanvas" width="1080" height="1920" hidden></canvas>
   </section>
 
   <!-- ═══ DASHBOARD ═══ -->
@@ -759,7 +799,7 @@ window.switchTab = function(tab, el){
   el.classList.add('on'); $('panel-'+tab).classList.add('on');
   if(tab==='dash'){ loadDash(false); startPoll(); } else { stopPoll(); }
   if(tab==='ag'){ agRenderProducts(); agBasket(); agLoad(); }
-  if(tab==='mk'){ mkRenderImgs(); mkPrev(); mkLoadCount(); mkLoadHist(); }
+  if(tab==='mk'){ mkRenderProducts(); mkSyncOfferUI(); mkRender(); mkLoadCount(); mkLoadHist(); }
   if(tab==='fid' && !currentCard) setTimeout(()=>$('manualId').focus(),50);
 };
 
@@ -954,85 +994,138 @@ function agLoad(){
 }
 window.agDelete = function(id, btn){ setLoading(btn,true); api('ag_delete',{id:id}).then(()=>{ toast('Panier retiré'); agLoad(); }).catch(()=>{ toast('Hors ligne'); setLoading(btn,false); }); };
 
-/* ════ PROMO (campagnes email — composeur vendeur) ════ */
-/* Images servies par GitHub raw (fiable pour les emails : le checkpoint anti-bot Vercel peut bloquer les proxys d'images) */
-const MK_RAW = 'https://raw.githubusercontent.com/Valoche74/boulangerieavisclient/main/assets/';
-const MK_IMGS = {
-  boulangerie:[['🥐 Bannière −50 %','promo/banner-viennoiserie-50.png'],['Croissant','promo/codex/croissant.jpg'],['Pain au chocolat','promo/codex/pain-chocolat.jpg'],['Baguette','promo/codex/baguette.jpg'],['Éclair','promo/codex/eclair.jpg'],['Cookie','promo/codex/cookie.jpg'],['Tartelette fraise','promo/codex/tartelette-fraise.jpg']],
-  fleuriste:[['Bouquet','fleuriste/bouquet.png'],['Fleur','fleuriste/fleur.png'],['Plante','fleuriste/plante.png'],['Graines','fleuriste/graines.png']],
-  pizzeria:[['Pizza','pizzeria/pizza.png'],['Tiramisu','pizzeria/tiramisu.png'],['Pain à l\'ail','pizzeria/painail.png'],['Boisson','pizzeria/boisson.png']],
-  vape:[['Pod kit','vape/podkit.png'],['E-liquide','vape/eliquide.png'],['Coil','vape/coil.png']],
-  restaurant:[['Menu','restaurant/menu.png'],['Dessert','restaurant/dessert.png'],['Café gourmand','restaurant/cafegourmand.png'],['Kir','restaurant/kir.png']],
-  primeur:[['Grand panier','primeur/grandpanier.png'],['Fraises','primeur/fraises.png'],['Fruit','primeur/fruit.png'],['Herbes','primeur/herbes.png']]
+/* ════ PROMO — builder d'affiche "deal digital" (réf. pack kiosque-promo-ui) ════ */
+/* Produits + cutouts (même origine que le kiosque → canvas lisible pour générer l'affiche email) */
+const MK_PRODUCTS = [
+  {id:'croissant', name:'Croissant pur beurre', img:'assets/promo/products/croissant.png',        agree:'m', scale:96, y:53, off:'buyGet'},
+  {id:'pain',      name:'Pain au chocolat',     img:'assets/promo/products/pain-au-chocolat.png', agree:'m', scale:98, y:53, off:'percent'},
+  {id:'baguette',  name:'Baguette tradition',   img:'assets/promo/products/baguette.png',          agree:'f', scale:100,y:62, off:'buyGet'},
+  {id:'eclair',    name:'Éclair chocolat',      img:'assets/promo/products/eclair.png',            agree:'m', scale:95, y:64, off:'percent'},
+  {id:'cookie',    name:'Cookie chocolat',      img:'assets/promo/products/cookie.png',            agree:'m', scale:90, y:55, off:'buyGet'},
+  {id:'tartelette',name:'Tartelette fraise',    img:'assets/promo/products/tartelette-fraise.png', agree:'f', scale:91, y:55, off:'percent'}
+];
+const MK_THEMES = {
+  green:{dark:'#001b0a',mint:'#efffe8',accent:'#04b522',lime:'#b9ff15',acid:'#e8ff25'},
+  choco:{dark:'#190904',mint:'#fff4dc',accent:'#b95a18',lime:'#ff9446',acid:'#ffce4a'},
+  berry:{dark:'#250411',mint:'#fff0f3',accent:'#d71946',lime:'#ff5b78',acid:'#fff26d'},
+  blue: {dark:'#071326',mint:'#edf7ff',accent:'#1455d9',lime:'#36d4ff',acid:'#9cf3ff'}
 };
-/* mêmes couleurs que MK_THEME côté serveur (gabarit identique) */
-const MK_COLORS = { boulangerie:['#C8963E','#2E5A1C'], fleuriste:['#E084B0','#542338'], pizzeria:['#E2664E','#5A1F12'], vape:['#8A7AF0','#241F4D'], restaurant:['#B85A68','#471B22'], primeur:['#F0A94E','#5C3A10'] };
-let mkB = { offre:'-50 %', type:'promo', img:'', when:'now' };
+const mkS = { pid:'croissant', off:'buyGet', buy:1, free:1, pct:20, theme:'green', when:'now' };
+function mkProd(){ return MK_PRODUCTS.find(function(p){return p.id===mkS.pid;}) || MK_PRODUCTS[0]; }
 
-function mkImgsList(){ return MK_IMGS[CT] || MK_IMGS.boulangerie; }
-function mkRenderImgs(){
-  const box=$('mkImgs'); if(!box || box.childElementCount) return;   // rendu une seule fois
-  const list=mkImgsList();
-  if(!mkB.img && list.length) mkB.img = MK_RAW + list[0][1];
-  box.innerHTML = list.map(function(it,i){ return '<button class="mkimg'+(i===0?' on':'')+'" onclick="mkImg(this,\''+MK_RAW+it[1]+'\')"><img src="'+MK_RAW+it[1]+'" alt="" loading="lazy"><span>'+esc(it[0])+'</span></button>'; }).join('')
-    + '<button class="mkimg" onclick="mkImg(this,\'\')"><span class="noimg">🚫</span><span>Sans visuel</span></button>';
+// Texte AUTO (zéro saisie clavier) : déduit de produit + type d'offre + qté/%
+function mkOffer(){
+  const p=mkProd();
+  if(mkS.off==='percent'){
+    return { l1:'-'+mkS.pct+'%', l2:'FIDÉLITÉ', pill:'AVEC LA CARTE', cta:'ACTIVER LA REMISE',
+      footer:'-'+mkS.pct+'% AVEC LA CARTE', legal:'Remise avec carte fidélité. Sur '+p.name.toLowerCase()+'. Offre non cumulable.',
+      title:p.name+' · -'+mkS.pct+'%', offreShort:'-'+mkS.pct+'%' };
+  }
+  const ach=(p.agree==='f'?(mkS.buy>1?'ACHETÉES':'ACHETÉE'):(mkS.buy>1?'ACHETÉS':'ACHETÉ'));
+  const off=(mkS.free>1?'OFFERTS':'OFFERT');
+  const l1=mkS.buy+' '+ach, l2=mkS.free+' '+off;
+  return { l1:l1, l2:l2, pill:'AUJOURD\'HUI', cta:(mkS.buy>1?'PRENDRE LE DEAL':'PROFITER DE L\'OFFRE'),
+    footer:l1+' = '+l2, legal:'Sur '+p.name.toLowerCase()+'. Selon disponibilité. Offre non cumulable.',
+    title:p.name+' · '+l1+' = '+l2, offreShort:l1+' = '+l2 };
 }
-function mkChip(el, boxId, cls){ document.querySelectorAll('#'+boxId+' .'+(cls||'chip')).forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); }
-window.mkOffre = function(el,v){ mkB.offre=v; mkChip(el,'mkOffres'); mkPrev(); };
-window.mkType  = function(el,v){ mkB.type=v;  mkChip(el,'mkTypes');  mkPrev(); };
-window.mkImg   = function(el,v){ mkB.img=v;   mkChip(el,'mkImgs','mkimg'); mkPrev(); };
-window.mkWhen  = function(el,v){ mkB.when=v;  mkChip(el,'mkWhens');
-  const b=$('mkSendBtn'); if(b) b.textContent = (v==='demain') ? '🗓️ Programmer pour demain matin' : '🚀 Envoyer aux clients fidèles';
+function mkRenderProducts(){
+  const box=$('mkProducts'); if(!box) return;
+  box.innerHTML = MK_PRODUCTS.map(function(p){ return '<button class="mkprod'+(p.id===mkS.pid?' on':'')+'" onclick="mkPick(\''+p.id+'\')"><img src="'+p.img+'" alt="" loading="lazy"><span>'+esc(p.name)+'</span></button>'; }).join('');
+}
+window.mkPick = function(id){ const p=MK_PRODUCTS.find(function(x){return x.id===id;}); if(!p) return;
+  mkS.pid=id; mkS.off=p.off; document.querySelectorAll('#mkProducts .mkprod').forEach(function(b){b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+id+"'")>=0);});
+  mkSyncOfferUI(); mkRender();
 };
-function mkTomorrow(){ const d=new Date(); d.setDate(d.getDate()+1);
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function mkLoadCount(){
-  api('mk_count',{}, true).then(function(d){ if(d.status==='ok' && $('mkCount')) $('mkCount').innerHTML = 'Destinataires actuels : <b>'+d.nb+'</b> client(s) fidélité opt-in'; }).catch(function(){});
+function mkSyncOfferUI(){
+  document.querySelectorAll('#mkOfferTypes .chip').forEach(function(c){ c.classList.toggle('on', c.getAttribute('onclick').indexOf("'"+mkS.off+"'")>=0); });
+  $('mkBuyGet').style.display = (mkS.off==='buyGet')?'':'none';
+  $('mkPercent').style.display = (mkS.off==='percent')?'':'none';
+  if($('mkBuy')) $('mkBuy').textContent=mkS.buy; if($('mkFree')) $('mkFree').textContent=mkS.free; if($('mkPct')) $('mkPct').textContent=mkS.pct;
 }
+window.mkSetOffer = function(el,v){ mkS.off=v; mkSyncOfferUI(); mkRender(); };
+window.mkSetTheme = function(el,v){ mkS.theme=v; document.querySelectorAll('#mkThemes .chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); mkRender(); };
+window.mkStep = function(k,d){
+  if(k==='buy')  mkS.buy =Math.min(9,Math.max(1,mkS.buy+d));
+  if(k==='free') mkS.free=Math.min(9,Math.max(1,mkS.free+d));
+  if(k==='pct')  mkS.pct =Math.min(90,Math.max(5,mkS.pct+d));
+  mkSyncOfferUI(); mkRender();
+};
+window.mkWhen = function(el,v){ mkS.when=v; document.querySelectorAll('#mkWhens .chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on');
+  const b=$('mkSendBtn'); if(b) b.textContent=mkBtnLabel();
+};
+
+function mkRender(){
+  const p=mkProd(), o=mkOffer(), t=MK_THEMES[mkS.theme]||MK_THEMES.green, ps=$('mkPoster');
+  ps.style.setProperty('--mkdark',t.dark); ps.style.setProperty('--mkmint',t.mint); ps.style.setProperty('--mkaccent',t.accent); ps.style.setProperty('--mklime',t.lime); ps.style.setProperty('--mkacid',t.acid);
+  ps.style.setProperty('--ps',p.scale); ps.style.setProperty('--py',p.y);
+  $('mkKicker').textContent=p.name.toUpperCase(); $('mkL1').textContent=o.l1; $('mkL2').textContent=o.l2;
+  $('mkPill').textContent=o.pill; $('mkCta').textContent=o.cta; $('mkLegal').textContent=o.legal; $('mkFooter').textContent=o.footer;
+  const img=$('mkHeroImg'); if(img.getAttribute('src')!==p.img){ img.crossOrigin='anonymous'; img.src=p.img; }
+}
+
+/* ── Génération de l'affiche en image (canvas 1080×1920 → JPEG dataURL) pour l'email ── */
+function mkCanvasFont(w,s){ return w+' '+s+'px Arial,"Arial Black",sans-serif'; }
+function mkFitFont(ctx,txt,w,max,maxW,min){ var s=max; while(s>=min){ ctx.font=mkCanvasFont(w,s); if(ctx.measureText(txt).width<=maxW) return s; s-=2; } return min; }
+function mkCText(ctx,txt,y,w,size,fill,maxW,stroke){ var f=mkFitFont(ctx,txt,w,size,maxW,28); ctx.font=mkCanvasFont(w,f); ctx.textAlign='center'; ctx.textBaseline='top'; if(stroke){ctx.lineWidth=stroke.w;ctx.strokeStyle=stroke.c;ctx.strokeText(txt,540,y);} ctx.fillStyle=fill; ctx.fillText(txt,540,y); }
+function mkRound(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function mkDrawPoster(){
+  const c=$('mkCanvas'), ctx=c.getContext('2d'), o=mkOffer(), p=mkProd(), t=MK_THEMES[mkS.theme]||MK_THEMES.green, img=$('mkHeroImg');
+  const W=1080,H=1920,split=Math.round(H*0.43);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=t.dark; ctx.fillRect(0,0,W,split+120);
+  var glow=ctx.createRadialGradient(540,420,20,540,420,520); glow.addColorStop(0,t.accent+'55'); glow.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=glow; ctx.fillRect(0,0,W,split);
+  ctx.fillStyle=t.mint; ctx.fillRect(0,split,W,H-split);
+  ctx.fillStyle=t.dark; ctx.beginPath(); ctx.moveTo(-40,split-10); for(var x=-40;x<=W+40;x+=80){ ctx.quadraticCurveTo(x+40,split+22,x+80,split+2);} ctx.lineTo(W+80,split-160); ctx.lineTo(-80,split-160); ctx.closePath(); ctx.fill();
+  [70,255,485,740,915].forEach(function(bx,i){ ctx.beginPath(); ctx.ellipse(bx,split+52,46+i*2,92-i*5,0,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle='#fff'; ctx.globalAlpha=.92; ctx.font=mkCanvasFont('900',28); ctx.textAlign='left'; ctx.fillText('LA FOURNÉE',124,76); ctx.textAlign='right'; ctx.fillText('OFFRE FLASH',956,76); ctx.globalAlpha=1;
+  ctx.strokeStyle=t.lime; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(88,88,18,0,Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.arc(960-246,88,18,0,Math.PI*2); ctx.stroke();
+  mkCText(ctx,p.name.toUpperCase(),172,'900',36,'rgba(218,255,194,.92)',900);
+  mkCText(ctx,o.l1,262,'900',168,'#fff',980,{w:8,c:'rgba(0,46,16,.76)'});
+  // ligne 2 : pattern rayé clippé dans le texte
+  (function(){ var size=mkFitFont(ctx,o.l2,'900',166,1000,44); ctx.font=mkCanvasFont('900',size); ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.save(); ctx.lineWidth=16; ctx.strokeStyle='rgba(0,25,8,.75)'; ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowOffsetX=10; ctx.shadowOffsetY=14; ctx.strokeText(o.l2,540,438); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.fillText(o.l2,540,438); ctx.clip(); for(var i=-280;i<1320;i+=54){ ctx.fillStyle=t.acid; ctx.fillRect(i,418,28,size+44); ctx.fillStyle=t.lime; ctx.fillRect(i+28,418,32,size+44); ctx.fillStyle=t.accent; ctx.fillRect(i+60,418,28,size+44);} ctx.restore();
+    ctx.save(); ctx.lineWidth=5; ctx.strokeStyle='rgba(255,255,255,.34)'; ctx.strokeText(o.l2,540,438); ctx.restore(); })();
+  // pastille
+  ctx.font=mkCanvasFont('900',31); var pw=Math.min(560,Math.max(330,ctx.measureText(o.pill).width+150)); ctx.fillStyle='rgba(255,255,255,.96)'; mkRound(ctx,540-pw/2,686,pw,74,37); ctx.fill(); mkCText(ctx,o.pill,704,'900',31,t.dark,pw-72);
+  // produit
+  if(img && img.naturalWidth){ var tw=Math.round(W*(p.scale/100)), ratio=tw/img.naturalWidth, th=img.naturalHeight*ratio, ix=(W-tw)/2, iy=H*(p.y/100)-th/2; ctx.save(); ctx.shadowColor='rgba(0,22,8,.28)'; ctx.shadowBlur=22; ctx.shadowOffsetY=24; ctx.drawImage(img,ix,iy,tw,th); ctx.restore(); }
+  // CTA
+  ctx.fillStyle=t.accent; mkRound(ctx,150,1540,780,96,48); ctx.fill(); mkCText(ctx,o.cta,1568,'900',45,'#fff',610);
+  mkCText(ctx,o.legal,1710,'700',25,'rgba(2,25,8,.76)',900);
+  mkCText(ctx,o.footer,1786,'900',32,'rgba(2,25,8,.92)',900);
+  return c.toDataURL('image/jpeg',0.86);
+}
+
+/* ── POST (gros payload : l'affiche base64) — text/plain = pas de préflight CORS ── */
+function apiPost(action, payload){
+  return new Promise(function(resolve,reject){
+    var x=new XMLHttpRequest(); x.open('POST', SHEETS_URL, true); x.timeout=40000;
+    x.setRequestHeader('Content-Type','text/plain;charset=utf-8');
+    x.onload=function(){ try{ resolve(JSON.parse(x.responseText)); }catch(e){ reject(e); } };
+    x.onerror=function(){ reject(new Error('net')); }; x.ontimeout=function(){ reject(new Error('timeout')); };
+    var body=Object.assign({action:action}, payload); var sec=kioskSecret(); if(sec) body.secret=sec;
+    x.send(JSON.stringify(body));
+  });
+}
+function mkTomorrow(){ const d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function mkBtnLabel(){ return (mkS.when==='demain')?'🗓️ Programmer pour demain matin':'🚀 Envoyer aux clients fidèles'; }
+function mkLoadCount(){ api('mk_count',{}, true).then(function(d){ if(d.status==='ok' && $('mkCount')) $('mkCount').innerHTML='Destinataires actuels : <b>'+d.nb+'</b> client(s) fidélité opt-in'; }).catch(function(){}); }
 function mkLoadHist(){
-  api('mk_list',{}, true).then(function(d){
-    const box=$('mkHist'); if(!box) return;
-    const rows=(d.campagnes||[]).slice(0,5);
-    box.innerHTML = rows.length ? rows.map(function(c){
-      return '<div class="mkh-row"><div class="t">'+esc(c.titre||'(sans titre)')+(c.offre?(' · '+esc(c.offre)):'')
-        +'<span>'+(c.statut==='envoye'?(esc(c.envoye_le)+' · '+c.nb+' envoyé(s)'):c.statut==='prevu'?('prévu le '+esc(c.date_envoi)):'brouillon')+'</span></div>'
-        +'<span class="mkh-badge '+esc(c.statut||'brouillon')+'">'+esc(c.statut||'brouillon')+'</span></div>';
-    }).join('') : '<div class="empty">Aucune campagne pour le moment.</div>';
+  api('mk_list',{}, true).then(function(d){ const box=$('mkHist'); if(!box) return; const rows=(d.campagnes||[]).slice(0,5);
+    box.innerHTML = rows.length ? rows.map(function(c){ return '<div class="mkh-row"><div class="t">'+esc(c.titre||'(sans titre)')
+      +'<span>'+(c.statut==='envoye'?(esc(c.envoye_le)+' · '+c.nb+' envoyé(s)'):c.statut==='prevu'?('prévu le '+esc(c.date_envoi)):'brouillon')+'</span></div>'
+      +'<span class="mkh-badge '+esc(c.statut||'brouillon')+'">'+esc(c.statut||'brouillon')+'</span></div>'; }).join('') : '<div class="empty">Aucune campagne pour le moment.</div>';
   }).catch(function(){});
 }
+// payload campagne : méta + affiche base64 (l'affiche EST la pub, hébergée côté serveur)
+function mkPayload(statut, date){ const o=mkOffer();
+  return { titre:o.title, offre:o.offreShort, accroche:'', type:(mkS.off==='percent'?'promo':'promo'), cta_txt:'J\'en profite',
+    statut:statut, date_envoi:(date||'2026-01-01'), poster:mkDrawPoster() }; }
 
-/* Réplique du gabarit serveur (mkEmailHtml_ de Code.gs) — garder les deux synchros */
-function mkEmailHtml(){
-  const col = MK_COLORS[CT] || MK_COLORS.boulangerie, c1=col[0];
-  const titre=esc(($('mkTitre').value||'').trim())||'Une offre vous attend';
-  const accroche=esc(($('mkAccroche').value||'').trim());
-  const offre=esc(mkB.offre), cta='J\'EN PROFITE';
-  const urg = mkB.type==='relance'?'👋 ON NE VOUS A PAS VU DEPUIS LONGTEMPS':mkB.type==='nouveaute'?'✨ NOUVEAU — EN BOUTIQUE MAINTENANT':'⏰ OFFRE LIMITÉE — NE TRAÎNEZ PAS';
-  const ctaS='display:block;background:'+c1+';color:#fff;font-size:22px;font-weight:900;letter-spacing:.03em;padding:20px 10px;border-radius:14px;text-align:center;text-transform:uppercase;border-bottom:4px solid rgba(0,0,0,.25)';
-  return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eee">'
-    +'<div style="background:#D7282F;color:#fff;font-size:13px;font-weight:800;letter-spacing:.08em;text-align:center;padding:11px 14px">'+urg+'</div>'
-    +(mkB.img?('<img src="'+mkB.img+'" alt="" style="width:100%;display:block"/>'):'')
-    +'<div style="padding:'+(mkB.img?'20px 26px 26px':'26px 26px 30px')+';text-align:center">'
-    /* bannière présente = elle porte titre+offre → on ne duplique pas (gabarit "image-first") */
-    +(mkB.img
-      ? (accroche?('<p style="font-size:15px;color:#666;line-height:1.55;margin:0 4px 4px">'+accroche+'</p>'):'')
-      : ('<div style="font-size:30px;font-weight:900;color:#111;line-height:1.12;text-transform:uppercase">'+titre+'</div>'
-        +(offre?('<div style="font-size:46px;font-weight:900;color:#D7282F;line-height:1.1;margin-top:8px">'+offre+'</div>'):'')
-        +(accroche?('<p style="font-size:16px;color:#444;line-height:1.6;margin:16px 4px 0">'+accroche+'</p>'):'')))
-    +'<div style="margin:'+(mkB.img?'16px':'24px')+' 0 0"><div style="'+ctaS+'">'+cta+' &rarr;</div></div>'
-    +'<p style="font-size:13px;font-weight:700;color:#888;margin:14px 0 0">Montrez simplement cet email en caisse 🥐</p>'
-    +'</div><div style="background:#F6F6F6;padding:16px 24px;text-align:center"><p style="font-size:11.5px;color:#999;line-height:1.6;margin:0">Cumulez des points fidélité à chaque passage.<br>Désactivable sur votre carte (alertes email).</p></div></div>';
-}
-window.mkPrev = function(){ const f=$('mkFrame'); if(f) f.srcdoc = '<body style="margin:14px;background:#e9e9e9">'+mkEmailHtml()+'</body>'; };
-
-function mkParams(statut, date){
-  return { titre:($('mkTitre').value||'').trim(), accroche:($('mkAccroche').value||'').trim(),
-    offre:mkB.offre, type:mkB.type, image:mkB.img, cta_txt:'J\'en profite', statut:statut, date_envoi:(date||'2026-01-01') };
-}
 window.mkSendTest = function(btn){
-  if(!($('mkTitre').value||'').trim()){ toast('Donne un titre à ta promo'); return; }
   setLoading(btn,true);
-  api('mk_create', mkParams('brouillon')).then(function(d){
+  apiPost('mk_create', mkPayload('brouillon')).then(function(d){
     if(d.status!=='ok') throw new Error(d.message||d.status);
     return api('mk_test',{id:d.id});
   }).then(function(d){
@@ -1041,33 +1134,21 @@ window.mkSendTest = function(btn){
   }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
 };
 let mkArmed=null;
-function mkBtnLabel(){ return (mkB.when==='demain') ? '🗓️ Programmer pour demain matin' : '🚀 Envoyer aux clients fidèles'; }
 window.mkSendAll = function(btn){
-  if(!($('mkTitre').value||'').trim()){ toast('Donne un titre à ta promo'); return; }
-  if(!mkArmed){   // 1er appui = demande de confirmation (anti fausse manip)
-    mkArmed = setTimeout(function(){ mkArmed=null; btn.textContent=mkBtnLabel(); }, 6000);
-    btn.textContent = (mkB.when==='demain') ? '⚠️ Confirmer la programmation ?' : '⚠️ Confirmer l\'envoi à TOUS ?';
-    return;
-  }
-  clearTimeout(mkArmed); mkArmed=null;
-  btn.textContent = mkBtnLabel();
-  setLoading(btn,true);
-  if(mkB.when==='demain'){
-    // programmé : statut 'prevu' + date de demain → le déclencheur quotidien (mkCron) l'enverra
-    api('mk_create', mkParams('prevu', mkTomorrow())).then(function(d){
-      if(d.status==='ok'){ toast('🗓️ Campagne programmée pour demain ✓', true); mkLoadHist(); }
-      else toast('Erreur : '+(d.message||d.status));
-    }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
-    return;
-  }
-  api('mk_create', mkParams('brouillon')).then(function(d){
+  if(!mkArmed){ mkArmed=setTimeout(function(){ mkArmed=null; btn.textContent=mkBtnLabel(); },6000);
+    btn.textContent=(mkS.when==='demain')?'⚠️ Confirmer la programmation ?':'⚠️ Confirmer l\'envoi à TOUS ?'; return; }
+  clearTimeout(mkArmed); mkArmed=null; btn.textContent=mkBtnLabel(); setLoading(btn,true);
+  const sched=(mkS.when==='demain');
+  apiPost('mk_create', mkPayload(sched?'prevu':'brouillon', sched?mkTomorrow():'2026-01-01')).then(function(d){
     if(d.status!=='ok') throw new Error(d.message||d.status);
-    return api('mk_send',{id:d.id});
-  }).then(function(d){
-    if(d.status==='ok'){ toast('Promo envoyée à '+d.nb_envoyes+' client(s) 🚀', true); mkLoadHist(); }
-    else if(d.status==='quota') toast('Quota email insuffisant aujourd\'hui');
-    else toast('Erreur : '+(d.message||d.status));
-  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
+    if(sched){ toast('🗓️ Campagne programmée pour demain ✓', true); mkLoadHist(); setLoading(btn,false); return null; }
+    return api('mk_send',{id:d.id}).then(function(r){
+      if(r.status==='ok') toast('Promo envoyée à '+r.nb_envoyes+' client(s) 🚀', true);
+      else if(r.status==='quota') toast('Quota email insuffisant aujourd\'hui');
+      else toast('Erreur : '+(r.message||r.status));
+      mkLoadHist(); setLoading(btn,false);
+    });
+  }).catch(function(){ toast('Hors ligne — réessayez'); setLoading(btn,false); });
 };
 
 /* ════ DASHBOARD ════ */
