@@ -687,7 +687,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
           <div class="mkp-top"><span class="mkp-brand"><i></i>LA FOURNÉE</span><span class="mkp-brand"><i></i>OFFRE FLASH</span></div>
           <p class="mkp-kicker" id="mkKicker">CROISSANT PUR BEURRE</p>
           <h3 class="mkp-title"><span class="mkp-l1" id="mkL1">1 ACHETÉ</span><span class="mkp-l2" id="mkL2">1 OFFERT</span></h3>
-          <div class="mkp-pill" id="mkPill">AUJOURD'HUI</div>
           <div class="mkp-drip"></div>
           <figure class="mkp-hero"><img id="mkHeroImg" src="" alt=""></figure>
           <div class="mkp-cta" id="mkCta">PROFITER DE L'OFFRE</div>
@@ -1059,7 +1058,7 @@ function mkRender(){
   ps.style.setProperty('--mkdark',t.dark); ps.style.setProperty('--mkmint',t.mint); ps.style.setProperty('--mkaccent',t.accent); ps.style.setProperty('--mklime',t.lime); ps.style.setProperty('--mkacid',t.acid);
   ps.style.setProperty('--ps',p.scale); ps.style.setProperty('--py',p.y);
   $('mkKicker').textContent=p.name.toUpperCase(); $('mkL1').textContent=o.l1; $('mkL2').textContent=o.l2;
-  $('mkPill').textContent=o.pill; $('mkCta').textContent=o.cta; $('mkLegal').textContent=o.legal; $('mkFooter').textContent=o.footer;
+  $('mkCta').textContent=o.cta; $('mkLegal').textContent=o.legal; $('mkFooter').textContent=o.footer;
   const img=$('mkHeroImg'); if(img.getAttribute('src')!==p.img){ img.crossOrigin='anonymous'; img.src=p.img; }
 }
 
@@ -1086,8 +1085,6 @@ function mkDrawPoster(){
     ctx.save(); ctx.lineWidth=16; ctx.strokeStyle='rgba(0,25,8,.75)'; ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowOffsetX=10; ctx.shadowOffsetY=14; ctx.strokeText(o.l2,540,438); ctx.restore();
     ctx.save(); ctx.beginPath(); ctx.fillText(o.l2,540,438); ctx.clip(); for(var i=-280;i<1320;i+=54){ ctx.fillStyle=t.acid; ctx.fillRect(i,418,28,size+44); ctx.fillStyle=t.lime; ctx.fillRect(i+28,418,32,size+44); ctx.fillStyle=t.accent; ctx.fillRect(i+60,418,28,size+44);} ctx.restore();
     ctx.save(); ctx.lineWidth=5; ctx.strokeStyle='rgba(255,255,255,.34)'; ctx.strokeText(o.l2,540,438); ctx.restore(); })();
-  // pastille
-  ctx.font=mkCanvasFont('900',31); var pw=Math.min(560,Math.max(330,ctx.measureText(o.pill).width+150)); ctx.fillStyle='rgba(255,255,255,.96)'; mkRound(ctx,540-pw/2,686,pw,74,37); ctx.fill(); mkCText(ctx,o.pill,704,'900',31,t.dark,pw-72);
   // produit
   if(img && img.naturalWidth){ var tw=Math.round(W*(p.scale/100)), ratio=tw/img.naturalWidth, th=img.naturalHeight*ratio, ix=(W-tw)/2, iy=H*(p.y/100)-th/2; ctx.save(); ctx.shadowColor='rgba(0,22,8,.28)'; ctx.shadowBlur=22; ctx.shadowOffsetY=24; ctx.drawImage(img,ix,iy,tw,th); ctx.restore(); }
   // CTA
