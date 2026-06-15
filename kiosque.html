@@ -378,9 +378,67 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
 .ag-tot.final .agsave{color:var(--ok)}
 
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+
+/* ════════ DESIGN 15/06 — fond vidéo + cards produits glass + loader ════════ */
+/* ── Fond vidéo animé (h264, accéléré matériellement → fluide sur Raspberry Pi) ── */
+.bgv{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.5;filter:saturate(1.12) contrast(1.04);pointer-events:none}
+.bgv-scrim{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 85% at 50% -8%,rgba(2,16,36,.32),rgba(2,16,36,.82) 78%)}
+
+/* ── Card produit : verre dépoli + halo « blob » animé derrière l'image (tokens marque) ── */
+.pcard{position:relative;display:grid;place-items:center;width:100%;border-radius:14px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03));
+  border:1px solid var(--border-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.pcard::before{content:'';position:absolute;z-index:0;width:78px;height:78px;border-radius:50%;
+  background:var(--accent);opacity:.55;filter:blur(20px);animation:pblob 7s infinite ease-in-out}
+.pcard>img{position:relative;z-index:1}
+@keyframes pblob{0%,100%{transform:translate(-28%,-18%)}25%{transform:translate(30%,-24%)}
+  50%{transform:translate(24%,26%)}75%{transform:translate(-26%,22%)}}
+/* vignettes Promo */
+.mkprod .pcard{height:74px;padding:5px;margin-bottom:2px}
+.mkprod .pcard>img{height:62px;width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 9px rgba(0,0,0,.4))}
+/* tuiles anti-gaspi (images détourées transparentes) */
+.agp .pcard{width:78px;height:78px;padding:6px}
+.agp-pcard>.agp-img{width:100%;height:100%;background:transparent;border:0;padding:0;
+  filter:drop-shadow(0 3px 7px rgba(0,0,0,.4))}
+
+/* ── Loader plein écran (attentes entre actions) — port du loader 5-carrés, recoloré accent ── */
+.kload-ov{position:fixed;inset:0;z-index:140;display:none;align-items:center;justify-content:center;padding:24px;
+  background:rgba(2,16,36,.74);backdrop-filter:blur(8px)}
+.kload-ov.on{display:flex;animation:fade .18s ease}
+.kload-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 46px;border-radius:24px;
+  background:rgba(6,24,58,.66);border:1px solid var(--border-2);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.kload-tx{font-size:17px;font-weight:700;color:var(--text);letter-spacing:.01em}
+.loadingspinner{--square:24px;--offset:28px;--duration:2.4s;--delay:.2s;--timing-function:ease-in-out;
+  --in-duration:.4s;--in-delay:.1s;--in-timing-function:ease-out;
+  width:calc(3*var(--offset) + var(--square));height:calc(2*var(--offset) + var(--square));position:relative}
+.loadingspinner div{display:inline-block;background:var(--accent-2);border:none;border-radius:5px;
+  width:var(--square);height:var(--square);position:absolute;box-shadow:0 0 14px var(--accent-dim)}
+.loadingspinner #square1{left:calc(0*var(--offset));top:calc(0*var(--offset));
+  animation:square1 var(--duration) var(--delay) var(--timing-function) infinite,squarefadein var(--in-duration) calc(1*var(--in-delay)) var(--in-timing-function) both}
+.loadingspinner #square2{left:calc(0*var(--offset));top:calc(1*var(--offset));
+  animation:square2 var(--duration) var(--delay) var(--timing-function) infinite,squarefadein var(--in-duration) calc(1*var(--in-delay)) var(--in-timing-function) both}
+.loadingspinner #square3{left:calc(1*var(--offset));top:calc(1*var(--offset));
+  animation:square3 var(--duration) var(--delay) var(--timing-function) infinite,squarefadein var(--in-duration) calc(2*var(--in-delay)) var(--in-timing-function) both}
+.loadingspinner #square4{left:calc(2*var(--offset));top:calc(1*var(--offset));
+  animation:square4 var(--duration) var(--delay) var(--timing-function) infinite,squarefadein var(--in-duration) calc(3*var(--in-delay)) var(--in-timing-function) both}
+.loadingspinner #square5{left:calc(3*var(--offset));top:calc(1*var(--offset));
+  animation:square5 var(--duration) var(--delay) var(--timing-function) infinite,squarefadein var(--in-duration) calc(4*var(--in-delay)) var(--in-timing-function) both}
+@keyframes square1{0%{left:calc(0*var(--offset));top:calc(0*var(--offset))}8.333%{left:calc(0*var(--offset));top:calc(1*var(--offset))}100%{left:calc(0*var(--offset));top:calc(1*var(--offset))}}
+@keyframes square2{0%{left:calc(0*var(--offset));top:calc(1*var(--offset))}8.333%{left:calc(0*var(--offset));top:calc(2*var(--offset))}16.67%{left:calc(1*var(--offset));top:calc(2*var(--offset))}25%{left:calc(1*var(--offset));top:calc(1*var(--offset))}83.33%{left:calc(1*var(--offset));top:calc(1*var(--offset))}91.67%{left:calc(1*var(--offset));top:calc(0*var(--offset))}100%{left:calc(0*var(--offset));top:calc(0*var(--offset))}}
+@keyframes square3{0%,100%{left:calc(1*var(--offset));top:calc(1*var(--offset))}16.67%{left:calc(1*var(--offset));top:calc(1*var(--offset))}25%{left:calc(1*var(--offset));top:calc(0*var(--offset))}33.33%{left:calc(2*var(--offset));top:calc(0*var(--offset))}41.67%{left:calc(2*var(--offset));top:calc(1*var(--offset))}66.67%{left:calc(2*var(--offset));top:calc(1*var(--offset))}75%{left:calc(2*var(--offset));top:calc(2*var(--offset))}83.33%{left:calc(1*var(--offset));top:calc(2*var(--offset))}91.67%{left:calc(1*var(--offset));top:calc(1*var(--offset))}}
+@keyframes square4{0%{left:calc(2*var(--offset));top:calc(1*var(--offset))}33.33%{left:calc(2*var(--offset));top:calc(1*var(--offset))}41.67%{left:calc(2*var(--offset));top:calc(2*var(--offset))}50%{left:calc(3*var(--offset));top:calc(2*var(--offset))}58.33%{left:calc(3*var(--offset));top:calc(1*var(--offset))}100%{left:calc(3*var(--offset));top:calc(1*var(--offset))}}
+@keyframes square5{0%{left:calc(3*var(--offset));top:calc(1*var(--offset))}50%{left:calc(3*var(--offset));top:calc(1*var(--offset))}58.33%{left:calc(3*var(--offset));top:calc(0*var(--offset))}66.67%{left:calc(2*var(--offset));top:calc(0*var(--offset))}75%{left:calc(2*var(--offset));top:calc(1*var(--offset))}100%{left:calc(2*var(--offset));top:calc(1*var(--offset))}}
+@keyframes squarefadein{0%{transform:scale(.75);opacity:0}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
+
+<!-- Fond animé (vidéo h264 looping, muet, accéléré matériellement) + voile de lisibilité -->
+<video class="bgv" id="bgv" autoplay muted loop playsinline preload="auto" poster="assets/fond-kiosque-poster.jpg" aria-hidden="true">
+  <source src="assets/fond-kiosque.mp4" type="video/mp4">
+</video>
+<div class="bgv-scrim"></div>
 
 <header class="hdr">
   <div class="hdr-l">
@@ -407,6 +465,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
       <button class="lock-go" onclick="lockSubmit()">Déverrouiller</button>
       <button class="lock-clear" onclick="lockClear()">Effacer le code</button>
     </div>
+  </div>
+</div>
+
+<!-- ⏳ Loader plein écran (attentes entre actions) -->
+<div class="kload-ov" id="kloadOv" aria-hidden="true" role="status" aria-live="polite">
+  <div class="kload-card">
+    <div class="loadingspinner"><div id="square1"></div><div id="square2"></div><div id="square3"></div><div id="square4"></div><div id="square5"></div></div>
+    <div class="kload-tx" id="kloadTx">Chargement…</div>
   </div>
 </div>
 
@@ -790,6 +856,9 @@ function api(action, extra, retry){
 function setSync(ok){ $('syncDot').classList.toggle('off',!ok); $('syncTxt').textContent = ok?'En direct':'Hors ligne'; }
 // animation de chargement : spinner sur le bouton cliqué (remplace l'ancien effet d'opacité)
 function setLoading(el,on){ if(el && el.classList) el.classList.toggle('is-loading',!!on); }
+// loader plein écran pour les attentes entre actions (scan carte, remise cadeau, envoi promo…)
+window.showLoader = function(msg){ var o=$('kloadOv'); if(!o) return; if(msg && $('kloadTx')) $('kloadTx').textContent=msg; o.classList.add('on'); o.setAttribute('aria-hidden','false'); };
+window.hideLoader = function(){ var o=$('kloadOv'); if(!o) return; o.classList.remove('on'); o.setAttribute('aria-hidden','true'); };
 
 /* ── TABS ── */
 window.switchTab = function(tab, el){
@@ -818,12 +887,13 @@ window.doIdentify = function(forced){
     query = /^FAL-/i.test(v) ? {card_id:v} : {uid:v};   // FAL-… = card_id, sinon UID
   }
   lastQuery = query;
+  showLoader('Lecture de la carte…');
   api('fid_identify', query, true).then(d=>{
-    setSync(true);
+    hideLoader(); setSync(true);
     if(d.status==='active'){ renderClient(d.client, d.rewards_pending); showFid('fidClient'); }
     else if(d.status==='new'){ currentCard = d.card_id; showFid('fidNew'); }
     else { currentCard = null; showFid('fidUnknown'); }
-  }).catch(()=>{ setSync(false); showFid('fidError'); });
+  }).catch(()=>{ hideLoader(); setSync(false); showFid('fidError'); });
 };
 
 let currentPending = [];
@@ -861,12 +931,13 @@ function renderPending(){
         + '<button class="btn btn-ok" onclick="validateGift(\''+g.code+'\',this)">Remettre</button></div>').join('');
 }
 window.validateGift = function(code, btn){
-  setLoading(btn,true);
+  setLoading(btn,true); showLoader('Remise du cadeau…');
   api('use',{code:code}).then(()=>{
+    hideLoader();
     toast('Cadeau remis ✓', true);
     currentPending = currentPending.filter(g => g.code !== code);   // retire de la liste, recharge l'affichage
     renderPending();
-  }).catch(()=>{ toast('Hors ligne — réessayez'); setLoading(btn,false); });
+  }).catch(()=>{ hideLoader(); toast('Hors ligne — réessayez'); setLoading(btn,false); });
 };
 
 let kpStr='';
@@ -930,7 +1001,7 @@ let agB = { items:{}, reduc:0, qty:1, retrait:'18h00' };
 function agProducts(){ return AG_PRODUCTS[CT] || AG_PRODUCTS.boulangerie; }
 function agRenderProducts(){ var P=agProducts(), box=$('agProducts'); if(!box) return;
   box.innerHTML = P.map(function(p,i){ var ph=agPhoto(p[0]);
-    var vis = ph ? '<img class="agp-img" src="'+ph+'" alt="">' : '<span class="agp-emo">'+p[2]+'</span>';
+    var vis = ph ? '<span class="pcard agp-pcard"><img class="agp-img" src="'+ph+'" alt=""></span>' : '<span class="agp-emo">'+p[2]+'</span>';
     return '<button class="agp" onclick="agAdd('+i+')">'+vis+'<span class="agp-nm">'+esc(p[0])+'</span><span class="agp-pr">'+eur(p[1])+'</span></button>'; }).join('');
 }
 function agOrigine(){ var P=agProducts(), s=0; for(var i in agB.items) s += P[i][1]*agB.items[i]; return Math.round(s*100)/100; }
@@ -970,14 +1041,14 @@ window.agCreate = function(btn){
   if(!keys.length){ toast('Ajoute au moins un produit au panier'); return; }
   var lib = keys.map(function(i){ return P[i][2]+' '+P[i][0]+(agB.items[i]>1?(' ×'+agB.items[i]):''); }).join(' · ');
   var o=agOrigine(), f=Math.round(o*(1-agB.reduc/100)*100)/100;
-  setLoading(btn,true);
+  setLoading(btn,true); showLoader('Mise en ligne du panier…');
   api('ag_create',{libelle:lib, qty:agB.qty, prix_reduit:f, prix_origine:o, retrait_avant:agB.retrait}).then(function(d){
     if(d.status==='ok'){ toast('Panier en ligne ✓'+(d.notified?(' · '+d.notified+' notifié'+(d.notified>1?'s':'')):''), true);
       agB={items:{},reduc:0,qty:1,retrait:agB.retrait}; agBasket(); if($('agQty'))$('agQty').textContent='1';
       document.querySelectorAll('#agReducs .chip').forEach(function(c,k){ c.classList.toggle('on',k===0); });
       agLoad();
     } else toast('Erreur : '+(d.message||d.status));
-  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
+  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); hideLoader(); });
 };
 function agLoad(){
   api('ag_list',{}, true).then(d=>{
@@ -1029,7 +1100,7 @@ function mkOffer(){
 }
 function mkRenderProducts(){
   const box=$('mkProducts'); if(!box) return;
-  box.innerHTML = MK_PRODUCTS.map(function(p){ return '<button class="mkprod'+(p.id===mkS.pid?' on':'')+'" onclick="mkPick(\''+p.id+'\')"><img src="'+p.img+'" alt="" loading="lazy"><span>'+esc(p.name)+'</span></button>'; }).join('');
+  box.innerHTML = MK_PRODUCTS.map(function(p){ return '<button class="mkprod'+(p.id===mkS.pid?' on':'')+'" onclick="mkPick(\''+p.id+'\')"><span class="pcard"><img src="'+p.img+'" alt="" loading="lazy"></span><span>'+esc(p.name)+'</span></button>'; }).join('');
 }
 window.mkPick = function(id){ const p=MK_PRODUCTS.find(function(x){return x.id===id;}); if(!p) return;
   mkS.pid=id; mkS.off=p.off; document.querySelectorAll('#mkProducts .mkprod').forEach(function(b){b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+id+"'")>=0);});
@@ -1121,14 +1192,14 @@ function mkPayload(statut, date){ const o=mkOffer();
     statut:statut, date_envoi:(date||'2026-01-01'), poster:mkDrawPoster() }; }
 
 window.mkSendTest = function(btn){
-  setLoading(btn,true);
+  setLoading(btn,true); showLoader('Envoi de l\'aperçu…');
   apiPost('mk_create', mkPayload('brouillon')).then(function(d){
     if(d.status!=='ok') throw new Error(d.message||d.status);
     return api('mk_test',{id:d.id});
   }).then(function(d){
     if(d.status==='ok') toast('Aperçu envoyé à '+(d.test_envoye_a||'votre email')+' ✓', true);
     else toast('Erreur : '+(d.message||d.status));
-  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); });
+  }).catch(function(){ toast('Hors ligne — réessayez'); }).then(function(){ setLoading(btn,false); hideLoader(); });
 };
 let mkArmed=null;
 window.mkSendAll = function(btn){
@@ -1136,16 +1207,17 @@ window.mkSendAll = function(btn){
     btn.textContent=(mkS.when==='demain')?'⚠️ Confirmer la programmation ?':'⚠️ Confirmer l\'envoi à TOUS ?'; return; }
   clearTimeout(mkArmed); mkArmed=null; btn.textContent=mkBtnLabel(); setLoading(btn,true);
   const sched=(mkS.when==='demain');
+  showLoader(sched?'Programmation de la campagne…':'Envoi de la promo…');
   apiPost('mk_create', mkPayload(sched?'prevu':'brouillon', sched?mkTomorrow():'2026-01-01')).then(function(d){
     if(d.status!=='ok') throw new Error(d.message||d.status);
-    if(sched){ toast('🗓️ Campagne programmée pour demain ✓', true); mkLoadHist(); setLoading(btn,false); return null; }
+    if(sched){ toast('🗓️ Campagne programmée pour demain ✓', true); mkLoadHist(); setLoading(btn,false); hideLoader(); return null; }
     return api('mk_send',{id:d.id}).then(function(r){
       if(r.status==='ok') toast('Promo envoyée à '+r.nb_envoyes+' client(s) 🚀', true);
       else if(r.status==='quota') toast('Quota email insuffisant aujourd\'hui');
       else toast('Erreur : '+(r.message||r.status));
-      mkLoadHist(); setLoading(btn,false);
+      mkLoadHist(); setLoading(btn,false); hideLoader();
     });
-  }).catch(function(){ toast('Hors ligne — réessayez'); setLoading(btn,false); });
+  }).catch(function(){ toast('Hors ligne — réessayez'); setLoading(btn,false); hideLoader(); });
 };
 
 /* ════ DASHBOARD ════ */
