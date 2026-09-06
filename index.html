@@ -151,6 +151,86 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   border-radius:14px;padding:12px 16px;font-size:13px;color:#fca5a5;
   margin-bottom:16px;text-align:center;display:none}
 .err-banner.show{display:block}
+/* ── OFFRE DU JOUR ──────────────────────────────────────────────
+   L'idée centrale de cet onglet : le commerçant VOIT la carte de son client
+   pendant qu'il écrit. La contrainte de longueur cesse d'être une règle à
+   retenir — elle se voit, le texte rétrécit sous ses yeux comme il le fera
+   vraiment sur l'iPhone. */
+.of-lead{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:18px}
+.of-lead b{color:var(--white);font-weight:600}
+
+/* La maquette de carte Wallet — proportions et couleurs de la vraie */
+.wcard{border-radius:18px;overflow:hidden;margin-bottom:6px;
+  background:rgb(62,122,26);box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
+  transform:perspective(900px) rotateX(2deg);transform-origin:top center}
+.wc-top{display:flex;align-items:center;gap:9px;padding:11px 14px}
+.wc-ring{width:22px;height:22px;border-radius:50%;border:4px solid var(--gold);flex-shrink:0}
+.wc-org{font-size:12px;font-weight:700;color:#fff;letter-spacing:-.01em}
+/* le bandeau : panneau sombre à gauche, chevrons + tampons à droite */
+.wc-strip{display:flex;height:88px;position:relative;overflow:hidden;
+  background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.34) 38%,transparent 52%)}
+.wc-strip::before{content:'';position:absolute;inset:0;z-index:0;
+  background:repeating-linear-gradient(115deg,transparent 0 16px,rgba(255,255,255,.055) 16px 19px)}
+.wc-pts{width:40%;padding:12px 0 0 14px;position:relative;z-index:1}
+.wc-num{font-size:32px;font-weight:300;color:#fff;line-height:.92;letter-spacing:-.02em}
+.wc-lbl{font-size:9px;font-weight:600;color:var(--gold2);letter-spacing:.07em;margin-top:3px}
+.wc-grid{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;
+  align-content:center;padding:0 26px 0 6px;position:relative;z-index:1}
+.wc-dot{aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(255,255,255,.42)}
+.wc-dot.on{background:linear-gradient(160deg,#E2B25A,#C8963E);border-color:rgba(255,255,255,.5);
+  box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.wc-dot.on{display:flex;align-items:center;justify-content:center}
+.wc-dot.on::after{content:'✓';color:#25490f;font-size:11px;font-weight:900;line-height:1}
+/* les deux champs qui se partagent la ligne — c'est TOUT le sujet */
+.wc-fields{display:flex;gap:12px;padding:11px 14px 15px}
+.wc-f{flex:1;min-width:0}
+.wc-f-lbl{font-size:8.5px;font-weight:700;color:var(--gold2);letter-spacing:.07em;margin-bottom:3px}
+.wc-f-val{color:#fff;font-weight:500;line-height:1.35;word-break:break-word}
+.wc-f-val.vide{color:rgba(255,255,255,.45);font-style:italic}
+.wc-caption{font-size:10px;color:var(--muted);text-align:center;margin-bottom:20px;letter-spacing:.03em}
+
+/* Saisie */
+.of-field{position:relative;margin-bottom:6px}
+.of-input{width:100%;padding:16px 62px 16px 16px;background:rgba(255,255,255,.04);
+  border:1.5px solid rgba(255,255,255,.08);border-radius:18px;color:var(--white);
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:600;outline:none;
+  transition:border-color .2s,background .2s}
+.of-input:focus{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.04)}
+.of-input::placeholder{color:rgba(255,255,255,.22);font-weight:500}
+.of-count{position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.02em;
+  font-variant-numeric:tabular-nums;transition:color .2s}
+.of-count.warn{color:var(--amber)}
+.of-count.bad{color:var(--red)}
+.of-note{font-size:11.5px;color:var(--muted);line-height:1.6;margin-bottom:16px;min-height:18px}
+.of-note.warn{color:var(--amber)}
+.of-note.bad{color:#fca5a5}
+
+/* Suggestions */
+.of-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.of-chip{padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.04);color:var(--muted2);font-family:'Inter',sans-serif;
+  font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s;text-align:left}
+.of-chip:active{background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.28);color:var(--gold2)}
+
+/* Envoi */
+.of-send{width:100%;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;border:none;border-radius:18px;font-family:'Inter',sans-serif;
+  font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 28px rgba(212,168,67,.25);
+  transition:all .2s;margin-bottom:10px}
+.of-send:active{transform:scale(.98)}
+.of-send:disabled{opacity:.4;cursor:default;box-shadow:none}
+
+/* Offre en cours */
+.of-live{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;padding:15px 16px;margin-bottom:16px;display:none}
+.of-live.show{display:block}
+.of-live-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.of-live-dot{width:6px;height:6px;border-radius:50%;background:var(--gold2);
+  box-shadow:0 0 8px rgba(240,201,106,.7);animation:lp 2s ease-in-out infinite}
+.of-live-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.of-live-txt{font-size:14px;font-weight:600;color:var(--white);line-height:1.45;margin-bottom:4px}
+.of-live-meta{font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -171,6 +251,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <div class="tabs">
   <div class="tab on" onclick="switchTab('validation',this)"><span class="tab-icon">✅</span>Validation</div>
   <div class="tab" onclick="switchTab('dashboard',this)"><span class="tab-icon">📊</span>Dashboard</div>
+  <div class="tab" onclick="switchTab('offre',this)"><span class="tab-icon">📣</span>Offre</div>
 </div>
 
 <!-- VALIDATION -->
@@ -226,13 +307,64 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 </div>
 
+<!-- OFFRE DU JOUR -->
+<div class="panel" id="panel-offre">
+  <div class="err-banner" id="ofErr"></div>
+
+  <div class="of-live" id="ofLive">
+    <div class="of-live-top"><div class="of-live-dot"></div><div class="of-live-lbl">Offre en cours</div></div>
+    <div class="of-live-txt" id="ofLiveTxt">—</div>
+    <div class="of-live-meta" id="ofLiveMeta">—</div>
+  </div>
+
+  <div class="of-lead">
+    Votre message s'affiche sur la carte de <b id="ofNb">…</b> et arrive
+    directement sur l'écran verrouillé de vos clients.
+  </div>
+
+  <!-- La carte du client, en direct -->
+  <div class="wcard">
+    <div class="wc-top"><div class="wc-ring"></div><div class="wc-org" id="ofOrg">Falman Em…</div></div>
+    <div class="wc-strip">
+      <div class="wc-pts"><div class="wc-num">5</div><div class="wc-lbl">MES TAMPONS</div></div>
+      <div class="wc-grid" id="ofGrid"></div>
+    </div>
+    <div class="wc-fields">
+      <div class="wc-f">
+        <div class="wc-f-lbl">CADEAU A RECUPERER</div>
+        <div class="wc-f-val vide" style="font-size:11px">Aucun pour l'instant</div>
+      </div>
+      <div class="wc-f">
+        <div class="wc-f-lbl">OFFRE DU MOMENT</div>
+        <div class="wc-f-val" id="ofPreview" style="font-size:11px">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="of-caption wc-caption">Aperçu réel — le texte rétrécit comme sur l'iPhone</div>
+
+  <div class="of-field">
+    <input class="of-input" id="ofInput" type="text" maxlength="64" autocomplete="off"
+           placeholder="Fournée de 16h : -30 % membres" oninput="ofType()">
+    <div class="of-count" id="ofCount">0</div>
+  </div>
+  <div class="of-note" id="ofNote">Visez 40 caractères : au-delà, l'iPhone réduit la police.</div>
+
+  <div class="of-chips" id="ofChips"></div>
+
+  <button class="of-send" id="ofSend" onclick="ofEnvoyer()">
+    <span id="ofSendTxt">Envoyer aux cartes</span>
+    <div class="loader-inline" id="ofLoader"></div>
+  </button>
+  <button class="btn-reset" onclick="ofEffacer()">Retirer l'offre des cartes</button>
+</div>
+
 <script>
 /* ══════════════════════════════════
    CONFIG — seule ligne à changer si
    l'URL Apps Script change
 ══════════════════════════════════ */
 // "Sheets dashboard" Apps Script — même URL pour check, use, dashboard
-const AS_URL = 'https://script.google.com/macros/s/AKfycbzfWEnvS2-tDmkR6xOds9WTTiJTO1WY9Qam0yjD1Zfk8CIe-kTG8lVxtoUYkYco6fiW/exec';
+const AS_URL = 'https://script.google.com/macros/s/AKfycbx0N4dLSGtyUMgA_lA8N9O-B3rleX7zHgTFAXZyiV7hEf5ioXAcVI245hHdi4CMKuCn/exec';
 
 /* ── Appel XHR générique (compatible Safari) ── */
 function xhrGet(url, onSuccess, onError){
@@ -278,6 +410,7 @@ function switchTab(tab, el){
   el.classList.add('on');
   document.getElementById('panel-' + tab).classList.add('on');
   if(tab === 'dashboard' && !dashLoaded){ loadDash(); dashLoaded = true; }
+  if(tab === 'offre'){ ofCharger(); }
 }
 
 function fmtCode(input){
@@ -465,6 +598,156 @@ function renderDash(){
     <button class="rbtn" onclick="loadDash()">↻ Actualiser</button>
   `;
 }
+/* ═══ 📣 OFFRE DU JOUR ═══════════════════════════════════════════
+   Le navigateur ne signe rien : c'est Apps Script qui détient le secret du
+   service Wallet et qui signe l'appel. Ici on ne fait que lui parler. */
+const OF_CONFORT = 40;     // au-delà, PassKit réduit la police
+const OF_MAX     = 64;     // au-delà, le service tronque
+const OF_SECRET  = params.get('secret') || '';   // exigé quand SECURITY.ENABLED passera à true
+
+const OF_EXEMPLES = [
+  'Fournée de 16h : -30 % membres',
+  'Pains au chocolat chauds a 16h',
+  '-30 % sur les viennoiseries',
+  'Baguettes tradition offertes des 2 achetees',
+  'Fermé exceptionnellement demain'
+];
+
+let ofOccupe = false;
+
+/* La grille de tampons de l'aperçu (5 sur 10, comme une vraie carte en cours) */
+(function(){
+  const g = document.getElementById('ofGrid');
+  if(!g) return;
+  let h = '';
+  for(let i=0;i<10;i++) h += '<div class="wc-dot' + (i<5 ? ' on' : '') + '"></div>';
+  g.innerHTML = h;
+  const c = document.getElementById('ofChips');
+  c.innerHTML = OF_EXEMPLES.map(function(t){
+    return '<button class="of-chip" onclick="ofChoisir(this)">' + t + '</button>';
+  }).join('');
+})();
+
+window.ofChoisir = function(el){
+  document.getElementById('ofInput').value = el.textContent.trim();
+  ofType();
+};
+
+/* Reproduit ce que fait PassKit : il ne coupe pas le texte trop long, il REDUIT
+   LA POLICE. Le montrer ici vaut tous les avertissements écrits. */
+function ofTaille(n){
+  if(n <= 24) return 11.5;
+  if(n <= 32) return 10.5;
+  if(n <= 40) return 9.5;
+  if(n <= 52) return 8;
+  return 6.8;
+}
+
+window.ofType = function(){
+  const v = document.getElementById('ofInput').value;
+  const n = v.length;
+  const prev  = document.getElementById('ofPreview');
+  const count = document.getElementById('ofCount');
+  const note  = document.getElementById('ofNote');
+
+  prev.textContent = v || '—';
+  prev.classList.toggle('vide', !v);
+  prev.style.fontSize = ofTaille(n) + 'px';
+
+  count.textContent = n;
+  count.className = 'of-count' + (n > OF_MAX ? ' bad' : n > OF_CONFORT ? ' warn' : '');
+
+  if(n > OF_MAX){
+    note.className = 'of-note bad';
+    note.textContent = 'Trop long : les ' + (n - OF_MAX) + ' derniers caractères seront coupés.';
+  } else if(n > OF_CONFORT){
+    note.className = 'of-note warn';
+    note.textContent = 'Ça passe, mais la police est déjà réduite — voyez l\'aperçu.';
+  } else {
+    note.className = 'of-note';
+    note.textContent = 'Visez 40 caractères : au-delà, l\'iPhone réduit la police.';
+  }
+};
+
+function ofErreur(msg){
+  const b = document.getElementById('ofErr');
+  b.textContent = msg;
+  b.classList.add('show');
+  setTimeout(function(){ b.classList.remove('show'); }, 6000);
+}
+
+function ofCharger(){
+  xhrGet(AS_URL + '?action=wallet_offre_etat', function(d){
+    if(d.status !== 'ok') return;
+    document.getElementById('ofNb').textContent =
+      d.cartes + ' carte' + (d.cartes > 1 ? 's' : '');
+    const live = document.getElementById('ofLive');
+    if(d.texte){
+      document.getElementById('ofLiveTxt').textContent = d.texte;
+      document.getElementById('ofLiveMeta').textContent =
+        'Envoyée ' + (d.depuis || '') + ' · elle disparaît toute seule au bout de 24 h';
+      live.classList.add('show');
+    } else {
+      live.classList.remove('show');
+    }
+    const b = document.getElementById('ofSend');
+    b.disabled = d.cartes === 0;
+    document.getElementById('ofSendTxt').textContent =
+      d.cartes === 0 ? 'Aucune carte enregistrée' : 'Envoyer aux ' + d.cartes + ' carte' + (d.cartes > 1 ? 's' : '');
+  }, function(err){ ofErreur(err); });
+}
+
+function ofAttendre(actif){
+  ofOccupe = actif;
+  document.getElementById('ofSend').disabled = actif;
+  document.getElementById('ofSendTxt').style.display = actif ? 'none' : '';
+  document.getElementById('ofLoader').style.display  = actif ? 'block' : 'none';
+}
+
+window.ofEnvoyer = function(){
+  if(ofOccupe) return;
+  const v = document.getElementById('ofInput').value.trim();
+  if(!v){ ofErreur('Écrivez d\'abord votre message.'); return; }
+  ofAttendre(true);
+  xhrGet(AS_URL + '?action=wallet_offre&message=' + encodeURIComponent(v)
+         + (OF_SECRET ? '&secret=' + encodeURIComponent(OF_SECRET) : ''),
+    function(d){
+      ofAttendre(false);
+      if(d.status !== 'ok'){ ofErreur(d.message || 'Envoi refusé'); return; }
+      flashOk('📣 Envoyée à ' + d.cartes + ' carte' + (d.cartes > 1 ? 's' : ''));
+      document.getElementById('ofInput').value = '';
+      ofType();
+      ofCharger();
+    },
+    function(err){ ofAttendre(false); ofErreur(err); });
+};
+
+window.ofEffacer = function(){
+  if(ofOccupe) return;
+  ofAttendre(true);
+  xhrGet(AS_URL + '?action=wallet_offre&clear=1'
+         + (OF_SECRET ? '&secret=' + encodeURIComponent(OF_SECRET) : ''),
+    function(d){
+      ofAttendre(false);
+      if(d.status !== 'ok'){ ofErreur(d.message || 'Refusé'); return; }
+      flashOk('Offre retirée des cartes');
+      ofCharger();
+    },
+    function(err){ ofAttendre(false); ofErreur(err); });
+};
+
+/* Petit bandeau de confirmation, façon .flash-ok déjà utilisé ailleurs */
+function flashOk(txt){
+  const d = document.createElement('div');
+  d.className = 'flash-ok';
+  d.textContent = txt;
+  document.body.appendChild(d);
+  setTimeout(function(){ d.remove(); }, 1800);
+}
+
+document.getElementById('ofOrg').textContent = commerce.slice(0, 12) + '…';
+ofType();
+
 </script>
 </body>
 </html>
