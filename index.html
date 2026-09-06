@@ -462,7 +462,82 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
    l'URL Apps Script change
 ══════════════════════════════════ */
 // "Sheets dashboard" Apps Script — même URL pour check, use, dashboard
-const AS_URL = 'https://script.google.com/macros/s/AKfycbx0N4dLSGtyUMgA_lA8N9O-B3rleX7zHgTFAXZyiV7hEf5ioXAcVI245hHdi4CMKuCn/exec';
+/* Commerce historique — sert de repli si le registre est injoignable. */
+var BA_REPLI = {
+  cle: 'falman',
+  nom: 'Falman Emmanuelle & Flavien',
+  nom_court: 'Falman',
+  metier: 'boulangerie',
+  apps_script: 'https://script.google.com/macros/s/AKfycbx0N4dLSGtyUMgA_lA8N9O-B3rleX7zHgTFAXZyiV7hEf5ioXAcVI245hHdi4CMKuCn/exec'
+};
+
+/* ═══ REGISTRE DES COMMERCES ═════════════════════════════════════
+   Une seule source de vérité : commerces.json, servi par le site client.
+   Ajouter un commerce = une entrée là-bas, et rien à toucher ici.
+
+   Deux notions, longtemps confondues dans ?type= :
+     metier   = l'apparence (thème, lots de la roue, catalogue)
+     commerce = l'identité et le backend
+   Les confondre interdisait deux boulangeries.
+
+   ⚠️ ?type= reste accepté et le restera TOUJOURS : les cartes Wallet déjà dans
+   les téléphones des clients contiennent card.html?id=…&type=boulangerie.
+
+   ⚠️ Résolution ASYNCHRONE. Toute la page doit donc attendre BA.pret() avant son
+   premier appel au backend. En cas de panne du registre (réseau, fichier absent),
+   on retombe sur BA_REPLI — le commerce historique — pour que la boutique
+   continue de tourner. Un commerçant hors ligne est un commerçant perdu. */
+var BA = (function(){
+  var REGISTRE = 'https://boulangerieavisclient.vercel.app/commerces.json';
+  var q       = new URLSearchParams(location.search);
+  var cle     = (q.get('c') || '').trim().toLowerCase();
+  var metier  = (q.get('type') || '').trim().toLowerCase();
+  var promesse = null;
+
+  function resoudre(reg){
+    var k = null;
+    if (cle && reg.commerces && reg.commerces[cle]) k = cle;
+    if (!k && metier && reg.alias_metier && reg.alias_metier[metier]) k = reg.alias_metier[metier];
+    if (!k) k = reg.defaut;
+    var c = reg.commerces && reg.commerces[k];
+    if (!c || !c.apps_script) return BA_REPLI;
+    /* copie : on ne veut pas que la page modifie le registre en mémoire */
+    var out = {}; for (var p in c) out[p] = c[p];
+    out.cle = k;
+    return out;
+  }
+
+  return {
+    /** @returns {Promise<object>} le commerce courant — ne rejette jamais. */
+    pret: function(){
+      if (promesse) return promesse;
+      promesse = new Promise(function(ok){
+        var x = new XMLHttpRequest();
+        /* cache-buster à la minute : un commerce ajouté se propage vite, sans
+           pour autant refaire la requête à chaque navigation */
+        x.open('GET', REGISTRE + '?v=' + Math.floor(Date.now() / 60000), true);
+        x.timeout = 4000;
+        x.onload = function(){
+          try { ok(resoudre(JSON.parse(x.responseText))); }
+          catch(e){ console.warn('[BA] registre illisible, repli'); ok(BA_REPLI); }
+        };
+        x.onerror = x.ontimeout = function(){
+          console.warn('[BA] registre injoignable, repli');
+          ok(BA_REPLI);
+        };
+        x.send();
+      });
+      return promesse;
+    }
+  };
+})();
+
+/* ⚠️ AS_URL n'est PLUS une constante : c'est le registre qui la donne, et un
+   deuxieme commercant doit voir SON backend, pas celui de Falman. Elle est
+   renseignee des que BA.pret() a repondu — d'ou le verrou plus bas, qui empeche
+   toute action tant que le commerce n'est pas connu. */
+let AS_URL = BA_REPLI.apps_script;
+let BA_COM = BA_REPLI;
 
 /* ── Appel XHR générique (compatible Safari) ── */
 function xhrGet(url, onSuccess, onError){
@@ -484,8 +559,34 @@ function xhrGet(url, onSuccess, onError){
 
 /* ── Init ── */
 const params   = new URLSearchParams(window.location.search);
-const commerce = params.get('commerce') || 'Falman Emmanuelle et Flavien';
-document.getElementById('commerceName').textContent = commerce.split(' ')[0];
+let   commerce = params.get('commerce') || BA_REPLI.nom;
+document.getElementById('commerceName').textContent = (commerce.split(' ')[0]);
+
+/* Le registre repond, puis seulement la page devient utilisable. Sans ce verrou,
+   un premier clic parti trop tot interrogerait le backend du mauvais commerce. */
+let baPret = false;
+BA.pret().then(function(c){
+  BA_COM = c;
+  AS_URL = c.apps_script;
+  baPret = true;
+  if(!params.get('commerce')) commerce = c.nom || commerce;
+  document.getElementById('commerceName').textContent =
+    (c.nom_court || commerce.split(' ')[0]);
+  var org = document.getElementById('ofOrg');
+  if(org) org.textContent = String(commerce).slice(0, 12) + '…';
+  document.dispatchEvent(new Event('ba:pret'));
+});
+
+/* Attend le registre avant d'executer une action. Les fonctions declenchees par
+   l'utilisateur passent par ici ; a ce stade la reponse est deja la 99 fois sur
+   100, donc l'attente est invisible. */
+function baAlors(fn){
+  if(baPret) return fn();
+  document.addEventListener('ba:pret', function once(){
+    document.removeEventListener('ba:pret', once);
+    fn();
+  });
+}
 
 let currentCode = '';
 let coupons = [], period = 7, dashLoaded = false;
@@ -519,6 +620,7 @@ function fmtCode(input){
    VALIDATION
 ══════════════════════════════════ */
 function validateCode(){
+  if(!baPret) return baAlors(validateCode);
   const input = document.getElementById('codeInput').value.trim();
   if(!input || input.length !== 6){ alert('Entrez un code à 6 chiffres'); return; }
   currentCode = input;
@@ -624,6 +726,7 @@ function flash(msg){
    DASHBOARD
 ══════════════════════════════════ */
 function loadDash(){
+  if(!baPret) return baAlors(loadDash);
   document.getElementById('dashContent').innerHTML =
     '<div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Chargement...</div></div>';
 
@@ -794,6 +897,7 @@ function ofErreur(msg){
 }
 
 function ofCharger(){
+  if(!baPret) return baAlors(ofCharger);
   xhrGet(AS_URL + '?action=wallet_offre_etat', function(d){
     if(d.status !== 'ok') return;
     document.getElementById('ofNb').textContent =
@@ -992,6 +1096,7 @@ function scanTrouve(texte){
 let carteId = '';
 
 function carteCharger(id){
+  if(!baPret) return baAlors(function(){ carteCharger(id); });
   carteId = id;
   showErr('');
   showLoader(true);
