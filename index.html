@@ -231,6 +231,69 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .of-live-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .of-live-txt{font-size:14px;font-weight:600;color:var(--white);line-height:1.45;margin-bottom:4px}
 .of-live-meta{font-size:11px;color:var(--muted)}
+/* ── SCANNER QR ─────────────────────────────────────────────────
+   Le QR de la carte Wallet porte le card_id, pas un code de coupon : scanner
+   une carte doit donc montrer LE CLIENT et ses cadeaux, pas juste valider un
+   code. Les deux entrées cohabitent — 6 chiffres = coupon, tout le reste = carte. */
+.btn-scan{width:100%;padding:17px;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:rgba(212,168,67,.09);border:1.5px solid rgba(212,168,67,.28);border-radius:20px;
+  color:var(--gold2);font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
+  cursor:pointer;transition:all .2s;margin-bottom:16px}
+.btn-scan:active{background:rgba(212,168,67,.16);transform:scale(.985)}
+.btn-scan .sc-ico{font-size:19px;line-height:1}
+.or-sep{display:flex;align-items:center;gap:12px;margin:0 0 16px;
+  font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.or-sep::before,.or-sep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+
+/* Vue caméra plein écran */
+.scan-ov{position:fixed;inset:0;z-index:500;background:#000;display:none;
+  flex-direction:column;align-items:center;justify-content:center}
+.scan-ov.on{display:flex}
+.scan-ov video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scan-mask{position:absolute;inset:0;background:rgba(0,0,0,.62);
+  -webkit-mask:radial-gradient(circle at center,transparent 0,transparent 0);}
+.scan-frame{position:relative;z-index:2;width:min(72vw,290px);aspect-ratio:1;
+  border-radius:28px;box-shadow:0 0 0 100vmax rgba(0,0,0,.62)}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:44px;height:44px;
+  border:3px solid var(--gold2);border-radius:14px}
+.scan-frame::before{top:-2px;left:-2px;border-right:none;border-bottom:none}
+.scan-frame::after{bottom:-2px;right:-2px;border-left:none;border-top:none}
+.scan-corner{position:absolute;width:44px;height:44px;border:3px solid var(--gold2);border-radius:14px}
+.scan-corner.tr{top:-2px;right:-2px;border-left:none;border-bottom:none}
+.scan-corner.bl{bottom:-2px;left:-2px;border-right:none;border-top:none}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--gold2),transparent);
+  box-shadow:0 0 12px rgba(240,201,106,.7);animation:scanmv 2.2s ease-in-out infinite}
+@keyframes scanmv{0%,100%{top:10%}50%{top:88%}}
+.scan-hint{position:relative;z-index:2;margin-top:26px;font-size:14px;font-weight:600;
+  color:#fff;text-align:center;padding:0 30px;line-height:1.5;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.scan-hint.err{color:#fca5a5}
+.scan-close{position:absolute;bottom:38px;z-index:3;padding:14px 34px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  backdrop-filter:blur(14px);border-radius:999px;color:#fff;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+
+/* Fiche client après scan de carte */
+.cl-solde{display:inline-flex;align-items:baseline;gap:6px;padding:8px 18px;margin-bottom:14px;
+  background:rgba(212,168,67,.09);border:1px solid rgba(212,168,67,.22);border-radius:999px}
+.cl-solde b{font-size:20px;font-weight:900;color:var(--gold2);letter-spacing:-.02em}
+.cl-solde span{font-size:12px;font-weight:600;color:var(--muted2)}
+.cl-list{width:100%;margin-bottom:16px}
+.cl-item{display:flex;align-items:center;gap:11px;padding:13px 14px;margin-bottom:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;text-align:left}
+.cl-item.att{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)}
+.cl-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.cl-txt{flex:1;min-width:0}
+.cl-lib{font-size:13.5px;font-weight:700;color:var(--white);line-height:1.3}
+.cl-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.cl-sub.amb{color:var(--amber)}
+.cl-btn{padding:9px 15px;border-radius:12px;border:none;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green),#16A34A);color:#fff;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s}
+.cl-btn:active{transform:scale(.95)}
+.cl-btn:disabled{background:rgba(255,255,255,.07);color:var(--muted);cursor:default}
+.cl-vide{font-size:13px;color:var(--muted);padding:18px 0;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
@@ -259,6 +322,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="err-banner" id="errBanner"></div>
 
   <div id="inputSection">
+    <button class="btn-scan" onclick="scanOuvrir()"><span class="sc-ico">⛶</span>Scanner la carte du client</button>
+    <div class="or-sep">ou saisir le code</div>
     <label class="val-label">Code client</label>
     <input class="code-input" id="codeInput" type="tel" placeholder="000000" maxlength="6" oninput="fmtCode(this)">
     <div class="val-hint">Tapez le code ou scannez le QR code</div>
@@ -279,10 +344,32 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <button class="btn-reset" onclick="resetVal()">Annuler</button>
   </div>
 
+  <div class="result" id="resCarte">
+    <div class="res-icon ri-ok">🪪</div>
+    <div class="res-title rt-ok" id="clNom">Client</div>
+    <div class="cl-solde"><b id="clTampons">0</b><span>tampons</span></div>
+    <div class="code-badge" id="clId" style="font-size:16px">—</div>
+    <div class="cl-list" id="clList"></div>
+    <button class="btn-reset" onclick="resetVal()">Terminer</button>
+  </div>
+
+  <!-- Validé par le CLIENT à l'instant : le cadeau est à remettre, ce n'est
+       surtout pas un refus. C'est le cas normal du self-redeem. -->
+  <div class="result" id="resFenetre">
+    <div class="res-icon ri-ok">🎁</div>
+    <div class="res-title rt-ok">À remettre</div>
+    <div class="res-prenom" id="fenPrenom"></div>
+    <div class="res-gain" id="fenGain">—</div>
+    <div class="res-desc">Le client vient de valider son cadeau devant vous.<br>
+      Il vous reste <b id="fenReste">—</b> pour le lui remettre.</div>
+    <div class="code-badge" id="fenCode">—</div>
+    <button class="btn-reset" onclick="resetVal()">Terminer</button>
+  </div>
+
   <div class="result" id="resUsed">
     <div class="res-icon ri-used">⚠</div>
     <div class="res-title rt-used">Déjà utilisé</div>
-    <div class="res-desc">Ce coupon a déjà été validé. Ne pas remettre le gain.</div>
+    <div class="res-desc">Ce coupon a été validé il y a plus d'une heure.<br>Ne pas remettre le gain.</div>
     <div class="code-badge" id="usedCode">—</div>
     <button class="btn-reset" onclick="resetVal()">Scanner un autre code</button>
   </div>
@@ -356,6 +443,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="loader-inline" id="ofLoader"></div>
   </button>
   <button class="btn-reset" onclick="ofEffacer()">Retirer l'offre des cartes</button>
+</div>
+
+<!-- SCANNER -->
+<div class="scan-ov" id="scanOv">
+  <video id="scanVid" playsinline muted autoplay></video>
+  <div class="scan-frame">
+    <div class="scan-corner tr"></div><div class="scan-corner bl"></div>
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-hint" id="scanHint">Visez le QR de la carte du client</div>
+  <button class="scan-close" onclick="scanFermer()">Fermer</button>
 </div>
 
 <script>
@@ -437,6 +535,15 @@ function validateCode(){
         document.getElementById('validCode').textContent  = currentCode;
         document.getElementById('validPrenom').textContent = data.prenom ? '👤 ' + data.prenom : '';
         showRes('resValid');
+      } else if(data.status === 'used' && data.en_fenetre){
+        /* Le client a validé lui-même il y a moins d'une heure : le cadeau est
+           EN ATTENTE DE REMISE, pas refusé. Sans cette branche le vendeur voyait
+           « déjà utilisé » en rouge et n'osait plus rien donner. */
+        document.getElementById('fenGain').textContent   = data.gain || 'Le cadeau';
+        document.getElementById('fenPrenom').textContent = data.prenom ? '👤 ' + data.prenom : '';
+        document.getElementById('fenCode').textContent   = currentCode;
+        document.getElementById('fenReste').textContent  = fmtReste(data.reste_sec);
+        showRes('resFenetre');
       } else if(data.status === 'used'){
         document.getElementById('usedCode').textContent = currentCode;
         showRes('resUsed');
@@ -468,15 +575,25 @@ function confirmUsed(){
   );
 }
 
+/* Le serveur envoie une DURÉE en secondes, jamais une heure : l'horloge du
+   téléphone du vendeur peut diverger de plusieurs heures de celle d'Apps Script
+   (écart constaté, cf. MEMOIRE/9). On ne fait que la mettre en forme. */
+function fmtReste(sec){
+  const s = Math.max(0, Number(sec) || 0);
+  if(s < 60) return 'moins d\'une minute';
+  const m = Math.round(s / 60);
+  return m < 60 ? m + ' minutes' : '1 heure';
+}
+
 function showRes(id){
   document.getElementById('inputSection').style.display = 'none';
-  ['resValid','resUsed','resInvalid'].forEach(r => document.getElementById(r).classList.remove('show'));
+  ['resValid','resUsed','resInvalid','resCarte','resFenetre'].forEach(r => document.getElementById(r).classList.remove('show'));
   document.getElementById(id).classList.add('show');
 }
 
 function resetVal(){
   document.getElementById('inputSection').style.display = 'block';
-  ['resValid','resUsed','resInvalid'].forEach(r => document.getElementById(r).classList.remove('show'));
+  ['resValid','resUsed','resInvalid','resCarte','resFenetre'].forEach(r => document.getElementById(r).classList.remove('show'));
   document.getElementById('codeInput').value = '';
   currentCode = '';
   showLoader(false);
@@ -747,6 +864,204 @@ function flashOk(txt){
 
 document.getElementById('ofOrg').textContent = commerce.slice(0, 12) + '…';
 ofType();
+
+/* ═══ 📷 SCANNER QR ══════════════════════════════════════════════
+   Deux natures de QR circulent dans le systeme :
+     - la carte Wallet, dont le QR porte le card_id (ex. FAL-OHG1L1) ;
+     - un code coupon a 6 chiffres, s'il est un jour imprime en QR.
+   On route sur la forme : 6 chiffres = coupon (parcours existant), tout le
+   reste = carte, et on affiche alors le client et ses cadeaux.
+
+   Decodage : BarcodeDetector quand le navigateur l'a (Android/Chrome, gratuit et
+   rapide), sinon jsQR charge a la demande. Safari iOS n'a pas BarcodeDetector,
+   c'est donc jsQR qui travaille sur iPhone — d'ou le chargement paresseux plutot
+   qu'un script de 130 Ko impose a chaque ouverture de la page. */
+const JSQR_URL = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+
+let scanFlux = null, scanAnim = null, scanDetecteur = null, scanActif = false;
+
+function scanDire(txt, err){
+  const h = document.getElementById('scanHint');
+  h.textContent = txt;
+  h.className = 'scan-hint' + (err ? ' err' : '');
+}
+
+function chargerJsQR(){
+  if(window.jsQR) return Promise.resolve();
+  return new Promise(function(ok, ko){
+    const t = document.createElement('script');
+    t.src = JSQR_URL;
+    t.onload = ok;
+    t.onerror = function(){ ko(new Error('lecteur QR indisponible (connexion ?)')); };
+    document.head.appendChild(t);
+  });
+}
+
+window.scanOuvrir = async function(){
+  document.getElementById('scanOv').classList.add('on');
+  scanDire('Autorisez l\'accès à la caméra…');
+  try{
+    /* facingMode 'environment' = camera arriere. Sur iPhone il FAUT playsinline
+       et muted sur la video, sinon Safari passe en plein ecran natif. */
+    scanFlux = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false
+    });
+  }catch(e){
+    scanDire(e && e.name === 'NotAllowedError'
+      ? 'Caméra refusée. Autorisez-la dans les réglages du navigateur, puis réessayez.'
+      : 'Caméra indisponible sur cet appareil. Saisissez le code à la main.', true);
+    return;
+  }
+
+  const v = document.getElementById('scanVid');
+  v.srcObject = scanFlux;
+  try{ await v.play(); }catch(e){}
+
+  if('BarcodeDetector' in window){
+    try{
+      const formats = await window.BarcodeDetector.getSupportedFormats();
+      if(formats.indexOf('qr_code') !== -1) scanDetecteur = new window.BarcodeDetector({ formats:['qr_code'] });
+    }catch(e){ scanDetecteur = null; }
+  }
+  if(!scanDetecteur){
+    try{ await chargerJsQR(); }
+    catch(e){ scanDire(e.message, true); return; }
+  }
+
+  scanDire('Visez le QR de la carte du client');
+  scanActif = true;
+  scanBoucle();
+};
+
+const scanCv = document.createElement('canvas');
+const scanCtx = scanCv.getContext('2d', { willReadFrequently: true });
+
+async function scanBoucle(){
+  if(!scanActif) return;
+  const v = document.getElementById('scanVid');
+  if(v.readyState === v.HAVE_ENOUGH_DATA){
+    let texte = null;
+    try{
+      if(scanDetecteur){
+        const codes = await scanDetecteur.detect(v);
+        if(codes.length) texte = codes[0].rawValue;
+      } else {
+        /* On echantillonne a 480 px de large : jsQR est en JS pur, le plein
+           capteur ferait tomber la cadence a quelques images par seconde. */
+        const ech = 480 / v.videoWidth;
+        scanCv.width  = Math.round(v.videoWidth * ech);
+        scanCv.height = Math.round(v.videoHeight * ech);
+        scanCtx.drawImage(v, 0, 0, scanCv.width, scanCv.height);
+        const img = scanCtx.getImageData(0, 0, scanCv.width, scanCv.height);
+        const r = window.jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
+        if(r && r.data) texte = r.data;
+      }
+    }catch(e){ /* image illisible : on retente a la frame suivante */ }
+
+    if(texte){ scanTrouve(String(texte).trim()); return; }
+  }
+  scanAnim = requestAnimationFrame(scanBoucle);
+}
+
+window.scanFermer = function(){
+  scanActif = false;
+  if(scanAnim) cancelAnimationFrame(scanAnim);
+  if(scanFlux){ scanFlux.getTracks().forEach(function(t){ t.stop(); }); scanFlux = null; }
+  document.getElementById('scanVid').srcObject = null;
+  document.getElementById('scanOv').classList.remove('on');
+};
+
+function scanTrouve(texte){
+  if(navigator.vibrate) navigator.vibrate(35);
+  scanFermer();
+
+  /* Un QR peut contenir une URL (…?id=FAL-XXXX) : on en extrait l'identifiant. */
+  let val = texte;
+  const m = texte.match(/[?&]id=([^&\s]+)/i);
+  if(m) val = decodeURIComponent(m[1]);
+
+  if(/^[0-9]{6}$/.test(val)){
+    document.getElementById('codeInput').value = val;
+    validateCode();                       // parcours coupon existant, inchange
+  } else {
+    carteCharger(val);
+  }
+}
+
+/* ── La carte d'un client ── */
+let carteId = '';
+
+function carteCharger(id){
+  carteId = id;
+  showErr('');
+  showLoader(true);
+  xhrGet(AS_URL + '?action=fid_client&card_id=' + encodeURIComponent(id),
+    function(d){
+      showLoader(false);
+      if(d.status !== 'active'){
+        showErr(d.status === 'unknown' ? 'Carte inconnue : ' + id : 'Carte sans profil : ' + id);
+        return;
+      }
+      carteAfficher(d);
+    },
+    function(err){ showLoader(false); showErr('Erreur lecture carte : ' + err); });
+}
+
+function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){
+  return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+
+function carteAfficher(d){
+  const c = d.client || {};
+  document.getElementById('clNom').textContent = (c.prenom || '').trim() || 'Client fidèle';
+  document.getElementById('clTampons').textContent = c.points_solde || 0;
+  document.getElementById('clId').textContent = carteId;
+
+  const attente = d.rewards_pending || [];
+  const encours = d.rewards_active  || [];
+  let h = '';
+
+  attente.forEach(function(r){
+    h += '<div class="cl-item">'
+       +   '<div class="cl-ico">🎁</div>'
+       +   '<div class="cl-txt"><div class="cl-lib">' + esc(r.libelle) + '</div>'
+       +     '<div class="cl-sub">Code ' + esc(r.code) + '</div></div>'
+       +   '<button class="cl-btn" onclick="remettre(\'' + esc(r.code) + '\',this)">✓ Remettre</button>'
+       + '</div>';
+  });
+
+  encours.forEach(function(r){
+    const min = Math.max(1, Math.round((r.expire_dans || 0) / 60));
+    h += '<div class="cl-item att">'
+       +   '<div class="cl-ico">⏳</div>'
+       +   '<div class="cl-txt"><div class="cl-lib">' + esc(r.libelle) + '</div>'
+       +     '<div class="cl-sub amb">Déjà validé par le client · encore ' + min + ' min</div></div>'
+       + '</div>';
+  });
+
+  if(!h){
+    h = '<div class="cl-vide">Aucun cadeau à remettre.<br>Ce client cumule ses tampons.</div>';
+  }
+  document.getElementById('clList').innerHTML = h;
+  showRes('resCarte');
+}
+
+window.remettre = function(code, btn){
+  btn.disabled = true;
+  btn.textContent = '…';
+  xhrGet(AS_URL + '?action=use&code=' + encodeURIComponent(code),
+    function(d){
+      dashLoaded = false;
+      btn.textContent = '✓ Remis';
+      const it = btn.closest('.cl-item');
+      if(it){ it.style.opacity = '.45'; }
+      flash('✓ Cadeau remis !');
+    },
+    function(err){
+      btn.disabled = false;
+      btn.textContent = '✓ Remettre';
+      showErr('Erreur : ' + err);
+    });
+};
 
 </script>
 </body>
