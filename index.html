@@ -539,14 +539,54 @@ var BA = (function(){
 let AS_URL = BA_REPLI.apps_script;
 let BA_COM = BA_REPLI;
 
+/* ── 🔐 SECRET VENDEUR ──────────────────────────────────────────────────
+   08/09 : le backend est FERMÉ (SECURITY.ENABLED = true). `dashboard`, `check`,
+   `use`, `fid_identify`… exigent désormais ?secret=.
+
+   ⚠️ Vérifié le 08/09 avant fermeture : `action=dashboard` sans rien renvoyait
+   les codes coupons ET les emails clients, et `action=use` permettait de brûler
+   le cadeau d'un client à distance. L'interrupteur seul ne suffisait pas —
+   `dashboard` n'était même pas dans la liste protégée.
+
+   Le secret n'est JAMAIS écrit en dur ici (il serait lisible dans le source) :
+   le commerçant le tape une fois, on le garde en localStorage.
+   MÊME CLÉ que kiosque.html, et même origine (les deux sont dans
+   BoulangerVendeur) → tapé au kiosque, il vaut aussi ici, et inversement. */
+const SECRET_KEY = 'boostavis_kiosk_secret';
+function vendorSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }catch(e){ return ''; } }
+function setVendorSecret(v){ try{ localStorage.setItem(SECRET_KEY, String(v||'').trim()); }catch(e){} }
+
+let _askingSecret = false;
+function askVendorSecret(msg){
+  if(_askingSecret) return;                 // un seul prompt même si 3 appels échouent ensemble
+  _askingSecret = true;
+  setTimeout(function(){
+    const v = window.prompt((msg || 'Code vendeur requis.') + '\n\nEntrez le code vendeur :', '');
+    _askingSecret = false;
+    if(v && v.trim()){ setVendorSecret(v); location.reload(); }
+  }, 50);
+}
+
 /* ── Appel XHR générique (compatible Safari) ── */
 function xhrGet(url, onSuccess, onError){
+  /* Point de passage unique : le secret est attaché ICI, donc aucun appel ne
+     peut l'oublier. C'est ce qui manquait — il n'était mis que sur wallet_offre. */
+  const _sec = vendorSecret();
+  if(_sec) url += (url.indexOf('?') === -1 ? '?' : '&') + 'secret=' + encodeURIComponent(_sec);
+
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
   xhr.timeout = 25000;
   xhr.onload = function(){
     try{
       const data = JSON.parse(xhr.responseText);
+      /* ⚠️ Apps Script répond HTTP 200 même quand il REFUSE : le refus est dans
+         le corps, jamais dans le statut HTTP. */
+      if(data && data.code === 'unauthorized'){
+        askVendorSecret('Code vendeur requis ou invalide.');
+        onError('Code vendeur requis');
+        return;
+      }
       onSuccess(data);
     } catch(e){
       onError('Réponse invalide du serveur');
@@ -823,7 +863,12 @@ function renderDash(){
    service Wallet et qui signe l'appel. Ici on ne fait que lui parler. */
 const OF_CONFORT = 40;     // au-delà, PassKit réduit la police
 const OF_MAX     = 64;     // au-delà, le service tronque
-const OF_SECRET  = params.get('secret') || '';   // exigé quand SECURITY.ENABLED passera à true
+/* 08/09 : le secret ne se transporte plus par action. xhrGet l'attache à TOUS
+   les appels (cf. plus haut). Un ?secret= dans l'URL sert seulement à amorcer le
+   poste une première fois — après quoi il vit en localStorage.
+   ⚠️ Il n'est PLUS ajouté à la main aux appels wallet_offre : ça ferait deux
+   paramètres `secret=` dans la même URL. */
+if (params.get('secret')) setVendorSecret(params.get('secret'));
 
 const OF_EXEMPLES = [
   'Fournée de 16h : -30 % membres',
@@ -930,8 +975,7 @@ window.ofEnvoyer = function(){
   const v = document.getElementById('ofInput').value.trim();
   if(!v){ ofErreur('Écrivez d\'abord votre message.'); return; }
   ofAttendre(true);
-  xhrGet(AS_URL + '?action=wallet_offre&message=' + encodeURIComponent(v)
-         + (OF_SECRET ? '&secret=' + encodeURIComponent(OF_SECRET) : ''),
+  xhrGet(AS_URL + '?action=wallet_offre&message=' + encodeURIComponent(v),
     function(d){
       ofAttendre(false);
       if(d.status !== 'ok'){ ofErreur(d.message || 'Envoi refusé'); return; }
@@ -946,8 +990,7 @@ window.ofEnvoyer = function(){
 window.ofEffacer = function(){
   if(ofOccupe) return;
   ofAttendre(true);
-  xhrGet(AS_URL + '?action=wallet_offre&clear=1'
-         + (OF_SECRET ? '&secret=' + encodeURIComponent(OF_SECRET) : ''),
+  xhrGet(AS_URL + '?action=wallet_offre&clear=1',
     function(d){
       ofAttendre(false);
       if(d.status !== 'ok'){ ofErreur(d.message || 'Refusé'); return; }
