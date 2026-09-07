@@ -866,8 +866,13 @@ const POLL_MS = 4000;
    le commerçant le tape une fois au login, on le garde en localStorage et on
    l'attache (?secret=) à chaque appel caisse. Le serveur l'ignore tant que la
    sécu y est désactivée (SECURITY.ENABLED=false) → 100% compatible phase test.
-   REQUIRE_LOGIN=false pendant les tests (kiosque ouvert) ; true en vraie prod. */
-const REQUIRE_LOGIN = false;
+
+   🔒 08/09 : la sécu backend est ACTIVÉE (SECURITY.ENABLED = true), donc le
+   kiosque exige le code au démarrage. Sans lui, fid_addpoints, use, fid_identify
+   et check répondent « unauthorized » — le kiosque serait ouvert mais inutile.
+   Le code se tape une fois ; il vaut aussi pour l'espace boulanger (même
+   origine, même clé localStorage). */
+const REQUIRE_LOGIN = true;
 const SECRET_KEY = 'boostavis_kiosk_secret';
 function kioskSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }catch(e){ return ''; } }
 function setKioskSecret(v){ try{ if(v) localStorage.setItem(SECRET_KEY, v); else localStorage.removeItem(SECRET_KEY); }catch(e){} }
