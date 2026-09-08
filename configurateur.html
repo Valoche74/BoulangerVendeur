@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Configurateur — construisez votre programme</title>
+<meta name="theme-color" content="#1B1714">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIGURATEUR COMMERÇANT — 09/09/2026
+
+   Envoyé au commerçant AU MOMENT DE SIGNER : il construit son programme
+   lui-même et voit sa carte se dessiner pendant qu'il répond.
+
+   ⚠️ LA RÈGLE QUI GOUVERNE CE FICHIER : sa sortie est EXACTEMENT une
+   entrée du registre des commerces (`site client/commerces.json`), plus
+   le bloc <<<CONFIG-COMMERCE>>> du Code.gs, plus un thème de
+   `wallet-service/lib/theme.js`, plus FID_CATALOGUE, plus PRIZES.
+   Tout champ ajouté ici DOIT correspondre à un champ réellement
+   consommé là-bas — sinon on fabrique du formulaire décoratif.
+
+   Aucun backend : le commerçant repart avec un lien qui PORTE sa config
+   (base64 dans le hash). Il l'envoie, on l'ouvre, tout est là. Pas de
+   compte à créer, pas de fichier à retrouver, marche depuis un
+   téléphone. Le logo, lui, se transmet à part — il ne tient pas dans
+   une URL.
+   ═══════════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --paper:#F7F4EF;
+  --card:#FFFFFF;
+  --sunk:#EFEAE1;
+  --ink:#1B1714;
+  --ink-soft:#4A423B;
+  --muted:#6E645A;
+  --rule:#DDD5C8;
+  --rule-hard:#C4B9A7;
+  /* La seule couleur saturée de la page : celle que le commerçant choisit. */
+  --accent:#C8963E;
+  --accent-ink:#8B6220;
+  --accent-soft:rgba(200,150,62,.13);
+  --f-d:'Fraunces',Georgia,serif;
+  --f-b:'Manrope','Segoe UI',system-ui,sans-serif;
+}
+html,body{background:var(--paper);color:var(--ink);font-family:var(--f-b);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+
+/* ── En-tête ── */
+.top{border-bottom:1px solid var(--rule);background:var(--card)}
+.top-in{max-width:1180px;margin:0 auto;padding:20px 24px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brand{font-family:var(--f-d);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.brand span{color:var(--accent-ink)}
+.top-sub{font-size:13.5px;color:var(--muted)}
+
+.hero{max-width:1180px;margin:0 auto;padding:42px 24px 8px}
+.hero h1{font-family:var(--f-d);font-weight:700;font-size:clamp(28px,5vw,40px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;max-width:19ch}
+.hero p{margin-top:14px;font-size:16.5px;color:var(--ink-soft);max-width:56ch}
+
+/* ── Grille ── */
+.grid{max-width:1180px;margin:0 auto;padding:28px 24px 120px;display:grid;grid-template-columns:1fr 372px;gap:44px;align-items:start}
+@media (max-width:960px){ .grid{grid-template-columns:1fr;gap:0} }
+
+/* ── Sections ── */
+.sec{margin-top:38px}
+.sec:first-child{margin-top:0}
+.sec-h{display:flex;align-items:baseline;gap:11px;padding-bottom:9px;border-bottom:1px solid var(--rule-hard)}
+.sec-n{font-size:12px;font-weight:700;color:var(--accent-ink);letter-spacing:.1em;font-variant-numeric:tabular-nums}
+.sec-t{font-family:var(--f-d);font-size:21px;font-weight:700;letter-spacing:-.01em}
+.sec-note{font-size:14px;color:var(--muted);margin-top:9px;max-width:60ch}
+
+.field{margin-top:18px}
+.lab{display:block;font-size:13.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px}
+input[type=text],input[type=url],textarea,select{
+  width:100%;font-family:var(--f-b);font-size:15.5px;color:var(--ink);
+  background:var(--card);border:1px solid var(--rule);border-radius:7px;padding:11px 13px;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+textarea{resize:vertical;min-height:92px;line-height:1.5}
+
+/* ── Choix en tuiles ── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:9px;margin-top:10px}
+.tile{
+  display:flex;flex-direction:column;gap:3px;padding:13px 14px;cursor:pointer;
+  background:var(--card);border:1px solid var(--rule);border-radius:8px;transition:border-color .12s,background .12s;
+}
+.tile:hover{background:var(--sunk)}
+.tile input{position:absolute;opacity:0;pointer-events:none}
+.tile.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.tile-e{font-size:22px;line-height:1}
+.tile-t{font-size:14.5px;font-weight:600}
+.tile-s{font-size:12.5px;color:var(--muted);line-height:1.35}
+
+/* ── Couleurs ── */
+.swatches{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px;align-items:center}
+.sw{width:38px;height:38px;border-radius:9px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(27,23,20,.14)}
+.sw.on{border-color:var(--ink)}
+.sw-custom{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);border-radius:9px;background:none;cursor:pointer}
+
+/* ── Lignes répétées (lots, paliers) ── */
+.rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.row{display:grid;grid-template-columns:52px 1fr 92px;gap:8px;align-items:center}
+.row.no-cost{grid-template-columns:52px 1fr}
+.row input{padding:9px 11px;font-size:14.5px}
+.row .emo{text-align:center;font-size:19px}
+.row .cost{text-align:right;font-variant-numeric:tabular-nums}
+.row-lab{display:grid;grid-template-columns:52px 1fr 92px;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+.row-lab.no-cost{grid-template-columns:52px 1fr}
+.proba{font-size:12px;color:var(--muted);text-align:center}
+
+/* ── Logo ── */
+.logo-drop{
+  margin-top:11px;border:1.5px dashed var(--rule-hard);border-radius:9px;padding:20px;
+  text-align:center;cursor:pointer;background:var(--card);transition:border-color .15s,background .15s;
+}
+.logo-drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.logo-drop img{max-height:76px;max-width:100%;margin-bottom:9px}
+.logo-drop p{font-size:14px;color:var(--muted)}
+
+/* ── Aperçu ── */
+.preview{position:sticky;top:22px}
+@media (max-width:960px){
+  .preview{position:static;margin-top:44px;padding-top:34px;border-top:1px solid var(--rule-hard)}
+}
+.pv-lab{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.phone{
+  background:var(--ink);border-radius:30px;padding:9px;box-shadow:0 18px 44px rgba(27,23,20,.18);
+}
+.screen{background:#FBF7EF;border-radius:23px;overflow:hidden;min-height:430px}
+
+/* la carte, en réduction fidèle de card.html */
+.c-head{padding:17px 17px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-eyebrow{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink)}
+.c-shop{font-family:var(--f-d);font-weight:700;font-size:20px;line-height:1.1;color:#2A2418;margin-top:3px;word-break:break-word}
+.c-greet{font-size:11.5px;color:#6A5F4B;margin-top:3px}
+.c-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-d);font-weight:700;font-size:15px;color:#2A2418;flex-shrink:0}
+.c-box{margin:13px 15px 0;background:#fff;border-radius:13px;padding:13px 15px;box-shadow:0 4px 14px rgba(120,90,30,.07)}
+.c-box-l{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6A5F4B}
+.c-big{font-family:var(--f-d);font-weight:700;font-size:34px;line-height:1;margin-top:2px}
+.c-big small{font-family:var(--f-b);font-size:13px;font-weight:600;color:#2A2418;margin-left:6px}
+.c-prog{margin:9px 15px 0;background:#fff;border-radius:13px;padding:11px 15px;box-shadow:0 4px 14px rgba(120,90,30,.07)}
+.c-prog-t{font-size:11.5px;color:#2A2418;font-weight:600}
+.c-prog-t b{color:var(--accent-ink)}
+.c-stamps{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:8px}
+.c-stamp{aspect-ratio:1;border-radius:50%;background:#F4ECDC;border:1px dashed #C4B9A7}
+.c-stamp.on{border:none;display:grid;place-items:center;font-size:8px}
+.c-sec{margin:14px 15px 0;font-family:var(--f-d);font-weight:700;font-size:15px;color:#2A2418}
+.c-rw{display:flex;gap:8px;margin:8px 0 0 15px;overflow:hidden}
+.c-rw-i{flex:0 0 92px;background:#fff;border-radius:11px;padding:9px;box-shadow:0 4px 14px rgba(120,90,30,.07)}
+.c-rw-e{font-size:24px;text-align:center;line-height:1.2}
+.c-rw-t{font-size:10.5px;font-weight:600;text-align:center;color:#2A2418;margin-top:4px;line-height:1.25}
+.c-rw-c{font-size:10px;font-weight:700;text-align:center;color:var(--accent-ink);margin-top:2px}
+.c-foot{padding:14px 15px 17px;text-align:center}
+.c-foot-b{font-family:var(--f-d);font-style:italic;font-weight:700;font-size:12.5px;color:var(--accent-ink)}
+
+/* roue */
+.wheel-wrap{margin-top:20px;text-align:center}
+.wheel-wrap svg{max-width:190px;height:auto}
+.wheel-legend{display:flex;flex-direction:column;gap:5px;margin-top:12px;font-size:12.5px}
+.wl{display:flex;justify-content:space-between;gap:10px;color:var(--ink-soft)}
+.wl b{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+
+/* ── Fin ── */
+.done{margin-top:44px;background:var(--card);border:1px solid var(--rule-hard);border-radius:11px;padding:26px}
+.done h2{font-family:var(--f-d);font-size:23px;font-weight:700;margin-bottom:9px}
+.done p{font-size:15px;color:var(--ink-soft);max-width:58ch}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{
+  font-family:var(--f-b);font-size:15px;font-weight:700;padding:13px 22px;border-radius:9px;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;
+}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:active{transform:scale(.985)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.out{
+  margin-top:18px;background:var(--sunk);border:1px solid var(--rule);border-radius:9px;
+  padding:14px;font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:11.5px;
+  line-height:1.5;white-space:pre;overflow-x:auto;color:var(--ink-soft);max-height:280px;overflow-y:auto;
+}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
+  background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:9px;font-size:14.5px;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:60;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.pro{margin-top:20px;padding-top:16px;border-top:1px dashed var(--rule-hard)}
+.pro summary{font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;letter-spacing:.02em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in">
+  <div class="brand">Peri<span>fy</span></div>
+  <div class="top-sub">Configurateur — votre programme de fidélité</div>
+</div></header>
+
+<div class="hero">
+  <h1>Construisez votre programme.</h1>
+  <p>
+    Une dizaine de questions. Votre carte se dessine à droite pendant que vous répondez —
+    c'est exactement celle que vos clients auront dans leur téléphone.
+    À la fin, vous nous envoyez un lien et nous montons tout.
+  </p>
+</div>
+
+<div class="grid">
+
+  <!-- ══════════ FORMULAIRE ══════════ -->
+  <main>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">01</span><h2 class="sec-t">Votre commerce</h2></div>
+      <div class="field">
+        <label class="lab" for="nom">Nom complet, tel qu'il doit apparaître sur la carte</label>
+        <input type="text" id="nom" placeholder="Boulangerie Falman — Emmanuelle &amp; Flavien">
+      </div>
+      <div class="field">
+        <label class="lab" for="court">Nom court</label>
+        <input type="text" id="court" placeholder="Falman">
+        <p class="hint">Celui qu'on affiche en gros. Deux mots maximum, c'est mieux.</p>
+      </div>
+      <div class="field">
+        <label class="lab" for="ville">Ville</label>
+        <input type="text" id="ville" placeholder="Annecy">
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">02</span><h2 class="sec-t">Votre métier</h2></div>
+      <p class="sec-note">Il donne les couleurs et les lots par défaut. Vous pourrez tout changer ensuite.</p>
+      <div class="tiles" id="metiers"></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">03</span><h2 class="sec-t">Votre couleur</h2></div>
+      <p class="sec-note">Elle habille la carte, le bouton, les tampons. Prenez celle de votre enseigne si vous en avez une.</p>
+      <div class="swatches" id="swatches"></div>
+      <div class="swatches" style="margin-top:12px">
+        <label class="sw-custom"><input type="color" id="couleur"> Une autre couleur</label>
+      </div>
+      <div class="field">
+        <label class="lab">Motif du bandeau de la carte</label>
+        <div class="tiles" id="motifs"></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">04</span><h2 class="sec-t">Le cadeau immédiat</h2></div>
+      <p class="sec-note">
+        Ce que le client gagne à la roue, dès son premier scan. Trois lots :
+        un courant, un plus rare, un gros lot. C'est ce qui le décide à sortir son téléphone.
+      </p>
+      <div class="row-lab"><span>Emoji</span><span>Le lot</span><span>Chance</span></div>
+      <div class="rows" id="lots"></div>
+      <p class="hint">Une seule roue par client, une seule fois. Personne ne rejoue le lendemain.</p>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">05</span><h2 class="sec-t">Vos paliers de fidélité</h2></div>
+      <p class="sec-note">
+        Le client gagne <b>un tampon par jour de passage</b>, deux en vous suivant sur un réseau,
+        trois en laissant un avis. À vous de dire ce qu'il obtient, et à combien.
+      </p>
+      <div class="row-lab"><span>Emoji</span><span>La récompense</span><span>Tampons</span></div>
+      <div class="rows" id="paliers"></div>
+      <p class="hint">Laissez une ligne vide pour la retirer du catalogue.</p>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">06</span><h2 class="sec-t">Votre présentoir</h2></div>
+      <div class="field">
+        <label class="lab" for="accroche">L'accroche imprimée</label>
+        <input type="text" id="accroche" placeholder="Scannez &amp; gagnez votre cadeau !">
+        <p class="hint">Court et impératif. C'est lu à deux mètres, debout, en trois secondes.</p>
+      </div>
+      <div class="field">
+        <label class="lab">Où sera-t-il posé ?</label>
+        <div class="tiles" id="poses"></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">07</span><h2 class="sec-t">Vos liens</h2></div>
+      <p class="sec-note">Là où vos clients vous laissent un avis ou vous suivent. Laissez vide ce que vous n'avez pas.</p>
+      <div class="field"><label class="lab" for="google">Votre fiche Google</label><input type="url" id="google" placeholder="https://maps.app.goo.gl/…"></div>
+      <div class="field"><label class="lab" for="insta">Instagram</label><input type="url" id="insta" placeholder="https://instagram.com/…"></div>
+      <div class="field"><label class="lab" for="fb">Facebook</label><input type="url" id="fb" placeholder="https://facebook.com/…"></div>
+      <div class="field"><label class="lab" for="tp">Trustpilot ou TripAdvisor</label><input type="url" id="tp" placeholder="https://…"></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">08</span><h2 class="sec-t">Votre logo</h2></div>
+      <p class="sec-note">Un PNG à fond transparent, le plus grand que vous ayez. Il ira sur le présentoir.</p>
+      <label class="logo-drop" id="logoDrop">
+        <input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml" hidden>
+        <div id="logoView"><p><b>Choisir un fichier</b><br>PNG, JPG ou SVG</p></div>
+      </label>
+      <p class="hint">
+        L'aperçu reste sur votre téléphone. Le fichier ne part pas avec le lien —
+        envoyez-le-nous séparément, par mail ou par message.
+      </p>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">09</span><h2 class="sec-t">Un mot pour nous</h2></div>
+      <div class="field">
+        <textarea id="mot" placeholder="Une idée, une contrainte, quelque chose qui compte pour vous et que les questions n'ont pas couvert…"></textarea>
+      </div>
+    </section>
+
+    <section class="done">
+      <h2>C'est prêt.</h2>
+      <p>
+        Copiez le lien ci-dessous et envoyez-le-nous. Il contient tous vos choix :
+        nous ouvrons, nous montons votre programme, et vous recevez votre présentoir.
+      </p>
+      <div class="btns">
+        <button class="btn" id="btnLien">Copier le lien à nous envoyer</button>
+        <button class="btn ghost" id="btnReset">Repartir des valeurs du métier</button>
+      </div>
+      <details class="pro">
+        <summary>Pour Perify — la configuration technique</summary>
+        <div class="out" id="json">—</div>
+        <div class="btns"><button class="btn ghost" id="btnJson">Copier la configuration</button></div>
+      </details>
+    </section>
+  </main>
+
+  <!-- ══════════ APERÇU ══════════ -->
+  <aside class="preview">
+    <div class="pv-lab">Votre carte, en direct</div>
+    <div class="phone"><div class="screen">
+      <div class="c-head">
+        <div>
+          <div class="c-eyebrow">✦ Ma fidélité</div>
+          <div class="c-shop" id="pvShop">Votre commerce</div>
+          <div class="c-greet">Bonjour Camille 👋</div>
+        </div>
+        <div class="c-av" id="pvAv">C</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-l">Mes tampons</div>
+        <div class="c-big" id="pvBig">7<small>tampons</small></div>
+      </div>
+      <div class="c-prog">
+        <div class="c-prog-t" id="pvProg">Plus que <b>3 tampons</b></div>
+        <div class="c-stamps" id="pvStamps"></div>
+      </div>
+      <div class="c-sec">Mes récompenses</div>
+      <div class="c-rw" id="pvRw"></div>
+      <div class="c-foot"><div class="c-foot-b" id="pvFoot">Votre commerce</div></div>
+    </div></div>
+
+    <div class="wheel-wrap">
+      <div class="pv-lab" style="margin-top:26px">Votre roue</div>
+      <svg id="pvWheel" viewBox="0 0 200 200" aria-hidden="true"></svg>
+      <div class="wheel-legend" id="pvLegend"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ LES MÉTIERS ═══
+   accent + lots + catalogue repris de la production :
+   `wallet-service/lib/theme.js`, le bloc PRIZES de `site client/index.html`
+   et FID_CATALOGUE du Code.gs. Changer une valeur ici sans la changer
+   là-bas fabriquerait un aperçu qui ment au commerçant. */
+const METIERS = {
+  boulangerie:{ t:"Boulangerie", e:"🥐", accent:"#C8963E",
+    lots:[["🥐","Croissant artisanal"],["🥖","Baguette tradition"],["🍰","Pâtisserie du jour"]],
+    cat:[["🥐","Viennoiserie",10],["☕","Boisson chaude",12],["🥖","Baguette tradition",15],["🧃","Boisson fraîche",18],["🍰","Pâtisserie",25],["🥪","Formule sandwich",40],["🎂","Gros lot — gâteau",80]] },
+  fleuriste:{ t:"Fleuriste", e:"🌷", accent:"#C8568E",
+    lots:[["🌷","Fleur du jour"],["💐","Petit bouquet"],["🪴","Plante surprise"]],
+    cat:[["🌷","Fleur à l'unité",10],["🌿","Botte de feuillage",12],["💐","Petit bouquet",15],["🕯️","Bougie parfumée",18],["🪴","Plante d'intérieur",25],["💐","Grand bouquet",40],["🌺","Composition sur mesure",80]] },
+  pizzeria:{ t:"Pizzeria", e:"🍕", accent:"#C8442E",
+    lots:[["🍕","Part de pizza"],["🥤","Boisson offerte"],["🍰","Dessert maison"]],
+    cat:[["🥤","Boisson",10],["🍟","Portion de frites",12],["🍕","Part de pizza",15],["🥗","Salade",18],["🍰","Dessert maison",25],["🍕","Pizza entière",40],["🍽️","Menu pour deux",80]] },
+  restaurant:{ t:"Restaurant", e:"🍽️", accent:"#9A3F4C",
+    lots:[["☕","Café gourmand"],["🍷","Apéritif offert"],["🍰","Dessert maison"]],
+    cat:[["☕","Café",10],["🍷","Verre de vin",12],["🍮","Dessert",15],["🥗","Entrée",18],["🍽️","Plat du jour",25],["🍾","Menu complet",40],["🥂","Repas pour deux",80]] },
+  primeur:{ t:"Primeur", e:"🥕", accent:"#E0892E",
+    lots:[["🍎","Fruits de saison"],["🥕","Botte de légumes"],["🧃","Jus pressé"]],
+    cat:[["🍎","Fruit de saison",10],["🥬","Botte de légumes",12],["🧃","Jus pressé",15],["🥑","Produit du moment",18],["🧺","Petit panier",25],["🧺","Grand panier",40],["🎁","Panier garni",80]] },
+  vape:{ t:"Vape", e:"💨", accent:"#6D5AE0",
+    lots:[["🧪","E-liquide offert"],["🔩","Résistance offerte"],["🎁","Accessoire surprise"]],
+    cat:[["🔩","Résistance",10],["🧪","E-liquide 10 ml",12],["🔋","Accessoire",15],["🧴","E-liquide 50 ml",18],["🔌","Chargeur",25],["📦","Pack découverte",40],["💨","Kit complet",80]] },
+  autre:{ t:"Autre métier", e:"🏪", accent:"#3F7D2E",
+    lots:[["🎁","Petit cadeau"],["✨","Cadeau surprise"],["🏆","Gros lot"]],
+    cat:[["🎁","Petite récompense",10],["✨","Récompense",12],["🎀","Récompense +",15],["🌟","Récompense ++",18],["🏅","Belle récompense",25],["🏆","Grosse récompense",40],["👑","Gros lot",80]] },
+};
+const MOTIFS = [["chevrons","Chevrons","Le défaut"],["diagonales","Diagonales",""],["pois","Pois",""],["aucun","Aucun","Aplat uni"]];
+const POSES  = [["comptoir","Sur le comptoir","À côté de la caisse"],["vitrine","En vitrine",""],["table","Sur les tables",""],["mur","Au mur","Affiche ou cadre"]];
+const PROBAS = ["50 %","48 %","2 %"];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let C = {};   // la configuration en cours
+
+/* ── Couleur : on dérive toute la palette Wallet d'une seule teinte ──
+   theme.js attend accent + background (foncé) + label (clair). Demander
+   trois couleurs à un boulanger serait absurde : il en donne une, on
+   calcule les deux autres. */
+function hex2hsl(h){
+  h=h.replace("#","");const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let hu=0,s=0;const l=(mx+mn)/2;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    hu=mx===r?((g-b)/d+(g<b?6:0)):mx===g?((b-r)/d+2):((r-g)/d+4);hu/=6;}
+  return [hu*360,s*100,l*100];
+}
+function hsl2rgb(h,s,l){
+  h/=360;s/=100;l/=100;const f=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;
+    if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+  let r,g,b;
+  if(s===0){r=g=b=l}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3);}
+  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];
+}
+function derive(accent){
+  const [h,s,l]=hex2hsl(accent);
+  const bg=hsl2rgb(h,Math.min(s*1.05,92),Math.max(l*.45,18));      // fond de carte, profond
+  const lb=hsl2rgb(h,Math.min(s*.85,80),Math.min(l*1.5,82));       // libellés, clairs
+  const ink=hsl2rgb(h,Math.min(s*1.1,95),Math.max(l*.62,26));      // l'or en version texte lisible
+  return {
+    background:`rgb(${bg[0]},${bg[1]},${bg[2]})`,
+    foreground:"rgb(255,255,255)",
+    label:`rgb(${lb[0]},${lb[1]},${lb[2]})`,
+    accentInk:`rgb(${ink[0]},${ink[1]},${ink[2]})`
+  };
+}
+
+/* ── Construction des contrôles ── */
+function tuiles(cible, liste, champ){
+  $(cible).innerHTML = liste.map(([v,t,s])=>
+    `<label class="tile" data-v="${v}"><input type="radio" name="${champ}" value="${v}">
+     <span class="tile-t">${esc(t)}</span>${s?`<span class="tile-s">${esc(s)}</span>`:""}</label>`).join("");
+}
+function tuilesMetier(){
+  $("metiers").innerHTML = Object.entries(METIERS).map(([k,m])=>
+    `<label class="tile" data-v="${k}"><input type="radio" name="metier" value="${k}">
+     <span class="tile-e">${m.e}</span><span class="tile-t">${esc(m.t)}</span></label>`).join("");
+}
+function lignes(cible, items, avecCout){
+  $(cible).innerHTML = items.map((it,i)=>
+    `<div class="row${avecCout?"":" no-cost"}">
+       <input class="emo" data-k="e" data-i="${i}" value="${esc(it[0])}" maxlength="4" aria-label="Emoji">
+       <input data-k="t" data-i="${i}" value="${esc(it[1])}" aria-label="Libellé">
+       ${avecCout?`<input class="cost" data-k="c" data-i="${i}" value="${it[2]}" inputmode="numeric" aria-label="Tampons">`
+                 :`<div class="proba">${PROBAS[i]||""}</div>`}
+     </div>`).join("");
+}
+
+function appliquerMetier(k){
+  const m = METIERS[k];
+  C.metier = k;
+  C.accent = m.accent;
+  C.lots = m.lots.map(l=>[...l]);
+  C.cat  = m.cat.map(c=>[...c]);
+  $("couleur").value = m.accent;
+  lignes("lots", C.lots, false);
+  lignes("paliers", C.cat, true);
+  majSwatches();
+  rendre();
+}
+
+function majSwatches(){
+  const base = Object.values(METIERS).map(m=>m.accent);
+  const uniq = [...new Set(base)];
+  $("swatches").innerHTML = uniq.map(c=>
+    `<button type="button" class="sw${c.toLowerCase()===String(C.accent).toLowerCase()?" on":""}" data-c="${c}" style="background:${c}" aria-label="Couleur ${c}"></button>`).join("");
+}
+
+/* ── L'aperçu ── */
+function rendre(){
+  const d = derive(C.accent || "#C8963E");
+  document.documentElement.style.setProperty("--accent", C.accent);
+  document.documentElement.style.setProperty("--accent-ink", d.accentInk);
+  document.documentElement.style.setProperty("--accent-soft", C.accent+"22");
+
+  const court = C.court || C.nom || "Votre commerce";
+  $("pvShop").textContent = court;
+  $("pvFoot").textContent = C.nom || court;
+  $("pvAv").textContent = (court.trim()[0]||"C").toUpperCase();
+  $("pvAv").style.background = `linear-gradient(135deg,${C.accent},${C.accent}bb)`;
+
+  // le premier palier renseigné pilote la progression affichée
+  const prem = (C.cat||[]).filter(c=>c[1].trim())[0];
+  const cout = prem ? Number(prem[2])||10 : 10;
+  const solde = Math.min(7, Math.max(1, cout-3));
+  $("pvBig").innerHTML = solde + '<small>tampons</small>';
+  $("pvProg").innerHTML = `Plus que <b>${Math.max(cout-solde,1)} tampons</b> pour ${esc(prem?prem[1]:"votre récompense")}`;
+  $("pvStamps").innerHTML = Array.from({length:10},(_,i)=>
+    i<solde ? `<div class="c-stamp on" style="background:${C.accent}">${(prem&&prem[0])||"✓"}</div>` : `<div class="c-stamp"></div>`).join("");
+
+  $("pvRw").innerHTML = (C.cat||[]).filter(c=>c[1].trim()).slice(0,3).map(c=>
+    `<div class="c-rw-i"><div class="c-rw-e">${esc(c[0])}</div>
+     <div class="c-rw-t">${esc(c[1])}</div><div class="c-rw-c">${Number(c[2])||0} tampons</div></div>`).join("")
+    || `<div class="c-rw-i"><div class="c-rw-e">🎁</div><div class="c-rw-t">À définir</div></div>`;
+
+  rendreRoue(d);
+  rendreSortie();
+}
+
+function rendreRoue(d){
+  const lots = (C.lots||[]).filter(l=>l[1].trim());
+  const n = 6, R = 92, CX = 100, CY = 100;
+  let out = "";
+  for(let i=0;i<n;i++){
+    const a0=(i*360/n-90)*Math.PI/180, a1=((i+1)*360/n-90)*Math.PI/180;
+    const x0=CX+R*Math.cos(a0), y0=CY+R*Math.sin(a0), x1=CX+R*Math.cos(a1), y1=CY+R*Math.sin(a1);
+    const fill = i%2 ? C.accent : "#FBF7EF";
+    out += `<path d="M${CX} ${CY} L${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${fill}" stroke="${d.background}" stroke-width="1"/>`;
+    const lot = lots[i%Math.max(lots.length,1)];
+    if(lot){
+      const am=((i+.5)*360/n-90)*Math.PI/180;
+      out += `<text x="${(CX+R*.62*Math.cos(am)).toFixed(1)}" y="${(CY+R*.62*Math.sin(am)+6).toFixed(1)}" text-anchor="middle" font-size="17">${esc(lot[0])}</text>`;
+    }
+  }
+  out += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${d.background}" stroke-width="4"/>`;
+  out += `<circle cx="${CX}" cy="${CY}" r="26" fill="${d.background}"/>`;
+  out += `<text x="${CX}" y="${CY+6}" text-anchor="middle" font-size="16" fill="#fff" font-family="Fraunces,serif" font-weight="700">P</text>`;
+  $("pvWheel").innerHTML = out;
+  $("pvLegend").innerHTML = lots.map((l,i)=>
+    `<div class="wl"><span>${esc(l[0])} ${esc(l[1])}</span><b>${PROBAS[i]||""}</b></div>`).join("");
+}
+
+/* ── La sortie : exactement ce que consomme la production ── */
+function cle(){
+  return (C.court||C.nom||"commerce").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,28) || "commerce";
+}
+function prefixe(){
+  /* Trois lettres, UNIQUES par commerce. En production : Falman -> FAL,
+     Au Jardin de Rose -> JDR. Donc initiales quand il y a plusieurs mots
+     significatifs, trois premieres lettres sinon. Perify valide de toute
+     facon l unicite : deux commerces avec le meme prefixe, et les cartes
+     de l un seraient servies par le backend de l autre, en silence. */
+  const ARTICLES = ["le","la","les","l","au","aux","du","de","des","un","une","chez"];
+  const brut = (C.court||C.nom||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase();
+  let mots = brut.split(/[^A-Z]+/).filter(Boolean);
+  // On ecarte l article de TETE seulement : "Le Bistrot" -> BIS, mais
+  // "Jardin de Rose" garde son "de" et donne bien JDR, comme en production.
+  if (mots.length > 1 && ARTICLES.includes(mots[0].toLowerCase())) mots = mots.slice(1);
+  let p = mots.length > 1 ? mots.map(m => m[0]).join("") : "";
+  // Moins de trois initiales (ou un seul mot) : on prend les trois premieres
+  // lettres du premier mot. Falman -> FAL, Bella Napoli -> BEL.
+  if (p.length < 3) p = (mots[0] || "");
+  p = p.replace(/[^A-Z]/g, "");
+  return (p.slice(0,3) || "XXX").padEnd(3,"X");
+}
+function config(){
+  const k = cle(), d = derive(C.accent||"#C8963E");
+  const cat = {};
+  (C.cat||[]).filter(c=>c[1].trim()).forEach((c,i)=>{
+    const id = c[1].toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||("lot"+i);
+    cat[id] = { libelle:c[1].trim(), cout:Number(c[2])||0, emoji:c[0] };
+  });
+  return {
+    _lisez_moi:"Produit par le configurateur. `commerces` se colle dans site client/commerces.json, `config_commerce` dans le bloc <<<CONFIG-COMMERCE>>> du Code.gs, `theme` dans wallet-service/lib/theme.js, `catalogue` dans FID_CATALOGUE, `prizes` dans le bloc PRIZES de index.html.",
+    cle:k,
+    commerces:{ [k]:{
+      nom:C.nom||"", nom_court:C.court||"", metier:C.metier||"boulangerie",
+      prefixe:prefixe(),
+      apps_script:"À CRÉER — un Apps Script + un Sheets par commerce",
+      lat:null, lng:null, rayon_m:200, place_id:"",
+      instagram:C.insta||"", facebook:C.fb||"", trustpilot:C.tp||"",
+      actif:false
+    }},
+    config_commerce:{
+      COMMERCE:C.nom||"", SS_ID:"À CRÉER", CARTE_PREFIXE:prefixe(),
+      CLIENT_CARD_URL:`https://boulangerieavisclient.vercel.app/card.html?c=${k}&type=${C.metier||"boulangerie"}`,
+      VALIDATOR_URL:`https://boulangerie-vendeur.vercel.app/kiosque.html?c=${k}`
+    },
+    /* ⚠️ Theme DERIVE d une seule couleur : le commercant en donne une, on
+       calcule le fond et les libelles. Les themes existants de theme.js ont
+       ete choisis a la main (la boulangerie a un fond VERT avec un accent
+       DORE — aucune derivation ne retrouve ca). A relire avant de coller. */
+    theme:{ name:C.nom||"", accent:C.accent, background:d.background,
+            foreground:d.foreground, label:d.label, motif:C.motif||"chevrons" },
+    catalogue:cat,
+    prizes:(C.lots||[]).filter(l=>l[1].trim()).map((l,i)=>({ name:l[1].trim(), emoji:l[0], prob:[.5,.98,1][i] })),
+    presentoir:{ accroche:C.accroche||"", pose:C.pose||"", logo_fourni:!!C.logoNom, logo_nom:C.logoNom||"" },
+    avis:{ google:C.google||"" },
+    ville:C.ville||"",
+    commentaire:C.mot||"",
+    envoye_le:new Date().toISOString()
+  };
+}
+function rendreSortie(){ $("json").textContent = JSON.stringify(config(), null, 2); }
+
+/* ── Le lien qui porte la config ── */
+function lien(){
+  const s = JSON.stringify(C);
+  const b64 = btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  return location.origin + location.pathname + "#c=" + b64;
+}
+function relire(){
+  const m = location.hash.match(/#c=([A-Za-z0-9\-_]+)/);
+  if(!m) return false;
+  try{
+    const b64 = m[1].replace(/-/g,"+").replace(/_/g,"/");
+    C = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    return true;
+  }catch(e){ return false; }
+}
+
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),2100); }
+async function copier(txt,msg){
+  try{ await navigator.clipboard.writeText(txt); toast(msg); }
+  catch(e){
+    const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand("copy"); toast(msg); }catch(_){ toast("Copie impossible — sélectionnez le texte à la main"); }
+    ta.remove();
+  }
+}
+
+/* ── Câblage ── */
+tuilesMetier();
+tuiles("motifs", MOTIFS, "motif");
+tuiles("poses", POSES, "pose");
+
+function coche(champ, val){
+  document.querySelectorAll(`[name="${champ}"]`).forEach(r=>{
+    const on = r.value===val; r.checked=on; r.closest(".tile").classList.toggle("on",on);
+  });
+}
+
+document.addEventListener("change", e=>{
+  const r = e.target;
+  if(r.name==="metier"){ appliquerMetier(r.value); coche("metier",r.value); return; }
+  if(r.name==="motif"){ C.motif=r.value; coche("motif",r.value); rendre(); return; }
+  if(r.name==="pose"){ C.pose=r.value; coche("pose",r.value); rendre(); return; }
+  if(r.id==="couleur"){ C.accent=r.value; majSwatches(); rendre(); return; }
+});
+
+document.addEventListener("input", e=>{
+  const t = e.target;
+  const champs = {nom:"nom",court:"court",ville:"ville",accroche:"accroche",google:"google",insta:"insta",fb:"fb",tp:"tp",mot:"mot"};
+  if(champs[t.id]){ C[champs[t.id]] = t.value; rendre(); return; }
+  const k = t.dataset.k, i = t.dataset.i;
+  if(k!==undefined && i!==undefined){
+    const src = t.closest("#lots") ? C.lots : C.cat;
+    const col = k==="e"?0:k==="t"?1:2;
+    src[i][col] = k==="c" ? (t.value.replace(/\D/g,"")||"0") : t.value;
+    rendre();
+  }
+});
+
+$("swatches").addEventListener("click", e=>{
+  const b = e.target.closest(".sw"); if(!b) return;
+  C.accent = b.dataset.c; $("couleur").value = b.dataset.c; majSwatches(); rendre();
+});
+
+$("logo").addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  C.logoNom = f.name;
+  const rd = new FileReader();
+  rd.onload = ev => {
+    $("logoView").innerHTML = `<img src="${ev.target.result}" alt=""><p>${esc(f.name)} — <b>à nous envoyer à part</b></p>`;
+    rendre();
+  };
+  rd.readAsDataURL(f);
+});
+
+$("btnLien").addEventListener("click", ()=> copier(lien(), "Lien copié — envoyez-le-nous"));
+$("btnJson").addEventListener("click", ()=> copier(JSON.stringify(config(),null,2), "Configuration copiée"));
+$("btnReset").addEventListener("click", ()=>{ appliquerMetier(C.metier||"boulangerie"); toast("Valeurs du métier rétablies"); });
+
+/* ── Démarrage ── */
+if(relire()){
+  ["nom","court","ville","accroche","google","insta","fb","tp","mot"].forEach(id=>{ if(C[id]!=null) $(id).value=C[id]; });
+  $("couleur").value = C.accent || "#C8963E";
+  lignes("lots", C.lots||METIERS.boulangerie.lots.map(l=>[...l]), false);
+  lignes("paliers", C.cat||METIERS.boulangerie.cat.map(c=>[...c]), true);
+  coche("metier", C.metier||"boulangerie"); coche("motif", C.motif||"chevrons"); coche("pose", C.pose||"");
+  majSwatches(); rendre();
+}else{
+  appliquerMetier("boulangerie");
+  coche("metier","boulangerie"); coche("motif","chevrons");
+}
+</script>
+</body>
+</html>
