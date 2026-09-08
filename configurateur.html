@@ -168,6 +168,55 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
 .c-foot{padding:14px 15px 18px;text-align:center}
 .c-foot-b{font-family:var(--f-d);font-style:italic;font-weight:700;font-size:12.5px;color:var(--accent-ink)}
 
+/* ── Onglets d'aperçu ── */
+.pv-tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--sunk);padding:4px;border-radius:9px}
+.pv-tabs button{flex:1;font-family:var(--f-b);font-size:13px;font-weight:700;padding:9px 6px;border:none;
+  border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;transition:background .14s,color .14s}
+.pv-tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(27,23,20,.10)}
+.pv-tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pv-pane{display:none}
+.pv-pane.on{display:block}
+.pv-tip{margin-top:12px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.45}
+
+/* ── La carte Apple Wallet ──
+   Reprise de la VRAIE structure de wallet-service/lib/buildPass.js :
+   logoText, le bandeau de tampons, puis MES TAMPONS / CADEAU A RECUPERER /
+   OFFRE DU MOMENT. Ne pas inventer de champs : iOS ne restructure JAMAIS un
+   pass déjà installé, donc un champ absent ici n'apparaîtra jamais non plus
+   chez le client. */
+.wal{border-radius:14px;overflow:hidden;box-shadow:0 14px 34px rgba(27,23,20,.22);
+  font-family:-apple-system,'SF Pro Text',var(--f-b),sans-serif}
+.wal-top{display:flex;align-items:center;gap:9px;padding:13px 15px 11px}
+.wal-logo{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-weight:800;font-size:13px}
+.wal-name{font-size:13.5px;font-weight:600;letter-spacing:-.01em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wal-strip{height:96px;display:grid;place-items:center;overflow:hidden}
+.wal-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:0 18px;width:100%}
+.wal-st{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:13px;cursor:pointer}
+.wal-fields{padding:13px 15px 16px;display:flex;flex-direction:column;gap:12px}
+.wal-f-l{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.wal-f-v{font-size:15px;font-weight:600;margin-top:2px;line-height:1.25}
+.wal-f-v.big{font-size:26px;font-weight:700}
+
+/* ── Le présentoir, au format 10 × 15 ── */
+.aff{position:relative;aspect-ratio:2/3;border-radius:11px;overflow:hidden;
+  box-shadow:0 14px 34px rgba(27,23,20,.22);display:flex;flex-direction:column;align-items:center;padding:16px 14px}
+.aff-logo{height:17px;width:auto;filter:brightness(0) invert(1);opacity:.96;flex-shrink:0}
+.aff-titre{margin-top:13px;text-align:center;font-family:var(--f-b);font-weight:800;line-height:1.04;
+  letter-spacing:-.02em;font-size:22px;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.3);word-break:break-word}
+.aff-jeu{flex:1;display:grid;place-items:center;width:100%;padding:6px 0;min-height:0}
+.aff-jeu svg{max-height:100%;max-width:72%;height:auto}
+.aff-bas{width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex-shrink:0}
+.aff-badges{display:flex;flex-direction:column;gap:4px}
+.aff-badge{background:#111;color:#fff;font-size:6.5px;font-weight:600;padding:3px 6px;border-radius:4px;white-space:nowrap}
+.aff-qr{width:62px;height:62px;background:#fff;border-radius:4px;padding:4px;flex-shrink:0}
+.aff-nouveau{position:absolute;left:14px;bottom:84px;background:#fff;color:#111;font-weight:800;
+  font-size:10px;padding:5px 12px;border-radius:99px;letter-spacing:.02em}
+.aff-note{margin-top:11px;font-size:12px;color:var(--muted);text-align:center;line-height:1.45}
+
+/* Le tampon de la carte web devient cliquable : c'est ce qui rend l'aperçu
+   interactif plutôt que décoratif — le commerçant fait avancer sa propre carte. */
+.c-stamp{cursor:pointer}
+
 .jeu-wrap{margin-top:26px;text-align:center}
 .jeu-wrap svg{max-width:186px;height:auto}
 .jeu-none{padding:26px 16px;border:1.5px dashed var(--rule-hard);border-radius:11px;color:var(--muted);font-size:14px}
@@ -330,31 +379,76 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
   </main>
 
   <aside class="preview">
-    <div class="pv-lab">Votre carte, en direct</div>
-    <div class="phone"><div class="screen" id="pvScreen" data-style="classique">
-      <div class="c-head">
-        <div>
-          <div class="c-eyebrow">✦ Ma fidélité</div>
-          <div class="c-shop" id="pvShop">Votre commerce</div>
-          <div class="c-greet">Bonjour Camille 👋</div>
-        </div>
-        <div class="c-av" id="pvAv">C</div>
-      </div>
-      <div class="c-box">
-        <div class="c-box-l">Mes tampons</div>
-        <div class="c-big" id="pvBig">7<small>tampons</small></div>
-      </div>
-      <div class="c-prog">
-        <div class="c-prog-t" id="pvProg">Plus que <b>3 tampons</b></div>
-        <div class="c-stamps" id="pvStamps"></div>
-      </div>
-      <div class="c-sec">Mes récompenses</div>
-      <div class="c-rw" id="pvRw"></div>
-      <div class="c-mods" id="pvMods"></div>
-      <div class="c-foot"><div class="c-foot-b" id="pvFoot">Votre commerce</div></div>
-    </div></div>
+    <div class="pv-tabs" id="pvTabs">
+      <button type="button" data-pv="carte" class="on">Carte</button>
+      <button type="button" data-pv="wallet">Wallet</button>
+      <button type="button" data-pv="aff">Présentoir</button>
+    </div>
 
-    <div class="jeu-wrap">
+    <!-- ══ La carte web ══ -->
+    <div class="pv-pane on" id="pane-carte">
+      <div class="phone"><div class="screen" id="pvScreen" data-style="classique">
+        <div class="c-head">
+          <div>
+            <div class="c-eyebrow">✦ Ma fidélité</div>
+            <div class="c-shop" id="pvShop">Votre commerce</div>
+            <div class="c-greet">Bonjour Camille 👋</div>
+          </div>
+          <div class="c-av" id="pvAv">C</div>
+        </div>
+        <div class="c-box">
+          <div class="c-box-l">Mes tampons</div>
+          <div class="c-big" id="pvBig">7<small>tampons</small></div>
+        </div>
+        <div class="c-prog">
+          <div class="c-prog-t" id="pvProg">Plus que <b>3 tampons</b></div>
+          <div class="c-stamps" id="pvStamps"></div>
+        </div>
+        <div class="c-sec">Mes récompenses</div>
+        <div class="c-rw" id="pvRw"></div>
+        <div class="c-mods" id="pvMods"></div>
+        <div class="c-foot"><div class="c-foot-b" id="pvFoot">Votre commerce</div></div>
+      </div></div>
+      <p class="pv-tip">Touchez les tampons pour faire avancer la carte.</p>
+    </div>
+
+    <!-- ══ La carte dans Apple Wallet ══ -->
+    <div class="pv-pane" id="pane-wallet">
+      <div class="wal" id="pvWal">
+        <div class="wal-top">
+          <div class="wal-logo" id="pvWalLogo">P</div>
+          <div class="wal-name" id="pvWalName">Votre commerce</div>
+        </div>
+        <div class="wal-strip" id="pvWalStrip"><div class="wal-stamps" id="pvWalStamps"></div></div>
+        <div class="wal-fields">
+          <div><div class="wal-f-l" id="pvWalL1">Mes tampons</div><div class="wal-f-v big" id="pvWalV1">7</div></div>
+          <div><div class="wal-f-l">Cadeau à récupérer</div><div class="wal-f-v" id="pvWalV2">—</div></div>
+          <div><div class="wal-f-l">Offre du moment</div><div class="wal-f-v" id="pvWalV3">—</div></div>
+        </div>
+      </div>
+      <p class="pv-tip">La carte telle qu'elle vit dans le téléphone, même sans réseau.<br>Touchez les tampons pour la faire avancer.</p>
+    </div>
+
+    <!-- ══ Le présentoir ══ -->
+    <div class="pv-pane" id="pane-aff">
+      <div class="aff" id="pvAff">
+        <img class="aff-logo" src="perify-logo.png" alt="">
+        <div class="aff-titre" id="pvAffTitre">Scannez &amp; gagnez votre cadeau !</div>
+        <div class="aff-jeu" id="pvAffJeu"></div>
+        <div class="aff-nouveau">NOUVEAU !</div>
+        <div class="aff-bas">
+          <div class="aff-badges">
+            <div class="aff-badge">Ajouter à Apple Wallet</div>
+            <div class="aff-badge">Ajouter à Google Wallet</div>
+          </div>
+          <div class="aff-qr" id="pvAffQr"></div>
+        </div>
+      </div>
+      <p class="aff-note">Format réel 10 × 15 cm. Votre QR est généré à l'installation.<br>Le logo sera le vôtre.</p>
+    </div>
+
+    <!-- Source de rendu du jeu : le présentoir la recopie. Masquée, pas supprimée. -->
+    <div class="jeu-wrap" style="display:none">
       <div class="pv-lab" style="margin-top:26px" id="pvJeuLab">Votre jeu</div>
       <div id="pvJeu"></div>
     </div>
@@ -515,13 +609,16 @@ function rendre(){
   $("pvAv").textContent = (court.trim()[0]||"C").toUpperCase();
   $("pvAv").style.background = `linear-gradient(135deg,${C.accent},${C.accent}bb)`;
 
-  const prem = (C.cat||[])[0];
-  const cout = prem ? Number(prem[2])||10 : 10;
-  const solde = Math.min(7, Math.max(1, cout-3));
-  $("pvBig").innerHTML = solde + '<small>tampons</small>';
-  $("pvProg").innerHTML = `Plus que <b>${Math.max(cout-solde,1)} tampons</b> pour ${esc(prem?prem[1]:"votre récompense")}`;
+  const prem = premierPalier();
+  const s = solde();
+  const atteint = s >= prem.cout;
+  $("pvBig").innerHTML = s + '<small>tampons</small>';
+  $("pvProg").innerHTML = atteint
+    ? 'Récompense débloquée : <b>' + esc(prem.libelle) + '</b> 🎉'
+    : 'Plus que <b>' + (prem.cout - s) + ' tampons</b> pour ' + esc(prem.libelle);
   $("pvStamps").innerHTML = Array.from({length:10},(_,i)=>
-    i<solde ? `<div class="c-stamp on" style="background:${C.accent}">${(prem&&prem[0])||"✓"}</div>` : `<div class="c-stamp"></div>`).join("");
+    i < s ? '<div class="c-stamp on" style="background:' + C.accent + '">' + esc(prem.emoji) + '</div>'
+          : '<div class="c-stamp"></div>').join("");
 
   $("pvRw").innerHTML = (C.cat||[]).slice(0,3).map(c=>
     `<div class="c-rw-i"><div class="c-rw-e">${esc(c[0])}</div>
@@ -534,6 +631,8 @@ function rendre(){
   $("pvMods").innerHTML = (C.features||[]).filter(f=>surCarte[f]).map(f=>`<span class="c-mod">${surCarte[f]}</span>`).join("");
 
   rendreJeu(d);
+  rendreWallet(d);
+  rendreAffiche(d);
   rendreSortie();
 }
 
@@ -663,6 +762,93 @@ async function copier(txt,msg){
   }
 }
 
+/* ═══ APERÇUS INTERACTIFS ═══════════════════════════════════════════
+   Trois surfaces, parce que le commerçant en reçoit trois : la carte web
+   (card.html), la carte dans Apple Wallet (buildPass.js) et le présentoir
+   imprimé. Voir la sienne avec son nom dessus, c'est ce qui emporte la
+   signature — plus qu'une liste de fonctionnalités.
+
+   Le solde de tampons est PILOTABLE : toucher un tampon le règle. C'est ce
+   qui rend l'aperçu interactif au lieu de décoratif — le commerçant fait
+   avancer sa propre carte et comprend la mécanique sans explication. */
+
+let soldeDemo = null;   // null = calculé depuis le palier ; sinon imposé par le commerçant
+
+function paliers(){ return (C.cat||[]); }
+function premierPalier(){ const p=paliers()[0]; return { emoji:(p&&p[0])||"✓", libelle:(p&&p[1])||"votre récompense", cout:(p&&Number(p[2]))||10 }; }
+function solde(){
+  const p = premierPalier();
+  if(soldeDemo===null) return Math.min(7, Math.max(1, p.cout-3));
+  return Math.max(0, Math.min(soldeDemo, p.cout));
+}
+
+/* ── Onglets ── */
+function ongletVers(nom){
+  document.querySelectorAll("#pvTabs button").forEach(b=>b.classList.toggle("on", b.dataset.pv===nom));
+  document.querySelectorAll(".pv-pane").forEach(p=>p.classList.toggle("on", p.id==="pane-"+nom));
+}
+document.getElementById("pvTabs").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(b) ongletVers(b.dataset.pv);
+});
+
+/* ── Un faux QR, honnête : une trame déterministe, pas un vrai code ──
+   Le vrai est généré à l'installation par _outils/qr-print.mjs, une fois
+   l'URL du commerce connue. Mieux vaut un motif manifestement décoratif
+   qu'un QR d'apparence réelle qui ne mènerait nulle part. */
+function trameQr(taille){
+  const n=13; let out="", g=7;
+  const rnd=()=>{ g=(g*1103515245+12345)&0x7fffffff; return (g>>16)&1; };
+  for(let y=0;y<n;y++) for(let x=0;x<n;x++){
+    const coin = (x<3&&y<3)||(x>n-4&&y<3)||(x<3&&y>n-4);
+    if(coin || rnd()) out+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#111"/>`;
+  }
+  return `<svg viewBox="0 0 ${n} ${n}" width="100%" height="100%" shape-rendering="crispEdges" aria-hidden="true">${out}</svg>`;
+}
+
+/* ── La carte Apple Wallet ── */
+function rendreWallet(d){
+  const p = premierPalier(), s = solde();
+  const w = document.getElementById("pvWal");
+  w.style.background = d.background;
+  w.style.color = d.foreground;
+  document.getElementById("pvWalLogo").style.background = C.accent;
+  document.getElementById("pvWalLogo").style.color = "#fff";
+  document.getElementById("pvWalLogo").textContent = ((C.court||C.nom||"P").trim()[0]||"P").toUpperCase();
+  document.getElementById("pvWalName").textContent = C.nom || C.court || "Votre commerce";
+  document.getElementById("pvWalStrip").style.background = C.accent;
+
+  /* Le bandeau est le SEUL endroit où une storeCard accepte une image
+     (cf. lib/stamps.js) : c'est là que vit la grille de tampons. */
+  document.getElementById("pvWalStamps").innerHTML = Array.from({length:10},(_,i)=>
+    `<div class="wal-st" data-tampon="${i+1}" style="background:${i<s?"rgba(255,255,255,.95)":"rgba(255,255,255,.20)"}">${i<s?p.emoji:""}</div>`).join("");
+
+  document.querySelectorAll(".wal-f-l").forEach(el=>el.style.color=d.label);
+  document.getElementById("pvWalV1").textContent = s;
+  document.getElementById("pvWalV2").textContent = s>=p.cout ? p.libelle : "Aucun pour l'instant";
+  document.getElementById("pvWalV3").textContent =
+    (C.features||[]).includes("offres") ? "Fournée de 16 h : −30 % membres" : "—";
+}
+
+/* ── Le présentoir ── */
+function rendreAffiche(d){
+  const a = document.getElementById("pvAff");
+  a.style.background = `radial-gradient(120% 90% at 50% 0%, ${C.accent}33 0%, transparent 60%), ${d.background}`;
+  document.getElementById("pvAffTitre").textContent = C.accroche || "Scannez & gagnez votre cadeau !";
+  document.getElementById("pvAffJeu").innerHTML = document.getElementById("pvJeu").innerHTML;
+  document.getElementById("pvAffQr").innerHTML = trameQr();
+}
+
+/* ── Régler le solde en touchant un tampon ── */
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-tampon], .c-stamp");
+  if(!t) return;
+  let n;
+  if(t.dataset.tampon) n = Number(t.dataset.tampon);
+  else n = [...t.parentElement.children].indexOf(t) + 1;
+  soldeDemo = (solde()===n) ? n-1 : n;   // re-toucher le même tampon le retire
+  rendre();
+});
+
 /* ── Câblage ── */
 tuilesMetier(); tuilesJeu();
 tuiles("styles",STYLES,"style");
@@ -689,6 +875,11 @@ document.addEventListener("change", e=>{
   if(r.type==="radio"){
     if(r.name==="metier"){ appliquerMetier(r.value); coche("metier",r.value); return; }
     C[r.name]=r.value; coche(r.name,r.value);
+    /* L'aperçu se place sur la surface concernée : choisir un jeu montre le
+       présentoir, choisir une allure montre la carte. Sans ça le commerçant
+       change un réglage et ne voit rien bouger. */
+    if(r.name==="jeu") ongletVers("aff");
+    if(r.name==="style") ongletVers("carte");
     if(r.name==="reseauxOui") $("reseauxBloc").classList.toggle("on", r.value==="oui");
     rendre(); return;
   }
