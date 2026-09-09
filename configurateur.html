@@ -42,6 +42,8 @@
   --rule:#DDD5C8; --rule-hard:#C4B9A7;
   /* La seule couleur saturée de la page : celle que le commerçant choisit. */
   --accent:#C8963E; --accent-ink:#8B6220; --accent-soft:rgba(200,150,62,.13);
+  /* Confinées à l'aperçu, redéfinies par rendre() sur .preview. */
+  --c-accent:#C8963E; --c-ink:#8B6220; --c-soft:rgba(200,150,62,.13);
   --f-d:'Fraunces',Georgia,serif;
   --f-b:'Manrope','Segoe UI',system-ui,sans-serif;
 }
@@ -143,7 +145,7 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
 .screen[data-style="epure"] .c-sec{font-family:var(--f-b)}
 
 .c-head{padding:17px 17px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.c-eyebrow{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink)}
+.c-eyebrow{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--c-ink)}
 .c-shop{font-weight:700;font-size:20px;line-height:1.1;color:#2A2418;margin-top:3px;word-break:break-word}
 .c-greet{font-size:11.5px;color:#6A5F4B;margin-top:3px}
 .c-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-d);font-weight:700;font-size:15px;color:#2A2418;flex-shrink:0}
@@ -153,7 +155,7 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
 .c-big small{font-family:var(--f-b);font-size:13px;font-weight:600;margin-left:6px}
 .c-prog{margin:9px 15px 0;padding:11px 15px}
 .c-prog-t{font-size:11.5px;color:#2A2418;font-weight:600}
-.c-prog-t b{color:var(--accent-ink)}
+.c-prog-t b{color:var(--c-ink)}
 .c-stamps{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:8px}
 .c-stamp{aspect-ratio:1;border-radius:50%;background:#F4ECDC;border:1px dashed #C4B9A7}
 .c-stamp.on{border:none;display:grid;place-items:center;font-size:8px}
@@ -162,11 +164,11 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
 .c-rw-i{flex:0 0 92px;padding:9px}
 .c-rw-e{font-size:24px;text-align:center;line-height:1.2}
 .c-rw-t{font-size:10.5px;font-weight:600;text-align:center;color:#2A2418;margin-top:4px;line-height:1.25}
-.c-rw-c{font-size:10px;font-weight:700;text-align:center;color:var(--accent-ink);margin-top:2px}
+.c-rw-c{font-size:10px;font-weight:700;text-align:center;color:var(--c-ink);margin-top:2px}
 .c-mods{display:flex;flex-wrap:wrap;gap:5px;margin:13px 15px 0}
-.c-mod{font-size:9.5px;font-weight:700;padding:4px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.c-mod{font-size:9.5px;font-weight:700;padding:4px 8px;border-radius:99px;background:var(--c-soft);color:var(--c-ink);box-shadow:inset 0 0 0 1px var(--c-accent)}
 .c-foot{padding:14px 15px 18px;text-align:center}
-.c-foot-b{font-family:var(--f-d);font-style:italic;font-weight:700;font-size:12.5px;color:var(--accent-ink)}
+.c-foot-b{font-family:var(--f-d);font-style:italic;font-weight:700;font-size:12.5px;color:var(--c-ink)}
 
 /* ── Onglets d'aperçu ── */
 .pv-tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--sunk);padding:4px;border-radius:9px}
@@ -353,20 +355,7 @@ input[type=color]{width:38px;height:38px;padding:0;border:1px solid var(--rule);
     </section>
 
     <section class="sec">
-      <div class="sec-h"><span class="sec-n">07</span><h2 class="sec-t">Votre présentoir</h2></div>
-      <div class="field">
-        <label class="lab" for="accroche">L'accroche imprimée</label>
-        <input type="text" id="accroche" placeholder="Scannez &amp; gagnez votre cadeau !">
-        <p class="hint">Court et impératif. C'est lu à deux mètres, debout, en trois secondes.</p>
-      </div>
-      <div class="field">
-        <label class="lab">Où sera-t-il posé ?</label>
-        <div class="tiles" id="poses"></div>
-      </div>
-    </section>
-
-    <section class="sec">
-      <div class="sec-h"><span class="sec-n">08</span><h2 class="sec-t">Un mot pour nous</h2></div>
+      <div class="sec-h"><span class="sec-n">07</span><h2 class="sec-t">Un mot pour nous</h2></div>
       <div class="field">
         <textarea id="mot" placeholder="Une idée, une contrainte, quelque chose qui compte pour vous et que les questions n'ont pas couvert…"></textarea>
       </div>
@@ -538,7 +527,6 @@ const RESEAUX = [
 ];
 const OUINON = [["oui","Oui, je veux les ajouter",""],["non","Non, pas pour l'instant",""]];
 const MOTIFS = [["chevrons","Chevrons","Le défaut"],["diagonales","Diagonales",""],["pois","Pois",""],["aucun","Aucun","Aplat uni"]];
-const POSES  = [["comptoir","Sur le comptoir","À côté de la caisse"],["vitrine","En vitrine",""],["table","Sur les tables",""],["mur","Au mur","Affiche ou cadre"]];
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -620,9 +608,14 @@ function majSwatches(){
 /* ── Aperçu ── */
 function rendre(){
   const d = derive(C.accent||"#C8963E");
-  document.documentElement.style.setProperty("--accent", C.accent);
-  document.documentElement.style.setProperty("--accent-ink", d.accentInk);
-  document.documentElement.style.setProperty("--accent-soft", C.accent+"22");
+  /* ⚠️ Sur .preview, PAS sur <html> : la couleur du commerçant ne doit
+     habiller que ce qu'il reçoit — sa carte, son Wallet, son présentoir.
+     Posée à la racine, elle repeignait aussi les numéros de section, les
+     tuiles et les cases du configurateur, qui ne sont pas son produit. */
+  const pv = document.querySelector(".preview");
+  pv.style.setProperty("--c-accent", C.accent);
+  pv.style.setProperty("--c-ink", d.accentInk);
+  pv.style.setProperty("--c-soft", C.accent+"22");
   $("pvScreen").dataset.style = C.style || "classique";
 
   const court = C.court || C.nom || "Votre commerce";
@@ -758,7 +751,6 @@ function config(){
     jeu:{ cle:jeu[0], libelle:jeu[1], construit:jeu[4] },
     outils:C.features||[],
     reseaux:{ souhaite:(C.reseauxOui||"non")==="oui", comptes:(C.reseauxOui==="oui")?(C.reseaux||[]):[] },
-    presentoir:{ accroche:C.accroche||"", pose:C.pose||"" },
     catalogue:cat,
     prizes:(C.lots||[]).map((l,i)=>({ name:l[1], emoji:l[0], prob:[.5,.98,1][i] })),
     ville:C.ville||"", commentaire:C.mot||"", envoye_le:new Date().toISOString()
@@ -856,7 +848,9 @@ function rendreWallet(d){
 function rendreAffiche(d){
   const a = document.getElementById("pvAff");
   a.style.background = `radial-gradient(120% 90% at 50% 0%, ${C.accent}33 0%, transparent 60%), ${d.background}`;
-  document.getElementById("pvAffTitre").textContent = C.accroche || "Scannez & gagnez votre cadeau !";
+  /* Le présentoir n'est plus configuré par le commerçant : l'aperçu montre
+     l'accroche standard, à titre d'illustration de ce qu'il recevra. */
+  document.getElementById("pvAffTitre").textContent = "Scannez & gagnez votre cadeau !";
   document.getElementById("pvAffJeu").innerHTML = document.getElementById("pvJeu").innerHTML;
   document.getElementById("pvAffQr").innerHTML = trameQr();
 }
@@ -876,7 +870,6 @@ document.addEventListener("click", e=>{
 tuilesMetier(); tuilesJeu();
 tuiles("styles",STYLES,"style");
 tuiles("motifs",MOTIFS,"motif");
-tuiles("poses",POSES,"pose");
 tuiles("reseauxOui",OUINON,"reseauxOui");
 cases("features",FEATURES,"features");
 cases("reseaux",RESEAUX,"reseaux");
@@ -910,7 +903,7 @@ document.addEventListener("change", e=>{
   if(r.id==="couleur"){ C.accent=r.value; majSwatches(); rendre(); }
 });
 document.addEventListener("input", e=>{
-  const champs={nom:"nom",court:"court",ville:"ville",accroche:"accroche",mot:"mot"};
+  const champs={nom:"nom",court:"court",ville:"ville",mot:"mot"};
   if(champs[e.target.id]){ C[champs[e.target.id]]=e.target.value; rendre(); }
 });
 document.getElementById("fondAuto").addEventListener("change", e=>{
@@ -940,14 +933,14 @@ const DEFAUTS = { metier:"boulangerie", style:"classique", motif:"chevrons", jeu
 if(!relire()) C = Object.assign({}, DEFAUTS);
 else for(const k in DEFAUTS) if(C[k]===undefined) C[k]=DEFAUTS[k];
 
-["nom","court","ville","accroche","mot"].forEach(id=>{ if(C[id]!=null) $(id).value=C[id]; });
+["nom","court","ville","mot"].forEach(id=>{ if(C[id]!=null) $(id).value=C[id]; });
 if(!C.lots || !C.cat){ const m=METIERS[C.metier]||METIERS.boulangerie; C.lots=m.lots.map(l=>[...l]); C.cat=m.cat.map(c=>[...c]); }
 if(!C.accent) C.accent=(METIERS[C.metier]||METIERS.boulangerie).accent;
 $("couleur").value=C.accent;
 document.getElementById("fondAuto").checked = (C.fondAuto !== false);
 document.getElementById("fond").value = C.fond || fondDerive(C.accent||"#C8963E");
 document.getElementById("fondBloc").style.display = (C.fondAuto===false) ? "flex" : "none";
-["metier","style","motif","jeu","pose","reseauxOui"].forEach(ch=>coche(ch,C[ch]));
+["metier","style","motif","jeu","reseauxOui"].forEach(ch=>coche(ch,C[ch]));
 cocheCases("features",C.features); cocheCases("reseaux",C.reseaux);
 $("reseauxBloc").classList.toggle("on", C.reseauxOui==="oui");
 majSwatches(); rendre();
