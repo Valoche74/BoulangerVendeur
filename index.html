@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#000000">
-<title>Espace Boulanger — Falman</title>
+<!-- Titre NEUTRE au chargement : le nom du commerce y est ajouté une fois le
+     registre résolu. Écrit en dur, il annonçait « Boulanger » à un vendeur de
+     tacos — y compris dans l'onglet Safari et sur l'écran d'accueil iPhone. -->
+<title>Espace Perify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -30,7 +33,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid rgba(255,255,255,.07)}
 .hdr-left{display:flex;align-items:center;gap:10px}
-.hdr-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
+/* La pastille d'en-tête. Trois états, du meilleur au plus sûr :
+     .logo → le logo du commerce (sa marque, c'est ce qu'il veut voir) ;
+     sinon  → son monogramme sur la pastille dorée ;
+     et si l'image ne charge pas, on RETOMBE sur le monogramme — jamais une
+     image cassée devant un commerçant. */
+.hdr-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:900;color:#000;letter-spacing:-.03em;flex-shrink:0;overflow:hidden}
+.hdr-logo.logo{background:none;border-radius:0}
+.hdr-logo img{width:100%;height:100%;object-fit:contain;display:block}
 .hdr-name{font-size:15px;font-weight:800;letter-spacing:-.02em}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
 .hdr-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;
@@ -159,13 +171,24 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .of-lead{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:18px}
 .of-lead b{color:var(--white);font-weight:600}
 
-/* La maquette de carte Wallet — proportions et couleurs de la vraie */
+/* La maquette de carte Wallet — proportions et couleurs de la vraie.
+   ⚠️ Les couleurs ne sont PLUS en dur : elles viennent de PASS_THEMES, qui
+   recopie `wallet-service/lib/theme.js`. Le vert d'origine reste en repli CSS,
+   pour le cas où le registre ne répond pas. Un vendeur de tacos voyait
+   jusqu'ici la carte verte de la boulangerie, légendée « aperçu réel ». */
 .wcard{border-radius:18px;overflow:hidden;margin-bottom:6px;
-  background:rgb(62,122,26);box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
+  background:var(--pass-bg,rgb(62,122,26));box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
   transform:perspective(900px) rotateX(2deg);transform-origin:top center}
 .wc-top{display:flex;align-items:center;gap:9px;padding:11px 14px}
-.wc-ring{width:22px;height:22px;border-radius:50%;border:4px solid var(--gold);flex-shrink:0}
-.wc-org{font-size:12px;font-weight:700;color:#fff;letter-spacing:-.01em}
+/* Le logo du pass est aujourd'hui celui de PERIFY pour TOUS les commerces
+   (wallet-service/lib/marque.js embarque un seul fichier). L'aperçu montre donc
+   le logo Perify, pas celui du commerçant : il est légendé « aperçu réel », il
+   ne doit pas promettre ce que le pass ne fait pas encore. Quand le logo par
+   commerce sera en place (point 6), c'est ici qu'il faudra le brancher. */
+.wc-logo{height:18px;width:auto;max-width:100px;object-fit:contain;flex-shrink:0;display:block}
+.wc-ring{width:22px;height:22px;border-radius:50%;border:4px solid var(--pass-accent,var(--gold));flex-shrink:0}
+.wc-org{font-size:12px;font-weight:700;color:#fff;letter-spacing:-.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* le bandeau : panneau sombre à gauche, chevrons + tampons à droite */
 .wc-strip{display:flex;height:88px;position:relative;overflow:hidden;
   background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.34) 38%,transparent 52%)}
@@ -173,18 +196,22 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:repeating-linear-gradient(115deg,transparent 0 16px,rgba(255,255,255,.055) 16px 19px)}
 .wc-pts{width:40%;padding:12px 0 0 14px;position:relative;z-index:1}
 .wc-num{font-size:32px;font-weight:300;color:#fff;line-height:.92;letter-spacing:-.02em}
-.wc-lbl{font-size:9px;font-weight:600;color:var(--gold2);letter-spacing:.07em;margin-top:3px}
+.wc-lbl{font-size:9px;font-weight:600;color:var(--pass-label,var(--gold2));letter-spacing:.07em;margin-top:3px}
 .wc-grid{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;
   align-content:center;padding:0 26px 0 6px;position:relative;z-index:1}
 .wc-dot{aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(255,255,255,.42)}
-.wc-dot.on{background:linear-gradient(160deg,#E2B25A,#C8963E);border-color:rgba(255,255,255,.5);
-  box-shadow:0 1px 3px rgba(0,0,0,.35)}
+/* Le vrai pass dessine la pastille dans l'ACCENT du thème et la coche dans le
+   fond assombri à 55 % (lib/stamps.js : `gold: theme.accent`, `ink = shade(base,
+   0.55)`). C'est exactement ce que reproduisent ces deux variables — vérifié
+   contre le générateur, pas deviné. */
+.wc-dot.on{background:linear-gradient(160deg,var(--pass-stamp2,#E2B25A),var(--pass-stamp,#C8963E));
+  border-color:rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .wc-dot.on{display:flex;align-items:center;justify-content:center}
-.wc-dot.on::after{content:'✓';color:#25490f;font-size:11px;font-weight:900;line-height:1}
+.wc-dot.on::after{content:'✓';color:var(--pass-ink,#25490f);font-size:11px;font-weight:900;line-height:1}
 /* les deux champs qui se partagent la ligne — c'est TOUT le sujet */
 .wc-fields{display:flex;gap:12px;padding:11px 14px 15px}
 .wc-f{flex:1;min-width:0}
-.wc-f-lbl{font-size:8.5px;font-weight:700;color:var(--gold2);letter-spacing:.07em;margin-bottom:3px}
+.wc-f-lbl{font-size:8.5px;font-weight:700;color:var(--pass-label,var(--gold2));letter-spacing:.07em;margin-bottom:3px}
 .wc-f-val{color:#fff;font-weight:500;line-height:1.35;word-break:break-word}
 .wc-f-val.vide{color:rgba(255,255,255,.45);font-style:italic}
 .wc-caption{font-size:10px;color:var(--muted);text-align:center;margin-bottom:20px;letter-spacing:.03em}
@@ -302,10 +329,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 <div class="hdr">
   <div class="hdr-left">
-    <div class="hdr-logo">🥖</div>
+    <!-- Vides au chargement, remplis par peindreEnTete(). Un nom écrit en dur
+         ici afficherait « Falman » à un autre commerçant pendant toute la durée
+         de la requête au registre — jusqu'à 4 s sur un réseau lent. -->
+    <div class="hdr-logo" id="hdrLogo"></div>
     <div>
-      <div class="hdr-name" id="commerceName">Falman</div>
-      <div class="hdr-sub">Espace boulanger</div>
+      <div class="hdr-name" id="commerceName"></div>
+      <div class="hdr-sub">Espace Perify</div>
     </div>
   </div>
   <div class="hdr-badge"><div class="live-dot"></div>En ligne</div>
@@ -411,7 +441,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
   <!-- La carte du client, en direct -->
   <div class="wcard">
-    <div class="wc-top"><div class="wc-ring"></div><div class="wc-org" id="ofOrg">Falman Em…</div></div>
+    <div class="wc-top"><img class="wc-logo" src="perify-logo.png" alt="" width="359" height="156"><div class="wc-org" id="ofOrg"></div></div>
     <div class="wc-strip">
       <div class="wc-pts"><div class="wc-num">5</div><div class="wc-lbl">MES TAMPONS</div></div>
       <div class="wc-grid" id="ofGrid"></div>
@@ -430,8 +460,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="of-caption wc-caption">Aperçu réel — le texte rétrécit comme sur l'iPhone</div>
 
   <div class="of-field">
+    <!-- placeholder posé par ofExemples() : il doit parler du métier du
+         commerçant, pas de fournées de 16 h. -->
     <input class="of-input" id="ofInput" type="text" maxlength="64" autocomplete="off"
-           placeholder="Fournée de 16h : -30 % membres" oninput="ofType()">
+           placeholder="Votre offre du moment" oninput="ofType()">
     <div class="of-count" id="ofCount">0</div>
   </div>
   <div class="of-note" id="ofNote">Visez 40 caractères : au-delà, l'iPhone réduit la police.</div>
@@ -597,10 +629,89 @@ function xhrGet(url, onSuccess, onError){
   xhr.send();
 }
 
+/* ═══ 🎨 LE THÈME DU PASS ════════════════════════════════════════════════
+   Recopie de `wallet-service/lib/theme.js`. Oui, c'est une duplication — mais
+   ce fichier est servi par un AUTRE domaine que le service Wallet, et aller la
+   chercher au chargement ajouterait un aller-retour réseau devant le commerçant.
+   Si vous touchez à theme.js, touchez ici : les deux doivent rester d'accord.
+
+   `accent` sert aux pastilles obtenues, `label` aux intitulés de champ,
+   `background` au fond. La coche des pastilles n'est PAS une constante : le
+   générateur la calcule (`shade(base, 0.55)`), on fait pareil plus bas. */
+const PASS_THEMES = {
+  boulangerie:{ bg:[62,122,26],  accent:'#C8963E', label:'rgb(245,208,122)' },
+  fleuriste:  { bg:[110,26,68],  accent:'#C8568E', label:'rgb(244,182,210)' },
+  pizzeria:   { bg:[112,32,20],  accent:'#C8442E', label:'rgb(242,160,126)' },
+  vape:       { bg:[44,35,102],  accent:'#6D5AE0', label:'rgb(182,171,255)' },
+  restaurant: { bg:[78,28,35],   accent:'#9A3F4C', label:'rgb(215,143,153)' },
+  primeur:    { bg:[112,62,12],  accent:'#E0892E', label:'rgb(248,200,124)' },
+  baps:       { bg:[22,19,15],   accent:'#F4A460', label:'rgb(244,164,96)'  }
+};
+
+function hexRgb(h){
+  h = String(h).replace('#','').trim();
+  if(h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const n = parseInt(h, 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+const rgbTxt = a => 'rgb(' + a[0] + ',' + a[1] + ',' + a[2] + ')';
+/* les deux mêmes opérations que lib/stamps.js, aux mêmes coefficients */
+const assombrir = (a,k) => a.map(v => Math.round(v * k));
+const eclaircir = (a,t) => a.map(v => Math.round(v + (255 - v) * t));
+
+function appliquerThemePass(metier){
+  const t = PASS_THEMES[String(metier || '').toLowerCase()];
+  if(!t) return;                                  // métier inconnu : on garde le repli CSS
+  const acc = hexRgb(t.accent);
+  const r = document.documentElement.style;
+  r.setProperty('--pass-bg',     rgbTxt(t.bg));
+  r.setProperty('--pass-accent', t.accent);
+  r.setProperty('--pass-label',  t.label);
+  r.setProperty('--pass-stamp',  t.accent);                      // pastille obtenue
+  r.setProperty('--pass-stamp2', rgbTxt(eclaircir(acc, 0.22)));  // son haut, plus clair
+  r.setProperty('--pass-ink',    rgbTxt(assombrir(t.bg, 0.55))); // la coche, comme stamps.js
+}
+
 /* ── Init ── */
 const params   = new URLSearchParams(window.location.search);
 let   commerce = params.get('commerce') || BA_REPLI.nom;
-document.getElementById('commerceName').textContent = (commerce.split(' ')[0]);
+
+/** Écrit le nom, le logo et le titre de la page. Appelée deux fois au plus :
+    une fois tout de suite SI aucun commerce précis n'est demandé, puis une fois
+    le registre résolu. */
+function peindreEnTete(nom, com){
+  com = com || {};
+  document.getElementById('commerceName').textContent = com.nom_court || String(nom).split(' ')[0];
+  document.title = 'Espace Perify — ' + (com.nom_court || nom);
+
+  /* L'aperçu du pass porte le nom d'organisation, tronqué comme le fait iOS.
+     Le « … » n'était pas conditionnel : « Le Bap's » s'affichait « Le Bap's… ». */
+  const org = document.getElementById('ofOrg');
+  if(org) org.textContent = String(nom).length > 12 ? String(nom).slice(0,12) + '…' : String(nom);
+
+  /* Le logo du commerce, en version CLAIRE : cet en-tête est noir. À défaut,
+     son monogramme. Et si l'image ne charge pas (réseau, fichier déplacé), on
+     retombe sur le monogramme — pas sur une icône cassée. */
+  const box = document.getElementById('hdrLogo');
+  if(!box) return;
+  const mono = (String(com.nom_court || nom).trim()[0] || 'P').toUpperCase();
+  const poserMono = function(){ box.className = 'hdr-logo'; box.textContent = mono; };
+  if(com.logo_blanc){
+    const img = new Image();
+    img.alt = '';
+    img.onload  = function(){ box.className = 'hdr-logo logo'; box.textContent = ''; box.appendChild(img); };
+    img.onerror = poserMono;
+    img.src = com.logo_blanc;
+    poserMono();                     // le monogramme d'abord, pour ne pas laisser un trou
+  } else {
+    poserMono();
+  }
+}
+
+/* ⚠️ Tant qu'un commerce PRÉCIS est demandé (?c= ou ?type=), on ne peint rien
+   avec le repli : sinon l'en-tête affiche « Falman » pendant toute la requête au
+   registre — jusqu'à 4 s sur un réseau lent, en plein rendez-vous. */
+if(!(params.get('c') || params.get('type'))) peindreEnTete(commerce, BA_REPLI);
 
 /* Le registre repond, puis seulement la page devient utilisable. Sans ce verrou,
    un premier clic parti trop tot interrogerait le backend du mauvais commerce. */
@@ -610,10 +721,11 @@ BA.pret().then(function(c){
   AS_URL = c.apps_script;
   baPret = true;
   if(!params.get('commerce')) commerce = c.nom || commerce;
-  document.getElementById('commerceName').textContent =
-    (c.nom_court || commerce.split(' ')[0]);
-  var org = document.getElementById('ofOrg');
-  if(org) org.textContent = String(commerce).slice(0, 12) + '…';
+  /* Tout ce qui porte l'identité du commerce est peint ICI, et nulle part
+     ailleurs : en-tête, titre, couleurs du pass, exemples d'offre. */
+  peindreEnTete(commerce, c);
+  appliquerThemePass(c.metier);
+  ofExemples(c.metier);
   document.dispatchEvent(new Event('ba:pret'));
 });
 
@@ -870,13 +982,83 @@ const OF_MAX     = 64;     // au-delà, le service tronque
    paramètres `secret=` dans la même URL. */
 if (params.get('secret')) setVendorSecret(params.get('secret'));
 
-const OF_EXEMPLES = [
-  'Fournée de 16h : -30 % membres',
-  'Pains au chocolat chauds a 16h',
-  '-30 % sur les viennoiseries',
-  'Baguettes tradition offertes des 2 achetees',
-  'Fermé exceptionnellement demain'
-];
+/* Les exemples ne sont pas décoratifs : le commerçant CLIQUE dessus, ils
+   remplissent le champ. Proposer « -30 % sur les viennoiseries » à un vendeur de
+   tacos décrédibilise l'outil entier en une seconde de rendez-vous.
+   Un jeu par métier, plus un jeu générique pour les métiers pas encore écrits —
+   générique et fade vaut toujours mieux que précis et faux.
+   ⚠️ Viser 40 caractères : au-delà, PassKit réduit la police (OF_CONFORT). */
+const OF_EXEMPLES = {
+  _defaut: [
+    'Offre du jour : -20 % membres',
+    'Nouveauté en boutique cette semaine',
+    'Le 2e article à moitié prix',
+    'Ouvert exceptionnellement dimanche',
+    'Fermé exceptionnellement demain'
+  ],
+  boulangerie: [
+    'Fournée de 16h : -30 % membres',
+    'Pains au chocolat chauds à 16h',
+    '-30 % sur les viennoiseries',
+    'Baguette offerte dès 2 achetées',
+    'Fermé exceptionnellement demain'
+  ],
+  baps: [
+    'Menu tacos + frites + boisson 9,90 €',
+    '-20 % sur les burgers ce soir',
+    "Mozzasticks offerts dès 15 € d'achat",
+    'Frites offertes avec tout tacos',
+    'Fermé exceptionnellement demain'
+  ],
+  fleuriste: [
+    'Bouquet du jour à -20 %',
+    'Roses : la 2e offerte',
+    'Nouvelles pivoines arrivées',
+    'Plantes vertes -15 % ce week-end',
+    'Fermé exceptionnellement demain'
+  ],
+  pizzeria: [
+    'Pizza achetée = boisson offerte',
+    '-25 % à emporter avant 19h',
+    'Calzone du jour à 9,90 €',
+    'Tiramisu maison offert dès 20 €',
+    'Fermé exceptionnellement demain'
+  ],
+  restaurant: [
+    'Formule midi à 14,90 € ce midi',
+    'Café gourmand offert aujourd’hui',
+    'Suggestion du jour : magret',
+    '-20 % sur les desserts ce soir',
+    'Fermé exceptionnellement demain'
+  ],
+  primeur: [
+    'Fraises de Carpentras arrivées',
+    'Cagette de saison à 9,90 €',
+    '-30 % sur les tomates ce soir',
+    'Légumes : 2 cagettes, 1 offerte',
+    'Fermé exceptionnellement demain'
+  ],
+  vape: [
+    '-20 % sur tous les e-liquides',
+    'Nouveaux arômes en boutique',
+    'Résistances : la 5e offerte',
+    'Pack découverte à 19,90 €',
+    'Fermé exceptionnellement demain'
+  ]
+};
+
+/** Pose les suggestions ET le placeholder du champ, aux couleurs du métier.
+    Appelée une fois le registre résolu — jamais avant : avant, on ne sait pas
+    à quel commerçant on parle. */
+function ofExemples(metier){
+  const liste = OF_EXEMPLES[String(metier || '').toLowerCase()] || OF_EXEMPLES._defaut;
+  const c = document.getElementById('ofChips');
+  if(c) c.innerHTML = liste.map(function(t){
+    return '<button class="of-chip" onclick="ofChoisir(this)">' + t + '</button>';
+  }).join('');
+  const i = document.getElementById('ofInput');
+  if(i) i.placeholder = liste[0];
+}
 
 let ofOccupe = false;
 
@@ -887,10 +1069,6 @@ let ofOccupe = false;
   let h = '';
   for(let i=0;i<10;i++) h += '<div class="wc-dot' + (i<5 ? ' on' : '') + '"></div>';
   g.innerHTML = h;
-  const c = document.getElementById('ofChips');
-  c.innerHTML = OF_EXEMPLES.map(function(t){
-    return '<button class="of-chip" onclick="ofChoisir(this)">' + t + '</button>';
-  }).join('');
 })();
 
 window.ofChoisir = function(el){
