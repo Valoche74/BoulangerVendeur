@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#021024">
-<title>Caisse Fidélité — Falman</title>
+<!-- Le nom du commerce est ajouté par peindreEnTete() une fois le registre lu. -->
+<title>Caisse Fidélité</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -44,7 +45,13 @@ svg{display:block}.ic{width:20px;height:20px;stroke:currentColor;stroke-width:1.
 /* ── HEADER ── */
 .hdr{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 30px;border-bottom:1px solid var(--border);background:rgba(2,16,36,.72);backdrop-filter:blur(10px)}
 .hdr-l{display:flex;align-items:center;gap:11px}
-.hdr-mk{width:48px;height:48px;border-radius:13px;background:linear-gradient(150deg,var(--accent),#0A3D80);display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;box-shadow:0 4px 14px rgba(45,125,255,.4)}
+/* ⚠️ Le dégradé et le halo portaient DEUX bleus en dur : la pastille d'un
+   vendeur de tacos partait de son orange pour finir dans le bleu boulangerie.
+   Les deux passent par des variables, posées avec la palette plus bas.
+   `.logo` efface la pastille quand le commerce a un vrai logo. */
+.hdr-mk{width:48px;height:48px;border-radius:13px;background:linear-gradient(150deg,var(--accent),var(--mk2,#0A3D80));display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;box-shadow:0 4px 14px var(--mk-glow,rgba(45,125,255,.4));overflow:hidden}
+.hdr-mk.logo{background:none;box-shadow:none;border-radius:0}
+.hdr-mk img{width:100%;height:100%;object-fit:contain;display:block}
 .hdr-name{font-size:21px;font-weight:700}.hdr-sub{font-size:13px;color:var(--mut);margin-top:2px}
 .sync{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-size:12px;font-weight:500;color:var(--dim)}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
@@ -442,8 +449,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
 
 <header class="hdr">
   <div class="hdr-l">
-    <div class="hdr-mk" id="hdrMk">F</div>
-    <div><div class="hdr-name" id="hdrName">Falman</div><div class="hdr-sub">Caisse fidélité</div></div>
+    <!-- Vides au chargement : remplis par peindreEnTete() une fois le registre
+         résolu. Écrits en dur, ils annonçaient « Falman » à tout autre commerce,
+         y compris quand ?c= désignait bien le sien. -->
+    <div class="hdr-mk" id="hdrMk"></div>
+    <div><div class="hdr-name" id="hdrName"></div><div class="hdr-sub">Caisse fidélité</div></div>
   </div>
   <div class="hdr-r">
     <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncTxt">En direct</span></div>
@@ -553,7 +563,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible,.btn
       <h2>Scannez une carte fidélité</h2>
       <p>Approchez la carte du lecteur, ou saisissez l'identifiant.</p>
       <div class="manual">
-        <input class="fld" id="manualId" placeholder="card_id (FAL-…) ou UID" onkeydown="if(event.key==='Enter')doIdentify()">
+        <!-- placeholder posé par peindreEnTete() avec le préfixe DU commerce -->
+        <input class="fld" id="manualId" placeholder="Numéro de carte ou UID" onkeydown="if(event.key==='Enter')doIdentify()">
         <button class="btn btn-accent" onclick="doIdentify()">Identifier</button>
       </div>
       <div class="idle-hint">Le lecteur NFC remplira ce champ automatiquement une fois branché.</div>
@@ -878,34 +889,123 @@ function kioskSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }cat
 function setKioskSecret(v){ try{ if(v) localStorage.setItem(SECRET_KEY, v); else localStorage.removeItem(SECRET_KEY); }catch(e){} }
 
 const params = new URLSearchParams(location.search);
-const commerce = params.get('commerce') || 'Falman';
-document.getElementById('hdrName').textContent = commerce;
-document.getElementById('hdrMk').textContent = (commerce.trim()[0]||'F').toUpperCase();
+
+/** Écrit le nom et la pastille d'en-tête. Le nom vient du REGISTRE, plus d'un
+    `?commerce=` qu'il fallait penser à mettre dans l'URL : sans lui, la caisse
+    du Bap's affichait « Falman » et un « F » alors que son backend, lui, était
+    bien le bon. ?commerce= reste prioritaire — c'est une échappatoire utile
+    quand un commerçant veut un autre libellé sur sa borne. */
+/* ⚠️ 12/09 — BUG FONCTIONNEL, pas cosmétique. Trois endroits testaient
+   `/^FAL-/i` EN DUR pour distinguer un numéro de carte d'un UID NFC. Une carte
+   « BAP-SBY3JG » tapée ou scannée à la caisse partait donc en `uid=`, et le
+   backend répondait « carte inconnue » — vérifié en production ce jour-là :
+     uid=BAP-SBY3JG      → {"status":"unknown"}
+     card_id=BAP-SBY3JG  → {"status":"active", prenom:"Camille", …}
+   Seul le pont NFC échappait au piège (il passe `isUid` explicitement).
+   La forme retenue est celle que le service Wallet utilise déjà pour retrouver
+   un commerce (lib/commerces.js, prefixeDe) : 2 à 6 lettres, un tiret, la suite.
+   Un UID NFC ne contient pas de tiret. Le préfixe du registre sert de voie
+   rapide quand il est connu. Falman : « FAL-… » passe toujours, à l'identique. */
+var BA_PREFIXE = '';
+function estCardId(v){
+  var s = String(v == null ? '' : v).trim().toUpperCase();
+  if(!s) return false;
+  if(BA_PREFIXE && s.indexOf(BA_PREFIXE + '-') === 0) return true;
+  return /^[A-Z]{2,6}-/.test(s);
+}
+
+function peindreEnTete(com){
+  com = com || {};
+  BA_PREFIXE = String(com.prefixe || '').trim().toUpperCase();
+  var nom = params.get('commerce') || com.nom_court || com.nom || 'Falman';
+
+  /* Le champ annonçait « FAL-… » à tout le monde. Il annonce le préfixe du
+     commerce courant, c'est-à-dire ce que le commerçant a réellement en main. */
+  var champ = document.getElementById('manualId');
+  if(champ) champ.placeholder = 'card_id (' + (BA_PREFIXE || 'FAL') + '-…) ou UID';
+  document.getElementById('hdrName').textContent = nom;
+  document.title = 'Caisse Fidélité — ' + nom;
+
+  var box = document.getElementById('hdrMk');
+  if(!box) return;
+  var mono = (String(nom).trim()[0] || 'P').toUpperCase();
+  var poserMono = function(){ box.className = 'hdr-mk'; box.textContent = mono; };
+  poserMono();                       // d'abord le monogramme : jamais de trou
+  /* Le logo CLAIR du commerce — cet en-tête est sombre. Si l'image ne charge
+     pas, on garde le monogramme : pas d'icône cassée sur une borne de caisse. */
+  if(com.logo_blanc){
+    var img = new Image();
+    img.alt = '';
+    img.onload = function(){ box.className = 'hdr-mk logo'; box.textContent = ''; box.appendChild(img); };
+    img.src = com.logo_blanc;
+  }
+}
+/* ⚠️ On ne peint le repli tout de suite QUE si aucun commerce précis n'est
+   demandé. Sinon la borne afficherait « Falman » pendant toute la requête au
+   registre — jusqu'à 4 s, et c'est la première chose que voit le commerçant. */
+if(params.get('commerce') || !(params.get('c') || params.get('type'))) peindreEnTete(null);
+BA.pret().then(peindreEnTete);
+
 /* Accent multi-commerce (?type=) — bleu par défaut */
 (function(){
   /* Palette de marque par verticale [primaire, secondaire] — alignée sur card.html / index.html.
-     primeur assombri (#C9741F) pour garder un contraste suffisant texte blanc sur bouton. */
-  var T={fleuriste:['#C8568E','#E084B0'],pizzeria:['#C8442E','#E2664E'],vape:['#6D5AE0','#8A7AF0'],restaurant:['#9A3F4C','#B85A68'],primeur:['#C9741F','#F0A94E']};
+     primeur assombri (#C9741F) pour garder un contraste suffisant texte blanc sur bouton.
+     baps : orange-sable de lebaps.com, assombri de la même façon (cf. PRESETS.baps). */
+  var T={fleuriste:['#C8568E','#E084B0'],pizzeria:['#C8442E','#E2664E'],vape:['#6D5AE0','#8A7AF0'],restaurant:['#9A3F4C','#B85A68'],primeur:['#C9741F','#F0A94E'],baps:['#C9761F','#E08A33']};
   var ty=(params.get('type')||'').toLowerCase(), pal=T[ty];
   if(!pal) return;   // boulangerie (défaut) garde le bleu d'origine
   var hx=function(h,a){h=h.replace('#','');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';};
+  var sombre=function(h,k){h=h.replace('#','');var n=parseInt(h,16);
+    return 'rgb('+Math.round(((n>>16)&255)*k)+','+Math.round(((n>>8)&255)*k)+','+Math.round((n&255)*k)+')';};
   var r=document.documentElement.style;
   r.setProperty('--accent',pal[0]); r.setProperty('--accent-2',pal[1]); r.setProperty('--accent-dim',hx(pal[0],.18));
   r.setProperty('--amb1',hx(pal[0],.26)); r.setProperty('--amb2',hx(pal[1],.20));   // halos de fond thémés
+  r.setProperty('--mk2',sombre(pal[0],.42)); r.setProperty('--mk-glow',hx(pal[0],.40)); // pastille d'en-tête
 })();
 const CT = (params.get('type')||'boulangerie').toLowerCase();   // commerce courant (anti-gaspi par type)
 
-/* 🥖 Anti-gaspi activable PAR COMMERCE. Mettre un type à false pour masquer l'onglet.
-   On peut aussi forcer via l'URL : ?antigaspi=0 (off) ou ?antigaspi=1 (on). */
+/* 🥖 Anti-gaspi activable PAR COMMERCE — la liste est en OPT-IN.
+   ⚠️ 11/09 : la règle était `AG_ENABLED[CT] !== false`, donc tout métier ABSENT
+   de la table héritait de l'anti-gaspi (`undefined !== false` vaut vrai). Le
+   Bap's, qui ne prend pas le module, se voyait proposer de composer des paniers
+   d'invendus de boulangerie. En opt-in (`=== true`), les six métiers listés ne
+   changent pas d'un iota et tout nouveau commerce naît sans le module — il
+   suffit de l'inscrire ici le jour où il le prend.
+   On peut toujours forcer via l'URL : ?antigaspi=0 (off) ou ?antigaspi=1 (on). */
 const AG_ENABLED = { boulangerie:true, fleuriste:true, pizzeria:true, restaurant:true, primeur:true, vape:true };
 const _agp = (params.get('antigaspi')||'').toLowerCase();
-const AG_ON = (_agp==='0'||_agp==='off'||_agp==='non') ? false
-            : (_agp==='1'||_agp==='on'||_agp==='oui') ? true
-            : (AG_ENABLED[CT] !== false);
-if(!AG_ON){
-  var _tag=document.getElementById('t-ag'); if(_tag) _tag.style.display='none';
-  var _pag=document.getElementById('panel-ag'); if(_pag) _pag.classList.remove('on');
+const _agForce = (_agp==='0'||_agp==='off'||_agp==='non') ? false
+               : (_agp==='1'||_agp==='on'||_agp==='oui') ? true
+               : null;
+
+function agDecider(metier){
+  if(_agForce !== null) return _agForce;                       // ?antigaspi= tranche toujours
+  return AG_ENABLED[String(metier||'').toLowerCase()] === true;
 }
+function agAppliquer(on){
+  AG_ON = on;
+  var t=document.getElementById('t-ag'); if(t) t.style.display = on ? '' : 'none';
+  if(!on){
+    var p=document.getElementById('panel-ag');
+    /* si on était justement sur l'onglet qui disparaît, on ne laisse pas un
+       écran vide : retour sur Fidélité. */
+    if(p && p.classList.contains('on') && window.switchTab) switchTab('fid', document.getElementById('t-fid'));
+    else if(p) p.classList.remove('on');
+  }
+}
+
+/* ⚠️ DEUX temps, et c'est voulu.
+   Tout de suite : on décide sur ?type=, la seule chose connue sans réseau.
+   Quand ?c= désigne un commerce dont on ignore encore le métier, on PART CACHÉ —
+   un onglet qui apparaît passe inaperçu, un onglet d'invendus de boulangerie
+   proposé à un vendeur de tacos, non.
+   Puis, le registre lu : on retranche avec le VRAI métier du commerce. Sans ce
+   second temps, ouvrir kiosque.html?c=baps (sans &type=) ramenait l'anti-gaspi. */
+let AG_ON = (_agForce !== null) ? _agForce
+          : (!params.get('type') && params.get('c')) ? false
+          : agDecider(CT);
+agAppliquer(AG_ON);
+BA.pret().then(function(c){ agAppliquer(agDecider(c.metier || CT)); });
 
 let currentCard = null;     // card_id du client identifié
 let lastQuery = null;       // dernière requête identify {card_id} ou {uid} (pour réessayer)
@@ -963,7 +1063,7 @@ window.doIdentify = function(forced){
   if(forced && typeof forced==='object'){ query = forced; }
   else {
     const v = (typeof raw==='string'?raw:'').trim(); if(!v) return;
-    query = /^FAL-/i.test(v) ? {card_id:v} : {uid:v};   // FAL-… = card_id, sinon UID
+    query = estCardId(v) ? {card_id:v} : {uid:v};
   }
   lastQuery = query;
   showLoader('Lecture de la carte…');
@@ -1044,7 +1144,7 @@ window.addQuick = function(p, btn){ pushPoints({points:p}, btn); };
 // (saisie du montant désormais via le pavé numérique → addKeypad)
 window.doUndo = function(btn){ if(!currentCard) return; setLoading(btn,true); api('fid_undo',{card_id:currentCard}).then(d=>{ if(d.status==='ok'){ toast('Annulé (−'+d.annule+')'); doIdentify({card_id:currentCard}); } else toast('Rien à annuler'); }).catch(()=>toast('Hors ligne')).then(()=>setLoading(btn,false)); };
 window.doActivate = function(){ if(!currentCard) return; api('fid_activate',{card_id:currentCard, prenom:$('nvPrenom').value.trim(), email:$('nvEmail').value.trim()}).then(d=>{ if(d.status==='ok'){ toast('Profil créé ✓'); doIdentify({card_id:currentCard}); } }).catch(()=>toast('Hors ligne')); };
-window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = /^FAL-/i.test(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
+window.doEnroll = function(){ const v=$('manualId').value.trim(); const q = estCardId(v)?{}:{uid:v}; api('fid_enroll',q).then(d=>{ if(d.card_id){ currentCard=d.card_id; toast('Carte enrôlée ✓'); showFid('fidNew'); } }).catch(()=>toast('Hors ligne')); };
 
 /* ════ VALIDATION CODE (avis) ════ */
 let currentCode='';
@@ -1406,7 +1506,7 @@ refreshLockBtn();
       const v=buf.trim(); buf='';
       if(!inField && v.length>=4){
         if(!$('panel-fid').classList.contains('on')) switchTab('fid', $('t-fid'));
-        doIdentify(/^FAL-/i.test(v) ? {card_id:v} : {uid:v});
+        doIdentify(estCardId(v) ? {card_id:v} : {uid:v});
       }
       return;
     }
