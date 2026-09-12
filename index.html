@@ -56,9 +56,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .tabs{display:flex;position:sticky;top:65px;z-index:90;
   background:rgba(0,0,0,.9);backdrop-filter:blur(16px);
   border-bottom:1px solid rgba(255,255,255,.07)}
-.tab{flex:1;padding:13px 8px;text-align:center;font-size:12px;font-weight:700;
+/* 4 onglets sur un écran de 375 px : 8 px de marge intérieure de chaque côté
+   ne laissaient plus la place à « Validation ». Réduit, et la police suit. */
+.tab{flex:1;min-width:0;padding:13px 3px;text-align:center;font-size:11px;font-weight:700;
   color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .2s;letter-spacing:.02em;text-transform:uppercase}
+  transition:all .2s;letter-spacing:0;text-transform:uppercase}
 .tab.on{color:var(--white);border-bottom-color:var(--gold2)}
 .tab-icon{font-size:18px;display:block;margin-bottom:4px}
 
@@ -258,6 +260,87 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .of-live-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .of-live-txt{font-size:14px;font-weight:600;color:var(--white);line-height:1.45;margin-bottom:4px}
 .of-live-meta{font-size:11px;color:var(--muted)}
+/* ── 📣 PROMO — le fabricant d'affiche ──────────────────────────
+   Porté du kiosque, où il vivait sur deux colonnes (borne de caisse). Ici la
+   page fait 480 px au plus : une seule colonne, l'affiche EN HAUT — le
+   commerçant doit voir ce qu'il fabrique pendant qu'il règle, comme dans
+   l'onglet OFFRE où la carte Wallet est au-dessus du champ. */
+.mk-lead{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:16px}
+.mk-lead b{color:var(--white);font-weight:600}
+
+/* L'affiche. Toutes ses couleurs passent par des variables : c'est ce qui
+   permet un jeu par commerce. ⚠️ Le halo du haut était un vert en dur dans le
+   kiosque alors que la version canvas, elle, prenait l'accent du thème : les
+   deux rendus divergeaient. Il est thémé ici. */
+.mk-poster{--mkdark:#001b0a;--mkmint:#efffe8;--mkaccent:#04b522;--mklime:#b9ff15;--mkacid:#e8ff25;
+  --mkglow:rgba(4,181,34,.28);--ps:96;--py:53;
+  position:relative;width:100%;aspect-ratio:1080/1920;border-radius:22px;overflow:hidden;color:#fff;isolation:isolate;
+  box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
+  background:radial-gradient(circle at 50% 23%,var(--mkglow),transparent 28%),linear-gradient(180deg,var(--mkdark) 0 43%,var(--mkmint) 43% 100%)}
+.mkp-top{position:absolute;z-index:5;top:5%;left:8%;right:8%;display:flex;justify-content:space-between;gap:8px;font-size:10px;font-weight:900}
+.mkp-brand{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.mkp-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mkp-brand i{width:11px;height:11px;border:2px solid var(--mklime);border-radius:50%;flex-shrink:0}
+.mkp-kicker{position:absolute;z-index:5;top:12%;left:6%;right:6%;margin:0;text-align:center;text-transform:uppercase;font-size:12px;font-weight:900;color:rgba(255,255,255,.82)}
+.mkp-title{position:absolute;z-index:5;top:16.5%;left:6%;right:6%;margin:0;text-align:center;text-transform:uppercase}
+.mkp-l1,.mkp-l2{display:block;font-family:"Arial Black",Impact,Arial,sans-serif}
+.mkp-l1{font-size:clamp(30px,9.5vw,52px);line-height:.93;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.55)}
+.mkp-l2{margin-top:6px;font-size:clamp(26px,8.5vw,46px);line-height:.9;color:transparent;
+  background:repeating-linear-gradient(-12deg,var(--mkacid) 0 14px,var(--mklime) 14px 28px,var(--mkaccent) 28px 42px);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-stroke:2px rgba(0,0,0,.62);filter:drop-shadow(4px 5px 0 rgba(0,0,0,.55))}
+.mkp-drip{position:absolute;z-index:2;top:42%;left:-4%;width:108%;height:5%;background:var(--mkdark);border-bottom-left-radius:46% 50%;border-bottom-right-radius:54% 50%}
+.mkp-hero{position:absolute;z-index:4;left:50%;top:calc(var(--py)*1%);width:calc(var(--ps)*1%);margin:0;transform:translate(-50%,-50%);filter:drop-shadow(0 18px 16px rgba(0,0,0,.3))}
+.mkp-hero img{display:block;width:100%;height:auto;object-fit:contain}
+.mkp-cta{position:absolute;z-index:6;left:50%;bottom:13%;width:76%;transform:translateX(-50%);padding:12px 8px;border-radius:999px;background:var(--mkaccent);color:#fff;font-size:clamp(12px,3vw,17px);font-weight:900;text-transform:uppercase;text-align:center}
+.mkp-legal{position:absolute;z-index:5;bottom:8.5%;left:9%;right:9%;margin:0;text-align:center;color:rgba(0,0,0,.7);font-size:9px;font-weight:700;line-height:1.35}
+.mkp-footer{position:absolute;z-index:5;bottom:4.2%;left:9%;right:9%;margin:0;text-align:center;color:rgba(0,0,0,.9);font-size:11.5px;font-weight:900;text-transform:uppercase}
+
+/* Le choix du produit */
+.mk-prods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.mk-prod{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 5px;
+  border:1.5px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.04);
+  color:var(--muted2);font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;
+  cursor:pointer;transition:border-color .15s,background .15s,color .15s,transform .1s;text-align:center;line-height:1.25}
+.mk-prod:active{transform:scale(.97)}
+.mk-prod img{width:100%;height:46px;object-fit:contain}
+.mk-prod.on{border-color:rgba(212,168,67,.5);background:rgba(212,168,67,.12);color:var(--gold2)}
+
+/* Les réglages : mêmes pastilles que l'onglet OFFRE, pour ne pas inventer
+   un deuxième vocabulaire visuel dans la même page. */
+.mk-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 8px;display:block}
+.mk-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mk-chip{padding:8px 13px;border-radius:999px;border:1.5px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.04);color:var(--muted2);font-family:'Inter',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.mk-chip.on{border-color:rgba(212,168,67,.45);background:rgba(212,168,67,.12);color:var(--gold2)}
+.mk-steps{display:flex;gap:10px;margin-top:4px}
+.mk-step{flex:1;min-width:0}
+.mk-step-n{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.mk-stepper{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:7px 10px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:14px}
+.mk-stepper button{width:30px;height:30px;flex-shrink:0;border:none;border-radius:9px;
+  background:rgba(255,255,255,.07);color:var(--white);font-size:18px;font-weight:700;
+  font-family:'Inter',sans-serif;cursor:pointer;line-height:1}
+.mk-stepper button:active{background:rgba(212,168,67,.22)}
+.mk-stepper b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.mk-count{margin-top:9px;text-align:center;font-size:12.5px;color:var(--muted);min-height:17px}
+.mk-count b{color:var(--gold2)}
+.mk-hist{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+.mk-h-row{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.mk-h-row:last-child{border-bottom:none}
+.mk-h-row .t{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk-h-row .t span{display:block;color:var(--muted);font-weight:400;font-size:11px}
+.mk-badge{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+  padding:4px 9px;border-radius:99px;white-space:nowrap;background:rgba(255,255,255,.07);color:var(--muted2)}
+.mk-badge.envoye{background:rgba(34,197,94,.12);color:var(--green)}
+.mk-badge.prevu{background:rgba(245,158,11,.12);color:var(--amber)}
+.mk-vide{padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
+.mk-ghost{width:100%;padding:15px;margin-top:10px;background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.1);border-radius:18px;color:var(--white);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.mk-ghost:active{background:rgba(255,255,255,.09)}
+.mk-ghost:disabled,.of-send:disabled{opacity:.45;cursor:default}
+
 /* ── SCANNER QR ─────────────────────────────────────────────────
    Le QR de la carte Wallet porte le card_id, pas un code de coupon : scanner
    une carte doit donc montrer LE CLIENT et ses cadeaux, pas juste valider un
@@ -345,6 +428,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="tab on" onclick="switchTab('validation',this)"><span class="tab-icon">✅</span>Validation</div>
   <div class="tab" onclick="switchTab('dashboard',this)"><span class="tab-icon">📊</span>Dashboard</div>
   <div class="tab" onclick="switchTab('offre',this)"><span class="tab-icon">📣</span>Offre</div>
+  <div class="tab" onclick="switchTab('promo',this)"><span class="tab-icon">🖼️</span>Promo</div>
 </div>
 
 <!-- VALIDATION -->
@@ -475,6 +559,80 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="loader-inline" id="ofLoader"></div>
   </button>
   <button class="btn-reset" onclick="ofEffacer()">Retirer l'offre des cartes</button>
+</div>
+
+<!-- PROMO — le fabricant d'affiche -->
+<div class="panel" id="panel-promo">
+  <div class="err-banner" id="mkErr"></div>
+
+  <div class="mk-lead">
+    Composez une affiche en trois touches, et envoyez-la par e-mail à vos
+    clients fidèles. <b>Aucun texte à écrire</b> — il se déduit de ce que
+    vous choisissez.
+  </div>
+
+  <!-- L'affiche, en direct -->
+  <div class="mk-poster" id="mkPoster">
+    <div class="mkp-top">
+      <span class="mkp-brand"><i></i><span id="mkBrand">—</span></span>
+      <span class="mkp-brand"><i></i><span>OFFRE FLASH</span></span>
+    </div>
+    <p class="mkp-kicker" id="mkKicker">—</p>
+    <h3 class="mkp-title"><span class="mkp-l1" id="mkL1">1 ACHETÉ</span><span class="mkp-l2" id="mkL2">1 OFFERT</span></h3>
+    <div class="mkp-drip"></div>
+    <figure class="mkp-hero"><img id="mkHeroImg" src="" alt=""></figure>
+    <div class="mkp-cta" id="mkCta">PROFITER DE L'OFFRE</div>
+    <p class="mkp-legal" id="mkLegal"></p>
+    <p class="mkp-footer" id="mkFooter"></p>
+  </div>
+  <div class="wc-caption" style="margin-top:8px">C'est exactement l'image que recevront vos clients</div>
+
+  <span class="mk-lbl" style="margin-top:6px">Le produit</span>
+  <div class="mk-prods" id="mkProduits"></div>
+
+  <span class="mk-lbl">Type d'offre</span>
+  <div class="mk-chips" id="mkTypes">
+    <button class="mk-chip on" onclick="mkSetType(this,'buyGet')">Acheté / offert</button>
+    <button class="mk-chip" onclick="mkSetType(this,'percent')">Réduction %</button>
+  </div>
+
+  <div id="mkBuyGet">
+    <div class="mk-steps" style="margin-top:14px">
+      <div class="mk-step"><div class="mk-step-n">Achetés</div>
+        <div class="mk-stepper"><button onclick="mkStep('buy',-1)">−</button><b id="mkBuy">1</b><button onclick="mkStep('buy',1)">+</button></div></div>
+      <div class="mk-step"><div class="mk-step-n">Offerts</div>
+        <div class="mk-stepper"><button onclick="mkStep('free',-1)">−</button><b id="mkFree">1</b><button onclick="mkStep('free',1)">+</button></div></div>
+    </div>
+  </div>
+  <div id="mkPercent" style="display:none">
+    <div class="mk-steps" style="margin-top:14px">
+      <div class="mk-step"><div class="mk-step-n">Réduction</div>
+        <div class="mk-stepper"><button onclick="mkStep('pct',-5)">−</button><b><span id="mkPct">20</span> %</b><button onclick="mkStep('pct',5)">+</button></div></div>
+    </div>
+  </div>
+
+  <span class="mk-lbl">Couleur de l'affiche</span>
+  <div class="mk-chips" id="mkThemes"></div>
+
+  <span class="mk-lbl">Envoyer quand ?</span>
+  <div class="mk-chips" id="mkWhens">
+    <button class="mk-chip on" onclick="mkSetWhen(this,'now')">🚀 Maintenant</button>
+    <button class="mk-chip" onclick="mkSetWhen(this,'demain')">🗓️ Demain matin</button>
+  </div>
+
+  <button class="of-send" id="mkSendBtn" style="margin-top:22px" onclick="mkEnvoyerTous(this)">
+    <span id="mkSendTxt">Envoyer aux clients fidèles</span>
+    <div class="loader-inline" id="mkLoader"></div>
+  </button>
+  <div class="mk-count" id="mkCount">&nbsp;</div>
+  <button class="mk-ghost" id="mkTestBtn" onclick="mkEnvoyerTest(this)">📩 M'envoyer l'aperçu d'abord</button>
+
+  <span class="mk-lbl">Dernières campagnes</span>
+  <div class="mk-hist" id="mkHist"><div class="mk-vide">—</div></div>
+
+  <!-- L'affiche redessinée en 1080×1920 pour l'e-mail. Masqué : c'est un
+       tampon de rendu, pas un élément d'interface. -->
+  <canvas id="mkCanvas" width="1080" height="1920" hidden></canvas>
 </div>
 
 <!-- SCANNER -->
@@ -726,6 +884,7 @@ BA.pret().then(function(c){
   peindreEnTete(commerce, c);
   appliquerThemePass(c.metier);
   ofExemples(c.metier);
+  mkMonter(c.metier);
   document.dispatchEvent(new Event('ba:pret'));
 });
 
@@ -762,6 +921,7 @@ function switchTab(tab, el){
   document.getElementById('panel-' + tab).classList.add('on');
   if(tab === 'dashboard' && !dashLoaded){ loadDash(); dashLoaded = true; }
   if(tab === 'offre'){ ofCharger(); }
+  if(tab === 'promo'){ mkCharger(); }
 }
 
 function fmtCode(input){
@@ -1178,6 +1338,369 @@ window.ofEffacer = function(){
     function(err){ ofAttendre(false); ofErreur(err); });
 };
 
+/* ═══ 🖼️ PROMO — le fabricant d'affiche ═════════════════════════════════
+   Porté du kiosque le 12/09. Le principe tient en une phrase : le commerçant
+   ne tape RIEN. Il choisit un produit, un type d'offre, une couleur — le texte
+   de l'affiche se déduit, et l'affiche part par e-mail aux clients fidèles
+   qui ont accepté d'en recevoir.
+
+   ⚠️ LES VISUELS DOIVENT ÊTRE SERVIS PAR CETTE MÊME ORIGINE. L'affiche finale
+   est redessinée dans un <canvas> puis exportée en JPEG (mkDessiner). Une image
+   venue d'un autre domaine « teinte » le canvas et `toDataURL()` lève alors une
+   SecurityError : plus d'affiche du tout. D'où `assets/promo/…` ici, et surtout
+   pas un lien vers le site client. */
+
+/* Les visuels, par métier. Un métier absent retombe sur `_defaut` : une affiche
+   fade vaut mieux qu'une affiche qui parle de croissants à un vendeur de tacos.
+   `scale` = largeur du produit en % de l'affiche, `y` = centre vertical en %.
+   `off` = le type d'offre qui va le mieux au produit, proposé d'office. */
+const MK_PRODUITS = {
+  boulangerie: [
+    {id:'croissant', nom:'Croissant',        img:'assets/promo/products/croissant.png',        genre:'m', scale:96, y:53, off:'buyGet'},
+    {id:'pain',      nom:'Pain au chocolat', img:'assets/promo/products/pain-au-chocolat.png', genre:'m', scale:98, y:53, off:'percent'},
+    {id:'baguette',  nom:'Baguette',         img:'assets/promo/products/baguette.png',         genre:'f', scale:100,y:62, off:'buyGet'},
+    {id:'eclair',    nom:'Éclair',           img:'assets/promo/products/eclair.png',           genre:'m', scale:95, y:64, off:'percent'},
+    {id:'cookie',    nom:'Cookie',           img:'assets/promo/products/cookie.png',           genre:'m', scale:90, y:55, off:'buyGet'},
+    {id:'tartelette',nom:'Tartelette',       img:'assets/promo/products/tartelette-fraise.png',genre:'f', scale:91, y:55, off:'percent'}
+  ],
+  /* Le Bap's — visuels fournis par le commerçant le 11/09.
+     ⚠️ Les échelles ne sont PAS uniformes, et ce n'est pas une coquette : seul
+     le burger est fourni en 684 px. Les autres font 200 à 357 px, et les
+     afficher à 96 % de la largeur reviendrait à les agrandir trois fois. Ils
+     sont donc posés plus petits — ça se voit moins qu'un visuel flou. */
+  baps: [
+    {id:'burger', nom:'Burger',      img:'assets/promo/baps/burger.png',      genre:'m', scale:98, y:55, off:'buyGet'},
+    {id:'tacos',  nom:'Tacos',       img:'assets/promo/baps/tacos.png',       genre:'m', scale:74, y:57, off:'buyGet'},
+    {id:'frites', nom:'Frites',      img:'assets/promo/baps/frites.png',      genre:'f', scale:78, y:58, off:'percent'},
+    {id:'mozza',  nom:'Mozzasticks', img:'assets/promo/baps/mozzasticks.png', genre:'m', scale:72, y:58, off:'buyGet'},
+    {id:'hotdog', nom:'Hot-dog',     img:'assets/promo/baps/hotdog.png',      genre:'m', scale:60, y:56, off:'buyGet'},
+    {id:'toast',  nom:'Toast',       img:'assets/promo/baps/toast.png',       genre:'m', scale:58, y:56, off:'percent'}
+  ]
+};
+MK_PRODUITS._defaut = MK_PRODUITS.boulangerie;
+
+/* Les palettes d'affiche. `dark` = le haut, `mint` = le bas, `accent` = le
+   bouton, `lime`/`acid` = les rayures du gros titre. */
+const MK_THEMES = {
+  green:{nom:'🟢 Vert',   dark:'#001b0a',mint:'#efffe8',accent:'#04b522',lime:'#b9ff15',acid:'#e8ff25'},
+  choco:{nom:'🟤 Choco',  dark:'#190904',mint:'#fff4dc',accent:'#b95a18',lime:'#ff9446',acid:'#ffce4a'},
+  berry:{nom:'🔴 Fraise', dark:'#250411',mint:'#fff0f3',accent:'#d71946',lime:'#ff5b78',acid:'#fff26d'},
+  blue: {nom:'🔵 Bleu',   dark:'#071326',mint:'#edf7ff',accent:'#1455d9',lime:'#36d4ff',acid:'#9cf3ff'},
+  /* Le Bap's : noir + orange-sable, relevé sur lebaps.com — la même identité
+     que leur pass Apple. */
+  baps: {nom:'🟠 Le Bap’s', dark:'#161310',mint:'#fff6ea',accent:'#C9761F',lime:'#F4A460',acid:'#FFD9A0'}
+};
+/* Le thème proposé d'office, par métier. Un commerçant peut toujours en changer. */
+const MK_THEME_DEFAUT = { boulangerie:'green', baps:'baps', fleuriste:'berry', pizzeria:'berry', restaurant:'choco', primeur:'green', vape:'blue' };
+
+const mkS = { metier:'boulangerie', pid:null, off:'buyGet', buy:1, free:1, pct:20, theme:'green', quand:'now' };
+let mkOccupe = false, mkArme = null;
+
+function mkListe(){ return MK_PRODUITS[mkS.metier] || MK_PRODUITS._defaut; }
+function mkProduit(){ const l = mkListe(); return l.find(function(p){ return p.id === mkS.pid; }) || l[0]; }
+
+/* Le texte de l'affiche — déduit, jamais saisi. C'est tout l'intérêt : pas de
+   faute d'orthographe, pas d'accroche à trouver un jour de coup de feu. */
+function mkTexte(){
+  const p = mkProduit();
+  if(mkS.off === 'percent'){
+    return { l1:'-' + mkS.pct + '%', l2:'FIDÉLITÉ', cta:'ACTIVER LA REMISE',
+      footer:'-' + mkS.pct + '% AVEC LA CARTE',
+      legal:'Remise réservée aux porteurs de la carte de fidélité. Sur ' + p.nom.toLowerCase() + '. Offre non cumulable.',
+      titre:p.nom + ' · -' + mkS.pct + '%', court:'-' + mkS.pct + '%' };
+  }
+  const ach = p.genre === 'f' ? (mkS.buy > 1 ? 'ACHETÉES' : 'ACHETÉE') : (mkS.buy > 1 ? 'ACHETÉS' : 'ACHETÉ');
+  const off = p.genre === 'f' ? (mkS.free > 1 ? 'OFFERTES' : 'OFFERTE') : (mkS.free > 1 ? 'OFFERTS' : 'OFFERT');
+  const l1 = mkS.buy + ' ' + ach, l2 = mkS.free + ' ' + off;
+  return { l1:l1, l2:l2, cta:(mkS.buy > 1 ? 'PRENDRE LE DEAL' : 'PROFITER DE L’OFFRE'),
+    footer:l1 + ' = ' + l2,
+    legal:'Sur ' + p.nom.toLowerCase() + '. Selon disponibilité. Offre non cumulable.',
+    titre:p.nom + ' · ' + l1 + ' = ' + l2, court:l1 + ' = ' + l2 };
+}
+
+function mkPeindreProduits(){
+  const box = document.getElementById('mkProduits');
+  if(!box) return;
+  box.innerHTML = mkListe().map(function(p){
+    return '<button class="mk-prod' + (p.id === mkS.pid ? ' on' : '') + '" onclick="mkChoisir(\'' + p.id + '\')">'
+         + '<img src="' + p.img + '" alt="" loading="lazy"><span>' + esc(p.nom) + '</span></button>';
+  }).join('');
+}
+function mkPeindreThemes(){
+  const box = document.getElementById('mkThemes');
+  if(!box) return;
+  box.innerHTML = Object.keys(MK_THEMES).map(function(k){
+    return '<button class="mk-chip' + (k === mkS.theme ? ' on' : '') + '" onclick="mkSetTheme(this,\'' + k + '\')">' + MK_THEMES[k].nom + '</button>';
+  }).join('');
+}
+
+window.mkChoisir = function(id){
+  const p = mkListe().find(function(x){ return x.id === id; });
+  if(!p) return;
+  mkS.pid = id;
+  mkS.off = p.off;                       // le type d'offre qui va au produit
+  mkPeindreProduits(); mkSyncReglages(); mkRendre();
+};
+function mkSyncReglages(){
+  document.querySelectorAll('#mkTypes .mk-chip').forEach(function(c){
+    c.classList.toggle('on', c.getAttribute('onclick').indexOf("'" + mkS.off + "'") >= 0);
+  });
+  document.getElementById('mkBuyGet').style.display  = mkS.off === 'buyGet'  ? '' : 'none';
+  document.getElementById('mkPercent').style.display = mkS.off === 'percent' ? '' : 'none';
+  document.getElementById('mkBuy').textContent  = mkS.buy;
+  document.getElementById('mkFree').textContent = mkS.free;
+  document.getElementById('mkPct').textContent  = mkS.pct;
+}
+window.mkSetType  = function(el,v){ mkS.off = v; mkSyncReglages(); mkRendre(); };
+window.mkSetTheme = function(el,v){ mkS.theme = v;
+  document.querySelectorAll('#mkThemes .mk-chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on'); mkRendre(); };
+window.mkStep = function(k,d){
+  if(k === 'buy')  mkS.buy  = Math.min(9, Math.max(1, mkS.buy + d));
+  if(k === 'free') mkS.free = Math.min(9, Math.max(1, mkS.free + d));
+  if(k === 'pct')  mkS.pct  = Math.min(90, Math.max(5, mkS.pct + d));
+  mkSyncReglages(); mkRendre();
+};
+window.mkSetWhen = function(el,v){ mkS.quand = v;
+  document.querySelectorAll('#mkWhens .mk-chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on'); mkDesarmer(); };
+
+function mkRendre(){
+  const p = mkProduit(), t = MK_THEMES[mkS.theme] || MK_THEMES.green, o = mkTexte();
+  const a = document.getElementById('mkPoster');
+  a.style.setProperty('--mkdark', t.dark);   a.style.setProperty('--mkmint', t.mint);
+  a.style.setProperty('--mkaccent', t.accent); a.style.setProperty('--mklime', t.lime);
+  a.style.setProperty('--mkacid', t.acid);
+  a.style.setProperty('--mkglow', mkRgba(t.accent, .28));
+  a.style.setProperty('--ps', p.scale); a.style.setProperty('--py', p.y);
+  document.getElementById('mkKicker').textContent = p.nom.toUpperCase();
+  document.getElementById('mkL1').textContent = o.l1;
+  document.getElementById('mkL2').textContent = o.l2;
+  document.getElementById('mkCta').textContent = o.cta;
+  document.getElementById('mkLegal').textContent = o.legal;
+  document.getElementById('mkFooter').textContent = o.footer;
+  const img = document.getElementById('mkHeroImg');
+  if(img.getAttribute('src') !== p.img) img.src = p.img;
+}
+function mkRgba(hex,a){
+  const h = String(hex).replace('#',''), n = parseInt(h, 16);
+  return 'rgba(' + ((n>>16)&255) + ',' + ((n>>8)&255) + ',' + (n&255) + ',' + a + ')';
+}
+
+/* ── L'affiche en image : 1080×1920 → JPEG, c'est ELLE qui part dans l'e-mail ──
+   Le HTML au-dessus n'est qu'un aperçu ; un e-mail ne sait pas afficher un
+   `background-clip:text`. Tout est donc redessiné à la main ici. */
+function mkFonte(g,t){ return g + ' ' + t + 'px Arial,"Arial Black",sans-serif'; }
+function mkAjuster(ctx,txt,g,max,largeurMax,min){
+  let t = max;
+  while(t >= min){ ctx.font = mkFonte(g,t); if(ctx.measureText(txt).width <= largeurMax) return t; t -= 2; }
+  return min;
+}
+function mkCentre(ctx,txt,y,g,taille,couleur,largeurMax,contour){
+  const t = mkAjuster(ctx,txt,g,taille,largeurMax,24);
+  ctx.font = mkFonte(g,t); ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  if(contour){ ctx.lineWidth = contour.w; ctx.strokeStyle = contour.c; ctx.strokeText(txt,540,y); }
+  ctx.fillStyle = couleur; ctx.fillText(txt,540,y);
+}
+function mkArrondi(ctx,x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);     ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function mkDessiner(){
+  const c = document.getElementById('mkCanvas'), ctx = c.getContext('2d');
+  const o = mkTexte(), p = mkProduit(), t = MK_THEMES[mkS.theme] || MK_THEMES.green;
+  const img = document.getElementById('mkHeroImg');
+  const W = 1080, H = 1920, coupe = Math.round(H * 0.43);
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = t.dark; ctx.fillRect(0,0,W,coupe+120);
+  const halo = ctx.createRadialGradient(540,420,20,540,420,520);
+  halo.addColorStop(0, t.accent + '55'); halo.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0,0,W,coupe);
+  ctx.fillStyle = t.mint; ctx.fillRect(0,coupe,W,H-coupe);
+  /* la coulure entre le haut sombre et le bas clair */
+  ctx.fillStyle = t.dark; ctx.beginPath(); ctx.moveTo(-40,coupe-10);
+  for(let x=-40; x<=W+40; x+=80) ctx.quadraticCurveTo(x+40,coupe+22,x+80,coupe+2);
+  ctx.lineTo(W+80,coupe-160); ctx.lineTo(-80,coupe-160); ctx.closePath(); ctx.fill();
+  [70,255,485,740,915].forEach(function(bx,i){
+    ctx.beginPath(); ctx.ellipse(bx,coupe+52,46+i*2,92-i*5,0,0,Math.PI*2); ctx.fill();
+  });
+
+  /* bandeau du haut : le NOM DU COMMERCE à gauche — c'était « LA FOURNÉE » en
+     dur, ce qui envoyait une affiche de boulangerie au nom d'un tacos. */
+  const marque = (BA_COM.nom_court || BA_COM.nom || 'Perify').toUpperCase();
+  ctx.fillStyle = '#fff'; ctx.globalAlpha = .92;
+  ctx.font = mkFonte('900',28); ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';  ctx.fillText(marque,124,86);
+  ctx.textAlign = 'right'; ctx.fillText('OFFRE FLASH',956,86);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = t.lime; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(88,78,18,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(714,78,18,0,Math.PI*2); ctx.stroke();
+
+  mkCentre(ctx,p.nom.toUpperCase(),172,'900',36,'rgba(255,255,255,.86)',900);
+  mkCentre(ctx,o.l1,262,'900',168,'#fff',980,{w:8,c:'rgba(0,0,0,.55)'});
+
+  /* ligne 2 : les rayures sont peintes DANS le texte, via un clip */
+  (function(){
+    const taille = mkAjuster(ctx,o.l2,'900',166,1000,44);
+    ctx.font = mkFonte('900',taille); ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.save(); ctx.lineWidth = 16; ctx.strokeStyle = 'rgba(0,0,0,.6)';
+    ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowOffsetX = 10; ctx.shadowOffsetY = 14;
+    ctx.strokeText(o.l2,540,438); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.fillText(o.l2,540,438); ctx.clip();
+    for(let i=-280; i<1320; i+=54){
+      ctx.fillStyle = t.acid;   ctx.fillRect(i,418,28,taille+44);
+      ctx.fillStyle = t.lime;   ctx.fillRect(i+28,418,32,taille+44);
+      ctx.fillStyle = t.accent; ctx.fillRect(i+60,418,28,taille+44);
+    }
+    ctx.restore();
+    ctx.save(); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,.34)';
+    ctx.strokeText(o.l2,540,438); ctx.restore();
+  })();
+
+  if(img && img.naturalWidth){
+    const tw = Math.round(W * (p.scale/100)), r = tw/img.naturalWidth, th = img.naturalHeight*r;
+    const ix = (W-tw)/2, iy = H*(p.y/100) - th/2;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 24;
+    ctx.drawImage(img,ix,iy,tw,th); ctx.restore();
+  }
+
+  ctx.fillStyle = t.accent; mkArrondi(ctx,150,1540,780,96,48); ctx.fill();
+  mkCentre(ctx,o.cta,1568,'900',45,'#fff',610);
+  mkCentre(ctx,o.legal,1706,'700',24,'rgba(0,0,0,.72)',900);
+  mkCentre(ctx,o.footer,1786,'900',32,'rgba(0,0,0,.9)',900);
+  return c.toDataURL('image/jpeg',0.86);
+}
+
+/* ── Le réseau ──────────────────────────────────────────────────────────
+   L'affiche fait ~200 Ko en base64 : trop pour une URL, d'où le POST.
+   `text/plain` évite le pré-vol CORS, qu'Apps Script ne sait pas traiter. */
+function mkPost(action, charge){
+  return new Promise(function(ok, ko){
+    const x = new XMLHttpRequest();
+    x.open('POST', AS_URL, true); x.timeout = 40000;
+    x.setRequestHeader('Content-Type','text/plain;charset=utf-8');
+    x.onload = function(){ try{ ok(JSON.parse(x.responseText)); }catch(e){ ko(new Error('reponse illisible')); } };
+    x.onerror = function(){ ko(new Error('reseau')); };
+    x.ontimeout = function(){ ko(new Error('timeout')); };
+    const corps = Object.assign({ action:action }, charge);
+    const sec = vendorSecret(); if(sec) corps.secret = sec;
+    x.send(JSON.stringify(corps));
+  });
+}
+function mkErreur(msg){
+  const b = document.getElementById('mkErr');
+  b.textContent = msg; b.classList.add('show');
+  setTimeout(function(){ b.classList.remove('show'); }, 6000);
+}
+function mkAttendre(actif){
+  mkOccupe = actif;
+  document.getElementById('mkSendBtn').disabled = actif;
+  document.getElementById('mkTestBtn').disabled = actif;
+  document.getElementById('mkSendTxt').style.display = actif ? 'none' : '';
+  document.getElementById('mkLoader').style.display  = actif ? 'block' : 'none';
+}
+function mkDemain(){
+  const d = new Date(); d.setDate(d.getDate()+1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function mkLibelleBouton(){ return mkS.quand === 'demain' ? 'Programmer pour demain matin' : 'Envoyer aux clients fidèles'; }
+function mkDesarmer(){
+  if(mkArme){ clearTimeout(mkArme); mkArme = null; }
+  document.getElementById('mkSendTxt').textContent = mkLibelleBouton();
+}
+function mkCharge(statut, date){
+  const o = mkTexte();
+  return { titre:o.titre, offre:o.court, accroche:'', type:'promo', cta_txt:'J’en profite',
+           statut:statut, date_envoi:(date || '2026-01-01'), poster:mkDessiner() };
+}
+
+function mkCharger(){
+  if(!baPret) return baAlors(mkCharger);
+  xhrGet(AS_URL + '?action=mk_count', function(d){
+    if(d.status !== 'ok') return;
+    const b = document.getElementById('mkSendBtn');
+    document.getElementById('mkCount').innerHTML =
+      d.nb > 0 ? 'Destinataires : <b>' + d.nb + '</b> client' + (d.nb > 1 ? 's' : '') + ' inscrit' + (d.nb > 1 ? 's' : '') + ' aux offres'
+               : 'Aucun client inscrit aux offres pour l’instant';
+    b.disabled = d.nb === 0;
+  }, function(err){ mkErreur(err); });
+
+  xhrGet(AS_URL + '?action=mk_list', function(d){
+    const box = document.getElementById('mkHist');
+    const lignes = (d.campagnes || []).slice(0,5);
+    box.innerHTML = lignes.length ? lignes.map(function(c){
+      const s = c.statut || 'brouillon';
+      const detail = s === 'envoye' ? (esc(c.envoye_le || '') + ' · ' + (c.nb || 0) + ' envoi' + ((c.nb||0) > 1 ? 's' : ''))
+                   : s === 'prevu'  ? ('prévu le ' + esc(c.date_envoi || ''))
+                   : 'brouillon';
+      return '<div class="mk-h-row"><div class="t">' + esc(c.titre || '(sans titre)')
+           + '<span>' + detail + '</span></div>'
+           + '<span class="mk-badge ' + esc(s) + '">' + esc(s) + '</span></div>';
+    }).join('') : '<div class="mk-vide">Aucune campagne pour le moment.</div>';
+  }, function(){});
+}
+
+window.mkEnvoyerTest = function(btn){
+  if(mkOccupe) return;
+  mkAttendre(true);
+  mkPost('mk_create', mkCharge('brouillon')).then(function(d){
+    if(d.status !== 'ok') throw new Error(d.message || d.status);
+    return new Promise(function(ok, ko){
+      xhrGet(AS_URL + '?action=mk_test&id=' + encodeURIComponent(d.id), ok, function(e){ ko(new Error(e)); });
+    });
+  }).then(function(d){
+    mkAttendre(false);
+    if(d.status === 'ok') flashOk('📩 Aperçu envoyé à ' + (d.test_envoye_a || 'votre e-mail'));
+    else mkErreur(d.message || d.status);
+    mkCharger();
+  }).catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
+};
+
+window.mkEnvoyerTous = function(btn){
+  if(mkOccupe) return;
+  /* Double détente : un envoi à TOUS les clients ne se déclenche pas sur une
+     touche malencontreuse, et il ne se rattrape pas. */
+  if(!mkArme){
+    mkArme = setTimeout(mkDesarmer, 6000);
+    document.getElementById('mkSendTxt').textContent =
+      mkS.quand === 'demain' ? '⚠️ Confirmer la programmation ?' : '⚠️ Confirmer l’envoi à TOUS ?';
+    return;
+  }
+  mkDesarmer();
+  const prevu = mkS.quand === 'demain';
+  mkAttendre(true);
+  mkPost('mk_create', mkCharge(prevu ? 'prevu' : 'brouillon', prevu ? mkDemain() : '2026-01-01')).then(function(d){
+    if(d.status !== 'ok') throw new Error(d.message || d.status);
+    if(prevu){
+      mkAttendre(false); flashOk('🗓️ Campagne programmée pour demain'); mkCharger(); return;
+    }
+    xhrGet(AS_URL + '?action=mk_send&id=' + encodeURIComponent(d.id), function(r){
+      mkAttendre(false);
+      if(r.status === 'ok') flashOk('🚀 Envoyée à ' + r.nb_envoyes + ' client' + (r.nb_envoyes > 1 ? 's' : ''));
+      else if(r.status === 'quota') mkErreur('Quota d’e-mails insuffisant aujourd’hui — réessayez demain.');
+      else mkErreur(r.message || r.status);
+      mkCharger();
+    }, function(e){ mkAttendre(false); mkErreur(e); });
+  }).catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
+};
+
+/** Monte l'onglet aux couleurs et aux produits du commerce. Appelée une fois le
+    registre résolu — avant, on ne sait pas de quel métier il s'agit. */
+function mkMonter(metier){
+  mkS.metier = MK_PRODUITS[String(metier || '').toLowerCase()] ? String(metier).toLowerCase() : '_defaut';
+  mkS.theme  = MK_THEME_DEFAUT[String(metier || '').toLowerCase()] || 'green';
+  mkS.pid    = mkListe()[0].id;
+  mkS.off    = mkListe()[0].off;
+  const b = document.getElementById('mkBrand');
+  if(b) b.textContent = (BA_COM.nom_court || BA_COM.nom || 'Perify').toUpperCase();
+  mkPeindreProduits(); mkPeindreThemes(); mkSyncReglages(); mkDesarmer(); mkRendre();
+}
+
 /* Petit bandeau de confirmation, façon .flash-ok déjà utilisé ailleurs */
 function flashOk(txt){
   const d = document.createElement('div');
@@ -1187,7 +1710,9 @@ function flashOk(txt){
   setTimeout(function(){ d.remove(); }, 1800);
 }
 
-document.getElementById('ofOrg').textContent = commerce.slice(0, 12) + '…';
+/* ⚠️ Il y avait ici une SECONDE écriture de #ofOrg, non conditionnelle, qui
+   repeignait « Falman Emman… » sur l'aperçu au chargement — peindreEnTete()
+   l'écrasait ensuite, mais le clignotement restait visible. Supprimée. */
 ofType();
 
 /* ═══ 📷 SCANNER QR ══════════════════════════════════════════════
