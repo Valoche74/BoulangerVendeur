@@ -335,6 +335,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .mk-badge.envoye{background:rgba(34,197,94,.12);color:var(--green)}
 .mk-badge.prevu{background:rgba(245,158,11,.12);color:var(--amber)}
 .mk-vide{padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
+/* ⚡ 13/09 — message d'attente SOUS le bouton d'envoi, là où le commerçant regarde.
+   Le bandeau d'erreur est en haut de l'onglet : hors de l'écran au moment du clic. */
+.mk-info{margin-top:10px;padding:11px 14px;border-radius:14px;background:rgba(245,158,11,.10);
+  border:1px solid rgba(245,158,11,.28);color:var(--amber);font-size:12.5px;line-height:1.5;text-align:center}
 .mk-ghost{width:100%;padding:15px;margin-top:10px;background:rgba(255,255,255,.05);
   border:1.5px solid rgba(255,255,255,.1);border-radius:18px;color:var(--white);
   font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
@@ -625,6 +629,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="loader-inline" id="mkLoader"></div>
   </button>
   <div class="mk-count" id="mkCount">&nbsp;</div>
+  <div class="mk-info" id="mkInfo" role="status" hidden></div>
   <button class="mk-ghost" id="mkTestBtn" onclick="mkEnvoyerTest(this)">📩 M'envoyer l'aperçu d'abord</button>
 
   <span class="mk-lbl">Dernières campagnes</span>
@@ -758,7 +763,9 @@ function askVendorSecret(msg){
 }
 
 /* ── Appel XHR générique (compatible Safari) ── */
-function xhrGet(url, onSuccess, onError){
+/* `delai` (ms, facultatif) : 13/09 — un envoi de campagne peut légitimement
+   dépasser 25 s (un e-mail par client). Seul mk_send s'en sert. */
+function xhrGet(url, onSuccess, onError, delai){
   /* Point de passage unique : le secret est attaché ICI, donc aucun appel ne
      peut l'oublier. C'est ce qui manquait — il n'était mis que sur wallet_offre. */
   const _sec = vendorSecret();
@@ -766,7 +773,7 @@ function xhrGet(url, onSuccess, onError){
 
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
-  xhr.timeout = 25000;
+  xhr.timeout = delai || 25000;
   xhr.onload = function(){
     try{
       const data = JSON.parse(xhr.responseText);
@@ -1645,17 +1652,133 @@ function mkCharger(){
   }, function(){});
 }
 
+/* ═══ ⚠️ 13/09 — UNE AFFICHE NE PART QU'UNE FOIS ════════════════════════════
+   Constaté le 13/09 au Bap's : le même « 1 acheté = 1 offert » est parti QUATRE
+   fois aux mêmes clients en sept minutes. L'envoi dépassait les 25 s d'attente de
+   la page, qui affichait « Timeout » ; le commerçant relançait — mais le serveur,
+   lui, avait continué et envoyé. Et chaque clic créait une NOUVELLE campagne
+   (mk_create) : la protection du serveur (mk_send refuse une campagne déjà
+   « envoye ») ne pouvait jamais jouer.
+
+   Désormais :
+     • une affiche = une campagne. Son identifiant est retenu (par commerce, dans
+       ce navigateur) et RÉUTILISÉ à chaque nouvel essai : mk_send répond alors
+       « already » au lieu de renvoyer. L'aperçu crée cette même campagne, et
+       l'envoi à tous qui suit la reprend ;
+     • pas de réponse ≠ pas d'envoi : sur un délai dépassé, on relit l'état de la
+       campagne (mk_list) avant de dire quoi que ce soit ;
+     • une affiche partie il y a moins de 12 h ne repart pas : il faut la modifier.
+   ⚠️ La mémoire est celle du navigateur : depuis un AUTRE appareil, rien
+   n'empêche encore un second envoi (garde-fou serveur à ajouter). */
+const MK_ENVOIS_CLE = 'perify_mk_envois_';
+const MK_VERIF_MS = 90000;             // durée max de vérification après un délai dépassé
+const MK_DEJA_MS  = 12 * 3600000;      // une même affiche ne repart pas dans les 12 h
+
+/* Ce qui fait « la même affiche » : tout ce qui la dessine ou s'écrit dedans.
+   Pas les octets de l'image : ils changent si la photo du produit n'était pas
+   encore chargée au premier essai, et l'on créerait une seconde campagne. */
+function mkEmpreinte(){
+  const o = mkTexte();
+  return JSON.stringify([(BA_COM && BA_COM.cle) || '', mkS.metier, mkS.pid, mkS.off,
+                         mkS.buy, mkS.free, mkS.pct, mkS.theme, o.titre, o.court]);
+}
+function mkEnvoisLire(){
+  try{
+    const o = JSON.parse(localStorage.getItem(MK_ENVOIS_CLE + ((BA_COM && BA_COM.cle) || '')) || '{}');
+    return (o && typeof o === 'object') ? o : {};
+  }catch(e){ return {}; }
+}
+function mkMemoriser(emp, patch){
+  const tous = mkEnvoisLire(), vieux = Date.now() - 7 * 86400000;   // oubli au bout d'une semaine
+  for(const k in tous){ if(!tous[k] || !(tous[k].t > vieux)) delete tous[k]; }
+  tous[emp] = Object.assign({}, tous[emp], patch, { t: Date.now() });
+  try{ localStorage.setItem(MK_ENVOIS_CLE + ((BA_COM && BA_COM.cle) || ''), JSON.stringify(tous)); }catch(e){}
+  return tous[emp];
+}
+/* Que faire de ce clic, vu ce que ce navigateur sait déjà de cette affiche ?
+     'deja'      partie il y a moins de 12 h, à au moins un client → on bloque
+     'reprendre' campagne déjà créée, pas (encore) confirmée envoyée → même id
+     'creer'     rien de connu, ou partie depuis longtemps → nouvelle campagne */
+function mkEtape(rec, maintenant){
+  if(rec && rec.statut === 'envoye'){
+    return (rec.nb > 0 && maintenant - (rec.envoyee || 0) < MK_DEJA_MS) ? 'deja' : 'creer';
+  }
+  return (rec && rec.id) ? 'reprendre' : 'creer';
+}
+function mkHeure(ms){
+  const d = new Date(ms);
+  return d.getHours() + ' h ' + String(d.getMinutes()).padStart(2, '0');
+}
+/* Message SOUS le bouton : c'est là que regarde le commerçant qui vient d'appuyer. */
+function mkInfo(txt){
+  const b = document.getElementById('mkInfo');
+  if(!b) return;
+  b.textContent = txt || ''; b.hidden = !txt;
+}
+/* L'identifiant de la campagne de cette affiche : celui déjà créé s'il existe et
+   n'est pas encore parti, sinon une nouvelle campagne. */
+function mkObtenirCampagne(emp){
+  const rec = mkEnvoisLire()[emp];
+  if(rec && rec.id && rec.statut !== 'envoye') return Promise.resolve(rec.id);
+  return mkPost('mk_create', mkCharge('brouillon', '2026-01-01')).then(function(d){
+    if(d.status !== 'ok') throw new Error(d.message || d.status);
+    mkMemoriser(emp, { id: d.id, statut: 'cree' });
+    return d.id;
+  });
+}
+function mkEnvoiConfirme(emp, id, nb, deja){
+  nb = Number(nb) || 0;
+  mkMemoriser(emp, { id: id, statut: 'envoye', nb: nb, envoyee: Date.now() });
+  mkAttendre(false); mkInfo('');
+  flashOk((deja ? '✅ Déjà envoyée à ' : '🚀 Envoyée à ') + nb + ' client' + (nb > 1 ? 's' : ''));
+  mkCharger();
+}
+function mkLancerEnvoi(id, emp){
+  mkInfo('Envoi en cours — cela peut prendre une minute. Ne relancez pas.');
+  xhrGet(AS_URL + '?action=mk_send&id=' + encodeURIComponent(id), function(r){
+    if(r.status === 'ok' || r.status === 'already'){
+      mkEnvoiConfirme(emp, id, r.status === 'ok' ? r.nb_envoyes : r.nb, r.status === 'already');
+      return;
+    }
+    mkAttendre(false); mkInfo('');
+    if(r.status === 'quota') mkErreur('Quota d’e-mails insuffisant aujourd’hui — réessayez demain.');
+    else if(r.status === 'unknown'){ mkMemoriser(emp, { id: null, statut: 'perdu' }); mkErreur('Campagne introuvable — réessayez.'); }
+    else mkErreur(r.message || r.status);
+    mkCharger();
+  }, function(err){
+    if(err === 'Code vendeur requis'){ mkAttendre(false); mkInfo(''); mkErreur(err); return; }
+    /* ⚠️ Pas de réponse ≠ pas d'envoi : le serveur continue souvent après que la
+       page a cessé d'attendre. On vérifie avant de dire quoi que ce soit. */
+    mkVerifierEnvoi(id, emp, Date.now() + MK_VERIF_MS);
+  }, 60000);
+}
+function mkVerifierEnvoi(id, emp, limite){
+  mkInfo('Le serveur tarde à répondre — on vérifie si l’envoi est parti. Ne relancez pas.');
+  const encore = function(){
+    if(Date.now() < limite){ setTimeout(function(){ mkVerifierEnvoi(id, emp, limite); }, 5000); return; }
+    mkAttendre(false);
+    mkInfo('Envoi non confirmé. Regardez « Dernières campagnes » dans une minute : si elle n’y est pas marquée envoyée, relancez — cette affiche ne partira qu’une fois.');
+    mkCharger();
+  };
+  xhrGet(AS_URL + '?action=mk_list', function(d){
+    const c = ((d && d.campagnes) || []).filter(function(x){ return x.id === id; })[0];
+    if(c && c.statut === 'envoye') mkEnvoiConfirme(emp, id, c.nb, false);
+    else encore();
+  }, encore);
+}
+
 window.mkEnvoyerTest = function(btn){
   if(mkOccupe) return;
-  mkAttendre(true);
-  mkPost('mk_create', mkCharge('brouillon')).then(function(d){
-    if(d.status !== 'ok') throw new Error(d.message || d.status);
+  mkAttendre(true); mkInfo('');
+  const emp = mkEmpreinte();
+  mkObtenirCampagne(emp).then(function(id){
     return new Promise(function(ok, ko){
-      xhrGet(AS_URL + '?action=mk_test&id=' + encodeURIComponent(d.id), ok, function(e){ ko(new Error(e)); });
+      xhrGet(AS_URL + '?action=mk_test&id=' + encodeURIComponent(id), ok, function(e){ ko(new Error(e)); });
     });
   }).then(function(d){
     mkAttendre(false);
     if(d.status === 'ok') flashOk('📩 Aperçu envoyé à ' + (d.test_envoye_a || 'votre e-mail'));
+    else if(d.status === 'unknown'){ mkMemoriser(emp, { id: null, statut: 'perdu' }); mkErreur('Campagne introuvable — réessayez.'); }
     else mkErreur(d.message || d.status);
     mkCharger();
   }).catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
@@ -1663,30 +1786,45 @@ window.mkEnvoyerTest = function(btn){
 
 window.mkEnvoyerTous = function(btn){
   if(mkOccupe) return;
+  const prevu = mkS.quand === 'demain';
+  const emp = mkEmpreinte();
+  const rec = mkEnvoisLire()[emp];
+  /* Déjà partie, ou déjà programmée : on le dit tout de suite, sans double détente. */
+  if(!prevu && mkEtape(rec, Date.now()) === 'deja'){
+    mkDesarmer();
+    mkInfo('Cette affiche est déjà partie à ' + rec.nb + ' client' + (rec.nb > 1 ? 's' : '')
+         + ', à ' + mkHeure(rec.envoyee) + '. Modifiez-la pour envoyer une nouvelle campagne.');
+    return;
+  }
+  if(prevu && rec && rec.statut === 'prevu' && rec.date === mkDemain()){
+    mkDesarmer(); mkInfo('Cette affiche est déjà programmée pour demain matin.');
+    return;
+  }
   /* Double détente : un envoi à TOUS les clients ne se déclenche pas sur une
      touche malencontreuse, et il ne se rattrape pas. */
   if(!mkArme){
     mkArme = setTimeout(mkDesarmer, 6000);
     document.getElementById('mkSendTxt').textContent =
-      mkS.quand === 'demain' ? '⚠️ Confirmer la programmation ?' : '⚠️ Confirmer l’envoi à TOUS ?';
+      prevu ? '⚠️ Confirmer la programmation ?' : '⚠️ Confirmer l’envoi à TOUS ?';
     return;
   }
   mkDesarmer();
-  const prevu = mkS.quand === 'demain';
-  mkAttendre(true);
-  mkPost('mk_create', mkCharge(prevu ? 'prevu' : 'brouillon', prevu ? mkDemain() : '2026-01-01')).then(function(d){
-    if(d.status !== 'ok') throw new Error(d.message || d.status);
-    if(prevu){
-      mkAttendre(false); flashOk('🗓️ Campagne programmée pour demain'); mkCharger(); return;
-    }
-    xhrGet(AS_URL + '?action=mk_send&id=' + encodeURIComponent(d.id), function(r){
+  mkAttendre(true); mkInfo('');
+  if(prevu){
+    mkPost('mk_create', mkCharge('prevu', mkDemain())).then(function(d){
+      if(d.status !== 'ok') throw new Error(d.message || d.status);
+      mkMemoriser(emp, { id: d.id, statut: 'prevu', date: mkDemain() });
+      mkAttendre(false); flashOk('🗓️ Campagne programmée pour demain'); mkCharger();
+    }).catch(function(e){
       mkAttendre(false);
-      if(r.status === 'ok') flashOk('🚀 Envoyée à ' + r.nb_envoyes + ' client' + (r.nb_envoyes > 1 ? 's' : ''));
-      else if(r.status === 'quota') mkErreur('Quota d’e-mails insuffisant aujourd’hui — réessayez demain.');
-      else mkErreur(r.message || r.status);
+      mkInfo('Programmation non confirmée (' + e.message + '). Regardez « Dernières campagnes » avant de réessayer.');
       mkCharger();
-    }, function(e){ mkAttendre(false); mkErreur(e); });
-  }).catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
+    });
+    return;
+  }
+  mkObtenirCampagne(emp)
+    .then(function(id){ mkLancerEnvoi(id, emp); })
+    .catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
 };
 
 /** Monte l'onglet aux couleurs et aux produits du commerce. Appelée une fois le
