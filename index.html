@@ -149,6 +149,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .cs{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
 .cs-w{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
 .cs-u{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.cs-x{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}   /* 🎁 15/09 — offre promo expirée */
 .rbtn{width:100%;padding:14px;margin-top:4px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   border-radius:16px;color:var(--muted);font-family:'Inter',sans-serif;
@@ -325,6 +326,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .mk-stepper b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
 .mk-count{margin-top:9px;text-align:center;font-size:12.5px;color:var(--muted);min-height:17px}
 .mk-count b{color:var(--gold2)}
+/* 🎁 15/09 — la date de fin de l'offre, sous les boutons de durée */
+.mk-sous{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.5}
+.mk-sous b{color:var(--gold2)}
 .mk-hist{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
 .mk-h-row{display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
 .mk-h-row:last-child{border-bottom:none}
@@ -498,6 +502,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="res-desc">Ce code n'existe pas. Vérifiez la saisie ou demandez l'email au client.</div>
     <button class="btn-reset" onclick="resetVal()">Réessayer</button>
   </div>
+
+  <!-- 🎁 15/09 — offre promo dont la date est passée (option A) : refusée, et on dit
+       pourquoi. « Code invalide » ferait croire à une faute de frappe. -->
+  <div class="result" id="resExpire">
+    <div class="res-icon ri-used">⌛</div>
+    <div class="res-title rt-used">Offre expirée</div>
+    <div class="res-gain" id="expGain">—</div>
+    <div class="res-desc">Cette offre était valable jusqu'au <b id="expFin">—</b>.<br>Ne pas remettre le gain.</div>
+    <button class="btn-reset" onclick="resetVal()">Scanner un autre code</button>
+  </div>
 </div>
 
 <!-- DASHBOARD -->
@@ -623,6 +637,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <button class="mk-chip on" onclick="mkSetWhen(this,'now')">🚀 Maintenant</button>
     <button class="mk-chip" onclick="mkSetWhen(this,'demain')">🗓️ Demain matin</button>
   </div>
+
+  <!-- 🎁 15/09 — durée de l'offre, choisie par le commerçant (validé par l'utilisateur :
+       3 · 7 · 14 · 30 jours, 7 présélectionné). Après la date, l'offre disparaît de la
+       carte du client et la caisse la refuse. -->
+  <span class="mk-lbl">Offre valable</span>
+  <div class="mk-chips" id="mkValidites">
+    <button class="mk-chip" onclick="mkSetValidite(this,3)">3 jours</button>
+    <button class="mk-chip on" onclick="mkSetValidite(this,7)">7 jours</button>
+    <button class="mk-chip" onclick="mkSetValidite(this,14)">14 jours</button>
+    <button class="mk-chip" onclick="mkSetValidite(this,30)">30 jours</button>
+  </div>
+  <div class="mk-sous" id="mkValiditeFin"></div>
 
   <button class="of-send" id="mkSendBtn" style="margin-top:22px" onclick="mkEnvoyerTous(this)">
     <span id="mkSendTxt">Envoyer aux clients fidèles</span>
@@ -968,6 +994,11 @@ function validateCode(){
       } else if(data.status === 'used'){
         document.getElementById('usedCode').textContent = currentCode;
         showRes('resUsed');
+      } else if(data.status === 'expired'){
+        /* 🎁 15/09 — offre promo dont la date est passée. */
+        document.getElementById('expGain').textContent = data.gain || 'Offre';
+        document.getElementById('expFin').textContent  = data.fin_le || '—';
+        showRes('resExpire');
       } else {
         showRes('resInvalid');
       }
@@ -1008,13 +1039,13 @@ function fmtReste(sec){
 
 function showRes(id){
   document.getElementById('inputSection').style.display = 'none';
-  ['resValid','resUsed','resInvalid','resCarte','resFenetre'].forEach(r => document.getElementById(r).classList.remove('show'));
+  ['resValid','resUsed','resInvalid','resCarte','resFenetre','resExpire'].forEach(r => document.getElementById(r).classList.remove('show'));
   document.getElementById(id).classList.add('show');
 }
 
 function resetVal(){
   document.getElementById('inputSection').style.display = 'block';
-  ['resValid','resUsed','resInvalid','resCarte','resFenetre'].forEach(r => document.getElementById(r).classList.remove('show'));
+  ['resValid','resUsed','resInvalid','resCarte','resFenetre','resExpire'].forEach(r => document.getElementById(r).classList.remove('show'));
   document.getElementById('codeInput').value = '';
   currentCode = '';
   showLoader(false);
@@ -1085,7 +1116,8 @@ function renderDash(){
   const list  = filterP(coupons);
   const total = list.length;
   const used  = list.filter(c => c.statut === 'Utilisé').length;
-  const wait  = total - used;
+  const expd  = list.filter(c => c.statut === 'Expiré').length;   // 🎁 15/09 — offres promo expirées : plus « en attente »
+  const wait  = total - used - expd;
   const taux  = total > 0 ? Math.round(used / total * 100) + '%' : '—';
 
   // Compter les gains
@@ -1130,7 +1162,7 @@ function renderDash(){
             <div class="cname">${c.gain}<br>
               <span style="font-size:11px;color:var(--muted);font-weight:400">${c.prenom} · ${c.date}</span>
             </div>
-            <div class="cs ${c.statut === 'Utilisé' ? 'cs-u' : 'cs-w'}">${c.statut === 'Utilisé' ? '✓' : '⏳'}</div>
+            <div class="cs ${c.statut === 'Utilisé' ? 'cs-u' : c.statut === 'Expiré' ? 'cs-x' : 'cs-w'}">${c.statut === 'Utilisé' ? '✓' : c.statut === 'Expiré' ? '⌛' : '⏳'}</div>
           </div>`).join('')}
     </div>
 
@@ -1400,7 +1432,7 @@ const MK_THEMES = {
 /* Le thème proposé d'office, par métier. Un commerçant peut toujours en changer. */
 const MK_THEME_DEFAUT = { boulangerie:'green', baps:'baps', fleuriste:'berry', pizzeria:'berry', restaurant:'choco', primeur:'green', vape:'blue' };
 
-const mkS = { metier:'boulangerie', pid:null, off:'buyGet', buy:1, free:1, pct:20, theme:'green', quand:'now' };
+const mkS = { metier:'boulangerie', pid:null, off:'buyGet', buy:1, free:1, pct:20, theme:'green', quand:'now', validite:7 };   // 🎁 15/09 — validite : durée de l'offre, en jours
 let mkOccupe = false, mkArme = null;
 
 function mkListe(){ return MK_PRODUITS[mkS.metier] || MK_PRODUITS._defaut; }
@@ -1470,7 +1502,26 @@ window.mkStep = function(k,d){
 };
 window.mkSetWhen = function(el,v){ mkS.quand = v;
   document.querySelectorAll('#mkWhens .mk-chip').forEach(function(c){ c.classList.remove('on'); });
-  el.classList.add('on'); mkDesarmer(); };
+  el.classList.add('on'); mkDesarmer(); mkPeindreValidite(); };
+
+/* 🎁 15/09 — DURÉE DE L'OFFRE, choisie par le commerçant (3 · 7 · 14 · 30 jours, 7 par
+   défaut — validé par l'utilisateur). Après la date, l'offre disparaît de la carte du
+   client et la caisse la refuse. La date affichée ici est indicative (horloge de ce
+   téléphone) : c'est le serveur qui la fixe, au moment réel de l'envoi. */
+const MK_VALIDITES = [3, 7, 14, 30];
+window.mkSetValidite = function(el,n){
+  mkS.validite = MK_VALIDITES.indexOf(Number(n)) >= 0 ? Number(n) : 7;
+  document.querySelectorAll('#mkValidites .mk-chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on'); mkDesarmer(); mkPeindreValidite(); };
+function mkFinAffichee(){
+  const d = new Date();
+  d.setDate(d.getDate() + (mkS.quand === 'demain' ? 1 : 0) + mkS.validite);
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function mkPeindreValidite(){
+  const b = document.getElementById('mkValiditeFin');
+  if(b) b.innerHTML = 'L’offre sera valable jusqu’au <b>' + mkFinAffichee() + '</b> inclus.';
+}
 
 function mkRendre(){
   const p = mkProduit(), t = MK_THEMES[mkS.theme] || MK_THEMES.green, o = mkTexte();
@@ -1623,21 +1674,36 @@ function mkDesarmer(){
 function mkCharge(statut, date){
   const o = mkTexte();
   return { titre:o.titre, offre:o.court, accroche:'', type:'promo', cta_txt:'J’en profite',
-           statut:statut, date_envoi:(date || '2026-01-01'), poster:mkDessiner() };
+           statut:statut, date_envoi:(date || '2026-01-01'), poster:mkDessiner(),
+           validite_jours:mkS.validite };   // 🎁 15/09
 }
 
+/* ⚠️ 15/09 — AU PREMIER CHARGEMENT, GOOGLE PEUT DÉPASSER LE DÉLAI D'ATTENTE.
+   Constaté le 14/09 au Bap's : onglet Promo ≈ 20 s puis erreur, alors qu'un rechargement
+   répondait en 5 s. Ces deux lectures ne changent rien côté serveur : on les relance
+   d'office (3 essais), avec un message neutre au lieu d'une erreur. */
+const MK_ESSAIS_LECTURE = 3;
+function mkLireRelance(action, ok, ko, pendant, essai){
+  essai = essai || 1;
+  xhrGet(AS_URL + '?action=' + action, ok, function(err){
+    if(err === 'Code vendeur requis' || essai >= MK_ESSAIS_LECTURE) return ko(err);   // un refus ne s'arrange pas en réessayant
+    if(pendant) pendant(essai);
+    setTimeout(function(){ mkLireRelance(action, ok, ko, pendant, essai + 1); }, 1500);
+  });
+}
 function mkCharger(){
   if(!baPret) return baAlors(mkCharger);
-  xhrGet(AS_URL + '?action=mk_count', function(d){
+  mkLireRelance('mk_count', function(d){
     if(d.status !== 'ok') return;
     const b = document.getElementById('mkSendBtn');
     document.getElementById('mkCount').innerHTML =
       d.nb > 0 ? 'Destinataires : <b>' + d.nb + '</b> client' + (d.nb > 1 ? 's' : '') + ' inscrit' + (d.nb > 1 ? 's' : '') + ' aux offres'
                : 'Aucun client inscrit aux offres pour l’instant';
     b.disabled = d.nb === 0;
-  }, function(err){ mkErreur(err); });
+  }, function(err){ document.getElementById('mkCount').textContent = ''; mkErreur(err); },
+  function(){ document.getElementById('mkCount').textContent = 'Connexion lente… nouvel essai en cours'; });
 
-  xhrGet(AS_URL + '?action=mk_list', function(d){
+  mkLireRelance('mk_list', function(d){
     const box = document.getElementById('mkHist');
     const lignes = (d.campagnes || []).slice(0,5);
     box.innerHTML = lignes.length ? lignes.map(function(c){
@@ -1649,7 +1715,11 @@ function mkCharger(){
            + '<span>' + detail + '</span></div>'
            + '<span class="mk-badge ' + esc(s) + '">' + esc(s) + '</span></div>';
     }).join('') : '<div class="mk-vide">Aucune campagne pour le moment.</div>';
-  }, function(){});
+  }, function(){
+    document.getElementById('mkHist').innerHTML = '<div class="mk-vide">Campagnes indisponibles pour le moment — rechargez la page dans une minute.</div>';
+  }, function(){
+    document.getElementById('mkHist').innerHTML = '<div class="mk-vide">Connexion lente… nouvel essai en cours</div>';
+  });
 }
 
 /* ═══ ⚠️ 13/09 — UNE AFFICHE NE PART QU'UNE FOIS ════════════════════════════
@@ -1680,7 +1750,8 @@ const MK_DEJA_MS  = 12 * 3600000;      // une même affiche ne repart pas dans l
 function mkEmpreinte(){
   const o = mkTexte();
   return JSON.stringify([(BA_COM && BA_COM.cle) || '', mkS.metier, mkS.pid, mkS.off,
-                         mkS.buy, mkS.free, mkS.pct, mkS.theme, o.titre, o.court]);
+                         mkS.buy, mkS.free, mkS.pct, mkS.theme, o.titre, o.court,
+                         mkS.validite]);   // 🎁 15/09 — même affiche, autre durée = autre campagne
 }
 function mkEnvoisLire(){
   try{
@@ -1717,14 +1788,34 @@ function mkInfo(txt){
 }
 /* L'identifiant de la campagne de cette affiche : celui déjà créé s'il existe et
    n'est pas encore parti, sinon une nouvelle campagne. */
+/* ⚠️ 15/09 — L'IDENTIFIANT EST CHOISI ICI, AVANT L'APPEL, et retenu. Le 14/09 au
+   Bap's, deux « Burger » identiques sont restés en brouillon : le serveur avait créé la
+   campagne, la page n'avait pas eu la réponse, le nouvel essai en a créé une autre.
+   Désormais le nouvel essai renvoie le MÊME identifiant, et le serveur répond avec la
+   campagne déjà créée au lieu d'en faire une seconde. */
+function mkNouvelId(){
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  try{ const t = new Uint8Array(8); crypto.getRandomValues(t); t.forEach(function(x){ s += A[x % A.length]; }); }
+  catch(e){ s = ''; for(let i = 0; i < 8; i++) s += A[Math.floor(Math.random() * A.length)]; }
+  return 'CAMP-' + s;
+}
 function mkObtenirCampagne(emp){
   const rec = mkEnvoisLire()[emp];
-  if(rec && rec.id && rec.statut !== 'envoye') return Promise.resolve(rec.id);
-  return mkPost('mk_create', mkCharge('brouillon', '2026-01-01')).then(function(d){
+  if(rec && rec.id && rec.statut !== 'envoye' && rec.statut !== 'creation' && rec.statut !== 'creation-prevu') return Promise.resolve(rec.id);
+  const id = (rec && rec.statut === 'creation' && rec.id) || mkNouvelId();
+  mkMemoriser(emp, { id: id, statut: 'creation' });
+  return mkPost('mk_create', Object.assign(mkCharge('brouillon', '2026-01-01'), { id: id })).then(function(d){
     if(d.status !== 'ok') throw new Error(d.message || d.status);
     mkMemoriser(emp, { id: d.id, statut: 'cree' });
     return d.id;
   });
+}
+/* Une création sans réponse n'est plus un « échec » : réessayer est sans risque. */
+function mkEchecCreation(e){
+  const m = (e && e.message) || '';
+  if(m === 'timeout' || m === 'reponse illisible') mkInfo('Le serveur tarde à répondre. Réessayez : cette affiche ne sera créée qu’une fois.');
+  else mkErreur('Envoi impossible — ' + m);
 }
 function mkEnvoiConfirme(emp, id, nb, deja){
   nb = Number(nb) || 0;
@@ -1781,7 +1872,7 @@ window.mkEnvoyerTest = function(btn){
     else if(d.status === 'unknown'){ mkMemoriser(emp, { id: null, statut: 'perdu' }); mkErreur('Campagne introuvable — réessayez.'); }
     else mkErreur(d.message || d.status);
     mkCharger();
-  }).catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
+  }).catch(function(e){ mkAttendre(false); mkEchecCreation(e); });
 };
 
 window.mkEnvoyerTous = function(btn){
@@ -1811,20 +1902,26 @@ window.mkEnvoyerTous = function(btn){
   mkDesarmer();
   mkAttendre(true); mkInfo('');
   if(prevu){
-    mkPost('mk_create', mkCharge('prevu', mkDemain())).then(function(d){
+    /* ⚠️ 15/09 — même piège que l'envoi immédiat : un délai dépassé puis un nouvel essai
+       programmaient DEUX campagnes, et le déclencheur du lendemain envoyait les deux.
+       L'identifiant est donc choisi avant l'appel et réutilisé à chaque essai. */
+    const recP = mkEnvoisLire()[emp];
+    const idP = (recP && recP.statut === 'creation-prevu' && recP.id) || mkNouvelId();
+    mkMemoriser(emp, { id: idP, statut: 'creation-prevu' });
+    mkPost('mk_create', Object.assign(mkCharge('prevu', mkDemain()), { id: idP })).then(function(d){
       if(d.status !== 'ok') throw new Error(d.message || d.status);
       mkMemoriser(emp, { id: d.id, statut: 'prevu', date: mkDemain() });
       mkAttendre(false); flashOk('🗓️ Campagne programmée pour demain'); mkCharger();
     }).catch(function(e){
       mkAttendre(false);
-      mkInfo('Programmation non confirmée (' + e.message + '). Regardez « Dernières campagnes » avant de réessayer.');
+      mkInfo('Programmation non confirmée (' + e.message + '). Réessayez : cette affiche ne sera programmée qu’une fois.');
       mkCharger();
     });
     return;
   }
   mkObtenirCampagne(emp)
     .then(function(id){ mkLancerEnvoi(id, emp); })
-    .catch(function(e){ mkAttendre(false); mkErreur('Envoi impossible — ' + e.message); });
+    .catch(function(e){ mkAttendre(false); mkEchecCreation(e); });
 };
 
 /** Monte l'onglet aux couleurs et aux produits du commerce. Appelée une fois le
@@ -1836,7 +1933,7 @@ function mkMonter(metier){
   mkS.off    = mkListe()[0].off;
   const b = document.getElementById('mkBrand');
   if(b) b.textContent = (BA_COM.nom_court || BA_COM.nom || 'Perify').toUpperCase();
-  mkPeindreProduits(); mkPeindreThemes(); mkSyncReglages(); mkDesarmer(); mkRendre();
+  mkPeindreProduits(); mkPeindreThemes(); mkSyncReglages(); mkDesarmer(); mkRendre(); mkPeindreValidite();
 }
 
 /* Petit bandeau de confirmation, façon .flash-ok déjà utilisé ailleurs */
