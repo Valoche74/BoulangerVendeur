@@ -420,6 +420,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .cl-btn:active{transform:scale(.95)}
 .cl-btn:disabled{background:rgba(255,255,255,.07);color:var(--muted);cursor:default}
 .cl-vide{font-size:13px;color:var(--muted);padding:18px 0;text-align:center;line-height:1.6}
+/* 21/09 — tampons à la main (décision de l'utilisateur) */
+.cl-manuel{width:100%;margin:0 0 16px;padding:14px;border-radius:16px;background:rgba(255,255,255,.03);
+  border:1px dashed rgba(255,255,255,.14);text-align:center}
+.cl-manuel-t{font-size:11.5px;font-weight:700;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.cl-manuel-btns{display:flex;gap:8px;justify-content:center}
+.cl-plus{flex:1;max-width:96px;padding:13px 0;border-radius:12px;border:1px solid rgba(212,168,67,.35);
+  background:rgba(212,168,67,.10);color:var(--gold2);font-family:'Inter',sans-serif;font-size:16px;font-weight:900;
+  cursor:pointer;transition:all .2s}
+.cl-plus:active{transform:scale(.95)}
+.cl-plus:disabled{opacity:.45;cursor:default}
+.cl-manuel-note{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5}
+.cl-annuler{margin-top:10px;padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;
+  color:var(--muted2);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.cl-annuler:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
@@ -480,6 +494,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="cl-solde"><b id="clTampons">0</b><span>tampons</span></div>
     <div class="code-badge" id="clId" style="font-size:16px">—</div>
     <div class="cl-list" id="clList"></div>
+    <!-- 21/09 — TAMPONS À LA MAIN (décision de l'utilisateur) : client sans batterie,
+         geste commercial, erreur à corriger. C'était une fonction du kiosque, abandonné.
+         3 tampons au plus par appui — au-delà, c'est un doigt qui a glissé. « Annuler »
+         ne défait que ce que CET écran vient d'ajouter (fid_undo retire la DERNIÈRE
+         opération de la carte, quelle qu'elle soit : on ne le propose qu'à ce moment-là). -->
+    <div class="cl-manuel">
+      <div class="cl-manuel-t">Ajouter des tampons à la main</div>
+      <div class="cl-manuel-btns">
+        <button class="cl-plus" type="button" onclick="tamponManuel(1,this)">+1</button>
+        <button class="cl-plus" type="button" onclick="tamponManuel(2,this)">+2</button>
+        <button class="cl-plus" type="button" onclick="tamponManuel(3,this)">+3</button>
+      </div>
+      <div class="cl-manuel-note">Client sans téléphone, geste commercial… Le tampon arrive aussitôt sur sa carte.</div>
+      <button class="cl-annuler" type="button" id="clAnnuler" hidden onclick="tamponAnnuler(this)">↩ Annuler ce que je viens d'ajouter</button>
+    </div>
     <button class="btn-reset" onclick="resetVal()">Terminer</button>
   </div>
 
@@ -2184,8 +2213,59 @@ function carteAfficher(d){
     h = '<div class="cl-vide">Aucun cadeau à remettre.<br>Ce client cumule ses tampons.</div>';
   }
   document.getElementById('clList').innerHTML = h;
+  /* Nouvelle carte à l'écran : on ne propose pas d'annuler un ajout fait sur une autre. */
+  manuelDernier = 0; document.getElementById('clAnnuler').hidden = true;
   showRes('resCarte');
 }
+
+/* ── Tampons à la main (21/09) ──────────────────────────────────────────
+   fid_addpoints est une action « caisse » : le secret vendeur part avec l'appel
+   (xhrGet l'attache). Le serveur réveille lui-même la carte Apple et, depuis le
+   21/09, met à jour la carte Google : le client voit le tampon arriver. */
+let manuelEnCours = false, manuelDernier = 0;
+const MANUEL_MAX = 3;                       // par appui ; au-delà, c'est une erreur de doigt
+
+window.tamponManuel = function(n, btn){
+  if(manuelEnCours || !carteId) return;
+  n = Math.max(1, Math.min(MANUEL_MAX, parseInt(n, 10) || 1));
+  manuelEnCours = true;
+  const btns = document.querySelectorAll('.cl-plus');
+  btns.forEach(function(b){ b.disabled = true; });
+  const libelle = btn.textContent; btn.textContent = '…';
+  const fini = function(){ manuelEnCours = false; btns.forEach(function(b){ b.disabled = false; }); btn.textContent = libelle; };
+  showErr('');
+  xhrGet(AS_URL + '?action=fid_addpoints&card_id=' + encodeURIComponent(carteId)
+       + '&points=' + n + '&source=manuel&note=' + encodeURIComponent('Ajouté à la main (espace commerçant)'),
+    function(d){
+      fini();
+      if(d.status !== 'ok'){ showErr('Tampon refusé : ' + (d.message || d.status)); return; }
+      dashLoaded = false;
+      const c = d.client || {};
+      if(c.points_solde != null) document.getElementById('clTampons').textContent = c.points_solde;
+      manuelDernier = n;
+      const a = document.getElementById('clAnnuler');
+      a.hidden = false; a.disabled = false;
+      a.textContent = n === 1 ? '↩ Annuler ce tampon' : '↩ Annuler ces ' + n + ' tampons';
+      flash('✓ +' + n + ' tampon' + (n > 1 ? 's' : '') + ' — sa carte se met à jour');
+    },
+    function(err){ fini(); showErr('Erreur : ' + err); });
+};
+
+window.tamponAnnuler = function(btn){
+  if(manuelEnCours || !carteId || !manuelDernier) return;
+  manuelEnCours = true; btn.disabled = true;
+  showErr('');
+  xhrGet(AS_URL + '?action=fid_undo&card_id=' + encodeURIComponent(carteId),
+    function(d){
+      manuelEnCours = false;
+      if(d.status !== 'ok'){ btn.disabled = false; showErr('Annulation refusée : ' + (d.message || d.status)); return; }
+      dashLoaded = false;
+      manuelDernier = 0; btn.hidden = true;
+      flash('↩ Annulé');
+      carteCharger(carteId);                // le solde revient du serveur, pas d'un calcul local
+    },
+    function(err){ manuelEnCours = false; btn.disabled = false; showErr('Erreur : ' + err); });
+};
 
 window.remettre = function(code, btn){
   btn.disabled = true;
