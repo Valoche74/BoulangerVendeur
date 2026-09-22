@@ -200,6 +200,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .wc-ring{width:22px;height:22px;border-radius:50%;border:4px solid var(--pass-accent,var(--gold));flex-shrink:0}
 .wc-org{font-size:12px;font-weight:700;color:#fff;letter-spacing:-.01em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 23/09 — MODÈLE VISUEL (celui des vraies cartes depuis le 21/09) : le compteur « 5/10 tampons »
+   passe en haut à droite, le bandeau devient la BANNIÈRE du commerce, servie par le service
+   Wallet (/api/bandeau?type=…) — la même image, octet pour octet, que dans les cartes Apple.
+   Si l'image ne vient pas (métier sans visuel, réseau), la carte garde son ancien dessin. */
+.wc-compteur{margin-left:auto;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:-.01em}
+.wc-logo.commerce{height:26px;max-width:120px}
+.wc-top.sans-nom .wc-org{display:none}
+.wc-banniere{display:none;width:100%;height:auto}
+.wc-strip.banniere{height:auto;background:none}
+.wc-strip.banniere::before{display:none}
+.wc-strip.banniere .wc-pts,.wc-strip.banniere .wc-grid{display:none}
+.wc-strip.banniere .wc-banniere{display:block}
 /* le bandeau : panneau sombre à gauche, chevrons + tampons à droite */
 .wc-strip{display:flex;height:88px;position:relative;overflow:hidden;
   background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.34) 38%,transparent 52%)}
@@ -588,10 +600,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
   <!-- La carte du client, en direct -->
   <div class="wcard">
-    <div class="wc-top"><img class="wc-logo" src="perify-logo.png" alt="" width="359" height="156"><div class="wc-org" id="ofOrg"></div></div>
-    <div class="wc-strip">
+    <div class="wc-top" id="ofTop"><img class="wc-logo" id="ofLogo" src="perify-logo.png" alt="" width="359" height="156"><div class="wc-org" id="ofOrg"></div><div class="wc-compteur" id="ofCompteur">5/10 tampons</div></div>
+    <div class="wc-strip" id="ofStrip">
       <div class="wc-pts"><div class="wc-num">5</div><div class="wc-lbl">MES TAMPONS</div></div>
       <div class="wc-grid" id="ofGrid"></div>
+      <img class="wc-banniere" id="ofBanniere" alt="" width="750" height="288">
     </div>
     <div class="wc-fields">
       <div class="wc-f">
@@ -899,8 +912,12 @@ const PASS_THEMES = {
   vape:       { bg:[44,35,102],  accent:'#6D5AE0', label:'rgb(182,171,255)' },
   restaurant: { bg:[78,28,35],   accent:'#9A3F4C', label:'rgb(215,143,153)' },
   primeur:    { bg:[112,62,12],  accent:'#E0892E', label:'rgb(248,200,124)' },
-  baps:       { bg:[22,19,15],   accent:'#F4A460', label:'rgb(244,164,96)'  }
+  baps:       { bg:[88,24,22],   accent:'#CB9549', label:'rgb(243,176,104)' }   // 22/09 : mesurées sur sa bannière
 };
+/* Les métiers dont la carte porte une bannière (lib/theme.js : `visuel`). L'image vient du
+   service Wallet, jamais d'une copie ici. */
+const PASS_BANNIERE = { boulangerie: true, baps: true };
+const WALLET_BANDEAU = 'https://wallet-service-chi.vercel.app/api/bandeau?type=';
 
 function hexRgb(h){
   h = String(h).replace('#','').trim();
@@ -933,6 +950,26 @@ let   commerce = params.get('commerce') || BA_REPLI.nom;
 /** Écrit le nom, le logo et le titre de la page. Appelée deux fois au plus :
     une fois tout de suite SI aucun commerce précis n'est demandé, puis une fois
     le registre résolu. */
+/* 23/09 — l'aperçu de carte de l'onglet Offre suit le modèle VISUEL des vraies cartes : logo du
+   commerce (s'il en a un : le même blanc que l'en-tête), compteur en haut à droite, bannière
+   servie par le service Wallet. Rien de tout ça n'est promis à tort : si la bannière ne vient
+   pas, l'ancien dessin reste, légendé « aperçu réel » comme avant. */
+function peindreApercuCarte(com){
+  const top = document.getElementById('ofTop'), logo = document.getElementById('ofLogo');
+  const strip = document.getElementById('ofStrip'), ban = document.getElementById('ofBanniere');
+  if(!top || !logo || !strip || !ban) return;
+  if(com && com.logo_blanc){
+    const img = new Image();
+    img.onload = function(){ logo.src = com.logo_blanc; logo.className = 'wc-logo commerce'; top.classList.add('sans-nom'); };
+    img.src = com.logo_blanc;
+  }
+  const metier = String((com && com.metier) || '').toLowerCase();
+  if(PASS_BANNIERE[metier]){
+    ban.onload  = function(){ strip.classList.add('banniere'); };
+    ban.onerror = function(){ strip.classList.remove('banniere'); };
+    ban.src = WALLET_BANDEAU + encodeURIComponent(metier);
+  }
+}
 function peindreEnTete(nom, com){
   com = com || {};
   document.getElementById('commerceName').textContent = com.nom_court || String(nom).split(' ')[0];
@@ -941,7 +978,11 @@ function peindreEnTete(nom, com){
   /* L'aperçu du pass porte le nom d'organisation, tronqué comme le fait iOS.
      Le « … » n'était pas conditionnel : « Le Bap's » s'affichait « Le Bap's… ». */
   const org = document.getElementById('ofOrg');
-  if(org) org.textContent = String(nom).length > 12 ? String(nom).slice(0,12) + '…' : String(nom);
+  /* 23/09 — comme la vraie carte : le nom écrit en haut est `nom_carte` s'il existe (« Boulangerie »
+     pour Falman), et il DISPARAÎT quand le commerce a son propre logo (Le Bap's), qui le porte déjà. */
+  const nomCarte = String(com.nom_carte || nom);
+  if(org) org.textContent = nomCarte.length > 12 ? nomCarte.slice(0,12) + '…' : nomCarte;
+  peindreApercuCarte(com);
 
   /* Le logo du commerce, en version CLAIRE : cet en-tête est noir. À défaut,
      son monogramme. Et si l'image ne charge pas (réseau, fichier déplacé), on
