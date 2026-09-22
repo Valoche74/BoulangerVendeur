@@ -581,6 +581,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <button class="exp-btn" id="btnExport" onclick="exporterExcel(this)">Exporter en Excel</button>
     <div class="exp-msg" id="exportMsg"></div>
   </div>
+  <!-- 23/09 : le calculateur de marge — « est-ce que ça me rapporte ? », avec ses chiffres. -->
+  <div class="exp-box">
+    <div class="exp-t">💶 Est-ce que ça vous rapporte ?</div>
+    <div class="exp-s">Ce qu'un tampon vous coûte, ce qu'une visite vous rapporte, et à partir de quand le programme se paie —
+      calculé avec vos prix, vos marges et ce que votre programme a vraiment fait. Rien n'est inventé.</div>
+    <a class="exp-btn" id="btnCalculateur" href="calculateur.html" style="display:block;text-align:center;text-decoration:none">Ouvrir le calculateur de marge</a>
+  </div>
 </div>
 
 <!-- OFFRE DU JOUR -->
@@ -970,6 +977,11 @@ function peindreApercuCarte(com){
     ban.src = WALLET_BANDEAU + encodeURIComponent(metier);
   }
 }
+/* 23/09 — le calculateur reçoit le même commerce que cette page (?c= et ?type=). */
+(function(){
+  const a = document.getElementById('btnCalculateur');
+  if(a) a.href = 'calculateur.html' + (location.search || '');
+})();
 function peindreEnTete(nom, com){
   com = com || {};
   document.getElementById('commerceName').textContent = com.nom_court || String(nom).split(' ')[0];

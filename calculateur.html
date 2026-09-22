@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<!-- LE CALCULATEUR DE MARGE (23/09/2026) — « est-ce que ça me rapporte ? »
+     Tout est calculé avec les chiffres du commerçant ; ce que la machine sait déjà (ses cadeaux,
+     ses tampons, ce que son programme a fait ces 30 derniers jours) est pré-rempli depuis le
+     serveur (?action=catalogue, ?action=mesures). Rien n'est inventé : ce qui manque est dit.
+     Le moteur (calculateur-moteur.js) est éprouvé à part : _outils/tests/test-calculateur.mjs. -->
+<title>Calculateur de marge — Perify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--black:#000;--black2:#111;--black3:#1a1a1a;--gold:#D4A843;--gold2:#F0C96A;--gold3:#FDE68A;
+  --green:#22C55E;--red:#EF4444;--amber:#F59E0B;--white:#FAFAFA;--muted:#6B7280;--muted2:#9CA3AF}
+html,body{background:var(--black);color:var(--white);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hdr{padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+.retour{color:var(--muted2);text-decoration:none;font-size:13px;font-weight:600;padding:8px 10px;border:1px solid rgba(255,255,255,.1);border-radius:10px;white-space:nowrap}
+.hdr-name{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 60px}
+.intro{font-size:13px;line-height:1.55;color:var(--muted2);margin-bottom:14px}
+.intro b{color:var(--white)}
+.note{font-size:12px;line-height:1.5;color:var(--muted2);padding:12px 14px;border-radius:14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.18);margin-bottom:14px}
+.note.attente{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+.bloc{padding:16px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.bloc h2{font-size:14px;font-weight:800;margin-bottom:10px;letter-spacing:-.01em}
+.bloc .aide{font-size:11.5px;line-height:1.5;color:var(--muted2)}
+.champ{margin-bottom:12px}
+.champ label{display:block;font-size:12px;font-weight:600;color:var(--muted2);margin-bottom:5px}
+.champ input,.grille input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:var(--white);font:inherit;font-size:16px;font-weight:600}
+.champ input:focus,.grille input:focus{outline:none;border-color:var(--gold)}
+.champ.hyp input,.grille input.hyp{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.06)}
+.champ .aide{margin-top:5px}
+.mesure{color:#86EFAC}
+.grille{width:100%;border-collapse:collapse;font-size:12.5px}
+.grille th{text-align:left;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:0 6px 6px 0}
+.grille td{padding:5px 6px 5px 0;vertical-align:middle}
+.grille td.lib{font-weight:700;min-width:80px}
+.grille td.calc{color:var(--muted2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.grille input{padding:9px 10px;font-size:15px}
+.grille td.sup{width:22px}
+.grille .x{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px}
+.ajout{margin-top:8px;background:none;border:1px dashed rgba(255,255,255,.2);color:var(--muted2);border-radius:12px;padding:10px 14px;font:inherit;font-size:12.5px;font-weight:600;width:100%;cursor:pointer}
+.legende{display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(245,158,11,.5);border:1px solid rgba(245,158,11,.8);vertical-align:-1px;margin-right:4px}
+/* résultats */
+.res{padding:16px;border-radius:20px;background:linear-gradient(160deg,rgba(212,168,67,.12),rgba(212,168,67,.03));border:1px solid rgba(212,168,67,.35);margin-bottom:14px}
+.res h2{font-size:14px;font-weight:800;margin-bottom:8px}
+.gros{font-size:34px;font-weight:900;letter-spacing:-.03em;color:var(--gold2);line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.gros.vert{color:var(--green)}.gros.rouge{color:var(--red)}
+.sous{font-size:12px;color:var(--muted2);line-height:1.5}
+.ligne{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+.ligne:last-child{border-bottom:none}
+.ligne .v{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.ligne.total{font-weight:800;border-top:1px solid rgba(255,255,255,.15);margin-top:4px;padding-top:10px}
+.seuil{font-size:15px;line-height:1.5;margin-top:8px}
+.seuil b{color:var(--gold2);font-size:22px}
+.curseur{margin:12px 0 4px}
+.curseur input[type=range]{width:100%;accent-color:var(--gold)}
+.sens{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+.sens td,.sens th{padding:6px 4px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(255,255,255,.06)}
+.sens th{font-weight:700;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+.sens td:first-child,.sens th:first-child{text-align:left}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.manque{padding:12px 14px;border-radius:14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);font-size:12.5px;line-height:1.5;margin-bottom:14px}
+.manque b{color:var(--gold3)}
+.levier{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12.5px;line-height:1.5}
+.levier:last-child{border-bottom:none}
+.levier b{font-variant-numeric:tabular-nums}
+.pied{font-size:11px;color:var(--muted);line-height:1.5;text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <a class="retour" id="retour" href="index.html">← Espace</a>
+  <div><div class="hdr-name">💶 Calculateur de marge</div><div class="hdr-sub" id="sousTitre">Est-ce que ça vous rapporte ?</div></div>
+</div>
+
+<main class="wrap">
+  <p class="intro">Tout est calculé avec <b>vos chiffres</b>. Ce que votre programme a déjà fait est pré-rempli
+    en <span class="mesure">vert</span> ; les cases <span class="legende"></span>orange sont <b>vos hypothèses</b>.
+    Rien n'est inventé : ce qui manque est dit, pas deviné.</p>
+  <div class="note attente" id="noteMesures">Chargement de votre commerce…</div>
+
+  <section class="bloc">
+    <h2>1 · Votre commerce</h2>
+    <div class="champ"><label for="panier">Panier moyen d'un client (€)</label><input id="panier" inputmode="decimal" placeholder="ex. 9">
+      <div class="aide">Ce qu'un client dépense en moyenne à chaque passage.</div></div>
+    <div class="champ"><label for="marge">Marge brute (%)</label><input id="marge" inputmode="decimal" placeholder="ex. 60">
+      <div class="aide">Ce qui vous reste sur une vente une fois la marchandise payée — avant loyer et salaires.</div></div>
+    <div class="champ"><label for="clients">Clients fidèles actifs</label><input id="clients" inputmode="numeric" placeholder="nombre de clients qui viennent">
+      <div class="aide mesure" id="aideClients"></div></div>
+    <div class="champ"><label for="visites">Visites par client et par mois</label><input id="visites" inputmode="decimal" placeholder="ex. 4">
+      <div class="aide mesure" id="aideVisites"></div></div>
+    <div class="champ hyp"><label for="tauxEchange">Part des tampons qui finiront en cadeau (%)</label><input id="tauxEchange" inputmode="numeric" value="100">
+      <div class="aide">Hypothèse. 100 % = le pire cas : chaque tampon distribué sera un jour échangé.</div></div>
+  </section>
+
+  <section class="bloc">
+    <h2>2 · Vos cadeaux</h2>
+    <p class="aide" style="margin-bottom:10px">Le <b>prix de revient</b> : ce que le cadeau vous coûte (ingrédients, emballage) —
+      jamais son prix de vente. Les tampons viennent de votre programme ; changez-les pour voir l'effet.</p>
+    <table class="grille" id="cadeaux"><thead><tr><th>Cadeau</th><th>Tampons</th><th>Revient (€)</th><th>Le tampon</th><th></th></tr></thead><tbody></tbody></table>
+    <button class="ajout" id="ajouterCadeau" type="button">+ Ajouter un cadeau</button>
+  </section>
+
+  <section class="bloc">
+    <h2>3 · Le cadeau de bienvenue (la roue)</h2>
+    <div class="champ"><label for="bCout">Prix de revient moyen d'un cadeau de bienvenue (€)</label><input id="bCout" inputmode="decimal" placeholder="ex. 0,50">
+      <div class="aide">La roue donne surtout le cadeau le moins cher : partez de son prix de revient.</div></div>
+    <div class="champ"><label for="bParMois">Nouveaux clients par mois</label><input id="bParMois" inputmode="decimal" placeholder="ex. 10">
+      <div class="aide mesure" id="aideNouveaux"></div></div>
+  </section>
+
+  <section class="bloc">
+    <h2>4 · Les tampons donnés sans passage</h2>
+    <p class="aide" style="margin-bottom:10px">Un avis ou un abonnement donne des tampons sans achat : c'est un coût sec.
+      Dites ce que ça vaut pour vous, ou laissez vide — on ne l'inventera pas.</p>
+    <table class="grille"><thead><tr><th>Action</th><th>Tampons</th><th>Par mois</th><th>Vaut pour vous (€)</th></tr></thead><tbody>
+      <tr><td class="lib">Un avis<br><span class="aide">Trustpilot, TripAdvisor</span></td><td class="calc" id="tAvis">2</td><td><input id="avisParMois" inputmode="decimal" placeholder="0"></td><td><input class="hyp" id="avisValeur" inputmode="decimal" placeholder="?"></td></tr>
+      <tr><td class="lib">Un abonné<br><span class="aide">Instagram, Facebook, TikTok</span></td><td class="calc" id="tReseaux">1</td><td><input id="reseauxParMois" inputmode="decimal" placeholder="0"></td><td><input class="hyp" id="reseauxValeur" inputmode="decimal" placeholder="?"></td></tr>
+      <tr><td class="lib">Les alertes e-mail<br><span class="aide">un client qui accepte</span></td><td class="calc" id="tEmail">1</td><td><input id="emailParMois" inputmode="decimal" placeholder="0"></td><td><input class="hyp" id="emailValeur" inputmode="decimal" placeholder="?"></td></tr>
+    </tbody></table>
+    <div class="aide mesure" id="aideActions" style="margin-top:8px"></div>
+  </section>
+
+  <section class="bloc">
+    <h2>5 · Perify</h2>
+    <div class="champ"><label for="abo">Abonnement (€ par mois)</label><input id="abo" inputmode="decimal" value="100"></div>
+    <div class="champ"><label for="inst">Installation, présentoir, formation (€, une fois)</label><input id="inst" inputmode="decimal" value="239"></div>
+    <div class="champ"><label for="amort">… étalée sur (mois)</label><input id="amort" inputmode="numeric" value="12"></div>
+  </section>
+
+  <div id="resultats"></div>
+
+  <p class="pied">Les tampons et les règles viennent de votre programme ; les mesures, de ce qu'il a enregistré ;
+    les prix, la marge et les hypothèses, de vous. Vos saisies restent sur ce téléphone.</p>
+</main>
+
+<script src="calculateur-moteur.js"></script>
+<script>
+(function(){
+  'use strict';
+  const M = window.CalculateurMoteur;
+  const $ = function(id){ return document.getElementById(id); };
+  const params = new URLSearchParams(location.search);
+  const cleDemandee = String(params.get('c') || '').toLowerCase();
+  const metierDemande = String(params.get('type') || '').toLowerCase();
+  const REGISTRE = 'https://boulangerieavisclient.vercel.app/commerces.json';
+  const SECRET_KEY = 'boostavis_kiosk_secret';     // le même que l'espace commerçant (même domaine)
+  $('retour').href = 'index.html' + (location.search || '');
+
+  let com = null, AS_URL = '';
+  let cadeaux = [];            // [{ cle, libelle, tampons, coutRevient }]
+  let mix = null;              // { cle: nombre d'échanges sur la fenêtre }
+  let mesures = null;
+  let incTouche = false;       // le commerçant a-t-il bougé le curseur d'hypothèse ?
+  const tamponsActions = { avis: 2, reseaux: 1, email: 1 };
+  const CHAMPS = ['panier','marge','clients','visites','tauxEchange','bCout','bParMois','avisParMois','avisValeur','reseauxParMois','reseauxValeur','emailParMois','emailValeur','abo','inst','amort'];
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function eur(n, d){ if (n === null || n === undefined || !isFinite(n)) return '—'; return n.toLocaleString('fr-FR', { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }) + ' €'; }
+  function nb(n, d){ if (n === null || n === undefined || !isFinite(n)) return '—'; return n.toLocaleString('fr-FR', { maximumFractionDigits: d == null ? 0 : d }); }
+  function pct(n, d){ if (n === null || n === undefined || !isFinite(n)) return '—'; return n.toLocaleString('fr-FR', { maximumFractionDigits: d == null ? 0 : d }) + ' %'; }
+  function signe(n){ return (n >= 0 ? '+' : '−') + eur(Math.abs(n), Math.abs(n) < 10 ? 2 : 0); }   // les petits montants gardent leurs centimes
+
+  // ── mémoire locale : ses saisies restent sur ce téléphone ──
+  function cleMemo(){ return 'perify.calculateur.' + (com ? com.cle : 'inconnu'); }
+  function lireMemo(){ try { return JSON.parse(localStorage.getItem(cleMemo()) || 'null'); } catch(e){ return null; } }
+  function ecrireMemo(){
+    try {
+      const o = { champs: {}, cadeaux: cadeaux.map(function(c){ return { cle: c.cle, libelle: c.libelle, tampons: c.tampons, coutRevient: c.coutRevient, manuel: !!c.manuel }; }), inc: $('inc') ? $('inc').value : '', incTouche: incTouche };
+      CHAMPS.forEach(function(id){ o.champs[id] = $(id).value; });
+      localStorage.setItem(cleMemo(), JSON.stringify(o));
+    } catch(e){}
+  }
+
+  // ── le registre : le commerce ──
+  function resoudre(reg){
+    let k = null;
+    if (cleDemandee && reg.commerces && reg.commerces[cleDemandee]) k = cleDemandee;
+    if (!k && metierDemande && reg.alias_metier && reg.alias_metier[metierDemande]) k = reg.alias_metier[metierDemande];
+    if (!k) k = reg.defaut;
+    const c = reg.commerces && reg.commerces[k];
+    if (!c) return null;
+    const out = {}; for (const p in c) out[p] = c[p];
+    out.cle = k;
+    return out;
+  }
+  function lireJson(url){ return fetch(url, { cache: 'no-store' }).then(function(r){ return r.json(); }); }
+
+  // ── les cadeaux ──
+  function peindreCadeaux(){
+    const tb = document.querySelector('#cadeaux tbody');
+    tb.innerHTML = cadeaux.map(function(c, i){
+      const cpt = M.coutParTampon(c);
+      return '<tr>'
+        + '<td class="lib">' + (c.manuel ? '<input value="' + esc(c.libelle) + '" data-i="' + i + '" data-champ="libelle" placeholder="Cadeau" style="font-size:13px;padding:8px">' : esc(c.libelle)) + '</td>'
+        + '<td><input inputmode="numeric" value="' + esc(c.tampons == null ? '' : c.tampons) + '" data-i="' + i + '" data-champ="tampons" style="width:64px"></td>'
+        + '<td><input inputmode="decimal" value="' + esc(c.coutRevient == null ? '' : c.coutRevient) + '" data-i="' + i + '" data-champ="coutRevient" placeholder="?" style="width:78px"></td>'
+        + '<td class="calc">' + (cpt === null ? '—' : eur(cpt, 3)) + '</td>'
+        + '<td class="sup">' + (c.manuel ? '<button class="x" type="button" data-i="' + i + '" data-champ="supprimer" title="Retirer">×</button>' : '') + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+  document.querySelector('#cadeaux').addEventListener('input', function(ev){
+    const t = ev.target; if (!t.dataset || t.dataset.i === undefined) return;
+    const c = cadeaux[Number(t.dataset.i)]; if (!c) return;
+    if (t.dataset.champ === 'libelle') c.libelle = t.value;
+    else if (t.dataset.champ === 'tampons') c.tampons = t.value === '' ? null : M.nombre(t.value);
+    else if (t.dataset.champ === 'coutRevient') c.coutRevient = t.value === '' ? null : M.nombre(t.value);
+    // on ne repeint pas la ligne en cours de frappe : juste la colonne « le tampon »
+    const cell = t.closest('tr').querySelector('.calc'); const cpt = M.coutParTampon(c); if (cell) cell.textContent = cpt === null ? '—' : eur(cpt, 3);
+    recalculer();
+  });
+  document.querySelector('#cadeaux').addEventListener('click', function(ev){
+    const t = ev.target; if (!t.dataset || t.dataset.champ !== 'supprimer') return;
+    cadeaux.splice(Number(t.dataset.i), 1); peindreCadeaux(); recalculer();
+  });
+  $('ajouterCadeau').addEventListener('click', function(){
+    cadeaux.push({ cle: 'm' + Date.now().toString(36), libelle: '', tampons: null, coutRevient: null, manuel: true });
+    peindreCadeaux(); recalculer();
+    const dernier = document.querySelector('#cadeaux tbody tr:last-child input'); if (dernier) dernier.focus();
+  });
+
+  // ── les entrées du moteur ──
+  function entrees(){
+    const v = function(id){ return $(id).value; };
+    return {
+      panierMoyen: v('panier'), margePct: v('marge'), clientsActifs: v('clients'), visitesParClientParMois: v('visites'),
+      tauxEchangePct: v('tauxEchange'), passageTampons: 1,
+      cadeaux: cadeaux, mix: mix,
+      actions: [
+        { cle: 'avis', libelle: 'Les avis', tampons: tamponsActions.avis, parMois: v('avisParMois'), valeur: v('avisValeur') },
+        { cle: 'reseaux', libelle: 'Les abonnements aux réseaux', tampons: tamponsActions.reseaux, parMois: v('reseauxParMois'), valeur: v('reseauxValeur') },
+        { cle: 'email', libelle: 'Les alertes e-mail', tampons: tamponsActions.email, parMois: v('emailParMois'), valeur: v('emailValeur') }
+      ],
+      bienvenue: { coutRevient: v('bCout'), parMois: v('bParMois') },
+      perify: { abonnement: v('abo'), installation: v('inst'), amortissementMois: v('amort') },
+      incrementalitePct: $('inc') ? $('inc').value : null
+    };
+  }
+
+  const MOTS = { panier_moyen: 'le panier moyen', marge: 'la marge brute', clients: 'le nombre de clients fidèles', visites: 'les visites par client et par mois',
+                 cout_cadeaux: 'le prix de revient d\'au moins un cadeau', cout_bienvenue: 'le prix de revient du cadeau de bienvenue' };
+
+  // ── le rendu ──
+  function recalculer(){
+    ecrireMemo();
+    const e = entrees();
+    const r = M.calculer(e);
+    const res = $('resultats');
+    let h = '';
+
+    if (r.manque.length){
+      h += '<div class="manque">Pour aller au bout du calcul, il manque : <b>' + r.manque.map(function(m){ return MOTS[m] || m; }).join('</b>, <b>') + '</b>.</div>';
+    }
+
+    // 1. ce qu'un tampon coûte
+    const t = r.tampon;
+    h += '<section class="res"><h2>Ce qu\'un tampon vous coûte</h2>'
+      + '<div class="gros">' + (t.cout === null ? '—' : eur(t.cout, 3)) + '</div>'
+      + '<div class="sous">' + (t.cout === null ? 'Renseignez le prix de revient d\'au moins un cadeau.'
+        : (t.min !== t.max ? 'De ' + eur(t.min, 3) + ' (' + esc(moinsCher(r)) + ') à ' + eur(t.max, 3) + ' (' + esc(plusCher(r)) + ') selon le cadeau choisi. ' : '')
+          + (t.base === 'mix' ? 'Moyenne pondérée par les cadeaux <b>réellement échangés</b> ces derniers jours.'
+             : 'Moyenne simple des ' + t.renseignes + (t.total > t.renseignes ? ' cadeaux renseignés sur ' + t.total : ' cadeaux') + ' — le mix réel affinera quand des cadeaux auront été échangés.'))
+      + '</div></section>';
+
+    // 2. ce qu'une visite rapporte
+    const rapport = (t.cout !== null && t.cout > 0 && r.margeVisite !== null) ? r.margeVisite / t.cout : null;
+    h += '<section class="res"><h2>Ce qu\'une visite vous rapporte</h2>'
+      + '<div class="gros">' + eur(r.margeVisite) + '</div>'
+      + '<div class="sous">de marge par visite (panier moyen × marge brute). '
+      + (rapport !== null ? 'Un tampon = une visite : <b>1 € offert en cadeaux vous laisse ' + eur(rapport) + ' de marge</b> sur les visites qui l\'ont gagné.' : '')
+      + '</div>'
+      + (r.parCadeau.some(function(c){ return c.margeAvantCadeau !== null; }) ? '<div style="margin-top:10px">' + r.parCadeau.filter(function(c){ return c.margeAvantCadeau !== null; }).map(function(c){
+          return '<div class="ligne"><span>' + esc(c.libelle) + ' <span class="sous">(' + nb(c.tampons) + ' visites)</span></span><span class="v">' + eur(c.margeAvantCadeau, 0) + ' de marge avant de l\'offrir' + (c.coutRevient !== null ? ' · coûte ' + eur(c.coutRevient) : '') + '</span></div>';
+        }).join('') + '</div>' : '')
+      + '</section>';
+
+    // 3. le mois
+    const m = r.mois;
+    h += '<section class="res"><h2>Votre mois, tel que le programme tourne</h2>'
+      + '<div class="ligne"><span>Visites de clients fidèles</span><span class="v">' + nb(m.visites) + '</span></div>'
+      + '<div class="ligne"><span>Tampons distribués (passages + actions)</span><span class="v">' + nb(m.tamponsPassages + m.tamponsActions) + '</span></div>'
+      + '<div class="ligne"><span>Cadeaux que ces passages paieront</span><span class="v">' + eur(m.coutCadeauxPassages, 0) + '</span></div>'
+      + '<div class="ligne"><span>Tampons donnés sans passage (avis, abonnés, e-mails)</span><span class="v">' + eur(m.coutActions, 0) + '</span></div>'
+      + '<div class="ligne"><span>Cadeaux de bienvenue</span><span class="v">' + eur(m.coutBienvenue, 0) + '</span></div>'
+      + '<div class="ligne"><span>Perify (abonnement + installation étalée)</span><span class="v">' + eur(m.coutPerify, 0) + '</span></div>'
+      + '<div class="ligne total"><span>Le programme vous coûte</span><span class="v">' + eur(m.coutTotal, 0) + ' / mois</span></div>'
+      + (m.valeurActions > 0 ? '<div class="ligne"><span>Ce que valent pour vous les avis, abonnés, e-mails</span><span class="v pos">' + eur(m.valeurActions, 0) + '</span></div>' : '')
+      + '</section>';
+
+    // 4. le seuil et l'hypothèse
+    if (r.seuil !== null){
+      const seuilArr = Math.round(r.seuil * 10) / 10;
+      const inc = $('inc');
+      const valeurCurseur = (inc && incTouche) ? Number(inc.value) : Math.min(60, Math.max(0, Math.round(r.seuil)));
+      const rHyp = M.calculer(Object.assign({}, e, { incrementalitePct: valeurCurseur }));
+      const net = rHyp.mois.net;
+      h += '<section class="res"><h2>À partir de quand ça se paie</h2>'
+        + (r.seuil > 100
+          ? '<div class="seuil">Même si <b>toutes</b> vos visites venaient du programme, il ne se paierait pas avec ces chiffres : baissez ses coûts (les leviers ci-dessous) ou vérifiez le panier, la marge et les prix de revient.</div>'
+          : '<div class="seuil">Le programme se paie dès que <b>' + pct(seuilArr, 1) + '</b> de ces visites lui sont dues — ' + nb(m.visites * r.seuil / 100, 0) + ' visites par mois qui n\'auraient pas eu lieu sans la carte.</div>')
+        + '<div class="curseur"><label for="inc" style="font-size:12px;color:var(--muted2);font-weight:600">Votre hypothèse : <b style="color:var(--gold3)">' + pct(valeurCurseur) + '</b> des visites sont dues au programme <span class="legende"></span></label>'
+        + '<input type="range" id="inc" min="0" max="60" step="1" value="' + valeurCurseur + '"></div>'
+        + '<div class="gros ' + (net >= 0 ? 'vert' : 'rouge') + '">' + signe(net) + ' / mois</div>'
+        + '<div class="sous">' + nb(rHyp.mois.visitesGagnees, 0) + ' visites gagnées × ' + eur(r.margeVisite) + ' de marge' + (m.valeurActions > 0 ? ' + ' + eur(m.valeurActions, 0) + ' d\'avis et d\'abonnés' : '') + ' − ' + eur(m.coutTotal, 0) + ' de coûts. Personne ne connaît ce pourcentage à l\'avance : bougez le curseur, jugez ce qui est crédible.</div>'
+        + '<table class="sens"><thead><tr><th>Si le programme explique…</th><th>… vous gagnez</th></tr></thead><tbody>'
+        + r.sensibilite.map(function(s){ return '<tr><td>' + pct(s.pct) + ' des visites</td><td class="' + (s.net >= 0 ? 'pos' : 'neg') + '">' + signe(s.net) + ' / mois</td></tr>'; }).join('')
+        + '</tbody></table></section>';
+    }
+
+    // 5. les leviers
+    if (r.leviers.length){
+      h += '<section class="res"><h2>Vos leviers</h2>';
+      const parCadeau = {};
+      r.leviers.filter(function(l){ return l.type === 'cadeau'; }).forEach(function(l){ (parCadeau[l.cle] = parCadeau[l.cle] || []).push(l); });
+      Object.keys(parCadeau).forEach(function(k){
+        const ls = parCadeau[k], plus = ls.find(function(l){ return l.apres > l.avant; }), moins = ls.find(function(l){ return l.apres < l.avant; });
+        h += '<div class="levier"><b>' + esc(ls[0].libelle) + '</b> (' + nb(ls[0].avant) + ' tampons) — '
+          + (plus ? 'à ' + nb(plus.apres) + ' tampons : le tampon passe à ' + eur(plus.coutParTampon, 3) + ', <b class="pos">' + signe(plus.economieMois) + '</b> / mois' : '')
+          + (plus && moins ? ' · ' : '')
+          + (moins ? 'à ' + nb(moins.apres) + ' tampons : ' + eur(moins.coutParTampon, 3) + ', <b class="neg">' + signe(moins.economieMois) + '</b> / mois' : '')
+          + '</div>';
+      });
+      r.leviers.filter(function(l){ return l.type === 'action'; }).forEach(function(l){
+        h += '<div class="levier"><b>' + esc(l.libelle) + '</b> (' + nb(l.tampons) + ' tampon' + (l.tampons > 1 ? 's' : '') + ', ' + nb(l.parMois, 1) + ' par mois) vous coûtent <b>' + eur(l.coutMois) + '</b> / mois'
+          + (l.valeurMois === null ? ' — vous n\'avez pas dit ce que ça vaut : coût sec.' : ' pour <b>' + eur(l.valeurMois) + '</b> de valeur selon vous.')
+          + '</div>';
+      });
+      h += '</section>';
+    }
+
+    res.innerHTML = h;
+    const inc = $('inc');
+    if (inc) inc.addEventListener('input', function(){ incTouche = true; recalculer(); });
+  }
+  function moinsCher(r){ const c = r.parCadeau.filter(function(x){ return x.coutParTampon !== null; }).sort(function(a, b){ return a.coutParTampon - b.coutParTampon; }); return c.length ? c[0].libelle : ''; }
+  function plusCher(r){ const c = r.parCadeau.filter(function(x){ return x.coutParTampon !== null; }).sort(function(a, b){ return b.coutParTampon - a.coutParTampon; }); return c.length ? c[0].libelle : ''; }
+
+  CHAMPS.forEach(function(id){ $(id).addEventListener('input', recalculer); });
+
+  // ── les mesures : ce que le programme a vraiment fait ──
+  function appliquerMesures(m){
+    mesures = m;
+    const j = m.jours_observes, p = m.periode || {};
+    const note = $('noteMesures');
+    if (!j){
+      note.className = 'note attente';
+      note.textContent = 'Aucun passage enregistré pour l\'instant : remplissez les chiffres à la main, le calcul marche pareil.';
+      return;
+    }
+    const parMois = function(n){ return M.parMois(n, j); };
+    const visitesMois = parMois(p.passages);
+    const visitesParClient = p.clients_actifs ? visitesMois / p.clients_actifs : null;
+    const poser = function(id, valeur, decimales){ if (valeur === null || !isFinite(valeur)) return; if ($(id).value === '') $(id).value = String(Math.round(valeur * Math.pow(10, decimales)) / Math.pow(10, decimales)); };
+    poser('clients', p.clients_actifs, 0);
+    poser('visites', visitesParClient, 1);
+    poser('bParMois', parMois(p.nouveaux_inscrits), 1);
+    poser('avisParMois', parMois(p.avis), 1);
+    poser('reseauxParMois', parMois(p.reseaux), 1);
+    poser('emailParMois', parMois(p.emails), 1);
+    $('aideClients').textContent = 'Mesuré : ' + nb(p.clients_actifs) + ' clients ont fait au moins un passage sur ' + j + ' jour' + (j > 1 ? 's' : '') + ' d\'activité (' + nb(m.clients_inscrits) + ' inscrits au total).';
+    $('aideVisites').textContent = 'Mesuré : ' + nb(p.passages) + ' passages en ' + j + ' jours → ' + nb(visitesMois, 0) + ' par mois, soit ' + nb(visitesParClient, 1) + ' par client actif.';
+    $('aideNouveaux').textContent = 'Mesuré : ' + nb(p.nouveaux_inscrits) + ' nouveaux inscrits en ' + j + ' jours (' + nb(p.cadeaux_bienvenue) + ' cadeaux de bienvenue).';
+    $('aideActions').textContent = 'Mesuré sur ' + j + ' jours, ramené au mois : ' + nb(p.avis) + ' avis, ' + nb(p.reseaux) + ' abonnements, ' + nb(p.emails) + ' alertes e-mail acceptées.';
+    // le mix réel des échanges → poids par cadeau (par libellé)
+    mix = null;
+    if (p.echanges && p.echanges.length){
+      mix = {};
+      p.echanges.forEach(function(ech){
+        const c = cadeaux.find(function(x){ return String(x.libelle).trim().toLowerCase() === String(ech.libelle).trim().toLowerCase(); });
+        if (c) mix[c.cle] = (mix[c.cle] || 0) + ech.n;
+      });
+      if (!Object.keys(mix).length) mix = null;
+    }
+    note.className = 'note';
+    note.innerHTML = 'Mesuré sur vos <b>' + nb(m.fenetre_jours) + ' derniers jours</b> — ' + j + ' jour' + (j > 1 ? 's' : '') + ' d\'activité' + (m.depuis ? ', premier passage le ' + esc(m.depuis.split('-').reverse().join('/')) : '') + ' : <b>' + nb(p.passages) + '</b> passages, <b>' + nb(p.clients_actifs) + '</b> clients actifs, <b>'
+      + nb((p.echanges || []).reduce(function(s, x){ return s + x.n; }, 0)) + '</b> cadeaux échangés'
+      + (mix ? ' (' + p.echanges.map(function(x){ return nb(x.n) + ' ' + esc(x.libelle); }).join(', ') + ')' : '') + '. '
+      + 'Depuis le début : ' + nb((m.total || {}).passages) + ' passages. Les chiffres en vert sont ramenés au mois ; corrigez-les si vous savez mieux.';
+  }
+
+  // ── démarrage ──
+  lireJson(REGISTRE).then(function(reg){
+    com = resoudre(reg);
+    if (!com){ $('noteMesures').textContent = 'Commerce introuvable dans le registre — les chiffres sont à saisir à la main.'; $('noteMesures').className = 'note attente'; recalculer(); return; }
+    AS_URL = String(com.apps_script || '');
+    $('sousTitre').textContent = com.nom_court || com.nom || '';
+    document.title = 'Calculateur de marge — ' + (com.nom_court || com.nom || 'Perify');
+    const memo = lireMemo();
+    if (memo && memo.champs) CHAMPS.forEach(function(id){ if (memo.champs[id] !== undefined && memo.champs[id] !== '') $(id).value = memo.champs[id]; });
+    if (memo && memo.incTouche) incTouche = true;
+
+    const surPerify = /^https:\/\/api\.perify\.app\//.test(AS_URL);
+    const pCatalogue = surPerify ? lireJson(AS_URL + '?action=catalogue').catch(function(){ return null; }) : Promise.resolve(null);
+    return pCatalogue.then(function(cat){
+      if (cat && cat.status === 'ok'){
+        cadeaux = cat.cadeaux.map(function(c){ return { cle: c.cle, libelle: c.libelle, tampons: c.tampons, coutRevient: null }; });
+        const a = cat.regles && cat.regles.actions || {};
+        if (a.trustpilot) tamponsActions.avis = a.trustpilot.tampons;
+        if (a.insta) tamponsActions.reseaux = a.insta.tampons;
+        if (a.optin_email) tamponsActions.email = a.optin_email.tampons;
+        $('tAvis').textContent = tamponsActions.avis; $('tReseaux').textContent = tamponsActions.reseaux; $('tEmail').textContent = tamponsActions.email;
+      }
+      // ses prix de revient et ses cadeaux ajoutés, retrouvés
+      if (memo && memo.cadeaux){
+        memo.cadeaux.forEach(function(mc){
+          const c = cadeaux.find(function(x){ return x.cle === mc.cle; });
+          if (c){ if (mc.coutRevient != null && mc.coutRevient !== '') c.coutRevient = M.nombre(mc.coutRevient); if (mc.tampons != null && mc.tampons !== '') c.tampons = M.nombre(mc.tampons); }
+          else if (mc.manuel) cadeaux.push({ cle: mc.cle, libelle: mc.libelle, tampons: M.nombre(mc.tampons), coutRevient: M.nombre(mc.coutRevient), manuel: true });
+        });
+      }
+      peindreCadeaux();
+      recalculer();
+      // les mesures, si le code vendeur est connu de ce téléphone (même domaine que l'espace commerçant)
+      let secret = ''; try { secret = localStorage.getItem(SECRET_KEY) || ''; } catch(e){}
+      if (!surPerify){ $('noteMesures').className = 'note attente'; $('noteMesures').textContent = 'Ce commerce n\'est pas encore sur le serveur Perify : pas de mesures automatiques, remplissez à la main.'; return; }
+      if (!secret){ $('noteMesures').className = 'note attente'; $('noteMesures').textContent = 'Pour pré-remplir avec ce que votre programme a vraiment fait, ouvrez d\'abord l\'espace commerçant avec votre code vendeur, puis revenez ici.'; return; }
+      return lireJson(AS_URL + '?action=mesures&secret=' + encodeURIComponent(secret)).then(function(m){
+        if (m && m.status === 'ok'){ appliquerMesures(m); recalculer(); }
+        else { $('noteMesures').className = 'note attente'; $('noteMesures').textContent = m && m.code === 'unauthorized' ? 'Code vendeur refusé : ouvrez l\'espace commerçant, saisissez-le, puis revenez.' : 'Mesures indisponibles pour l\'instant — remplissez à la main.'; }
+      }).catch(function(){ $('noteMesures').className = 'note attente'; $('noteMesures').textContent = 'Mesures indisponibles (réseau) — remplissez à la main.'; });
+    });
+  }).catch(function(){
+    $('noteMesures').className = 'note attente'; $('noteMesures').textContent = 'Registre injoignable — les chiffres sont à saisir à la main.';
+    peindreCadeaux(); recalculer();
+  });
+})();
+</script>
+</body>
+</html>
