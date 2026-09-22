@@ -819,6 +819,16 @@ let BA_COM = BA_REPLI;
    MÊME CLÉ que kiosque.html, et même origine (les deux sont dans
    BoulangerVendeur) → tapé au kiosque, il vaut aussi ici, et inversement. */
 const SECRET_KEY = 'boostavis_kiosk_secret';
+function bandeauArret(d){
+  if(document.getElementById('bandeauArret')) return;
+  const b = document.createElement('div');
+  b.id = 'bandeauArret';
+  b.style.cssText = 'position:sticky;top:0;z-index:50;background:#3b0d0d;color:#fff;padding:12px 16px;font-size:14px;line-height:1.45;border-bottom:1px solid rgba(255,255,255,.15)';
+  const depuis = d && d.arrete_le ? ' depuis le ' + String(d.arrete_le).slice(0, 10).split('-').reverse().join('/') : '';
+  b.textContent = '🏁 Programme de fidélité arrêté' + depuis + '. Les clients ne gagnent plus rien et ne peuvent plus utiliser leurs cadeaux.'
+    + ' Votre fichier client reste téléchargeable dans l\'onglet Dashboard (« Exporter en Excel »).';
+  document.body.insertBefore(b, document.body.firstChild);
+}
 function vendorSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }catch(e){ return ''; } }
 function setVendorSecret(v){ try{ localStorage.setItem(SECRET_KEY, String(v||'').trim()); }catch(e){} }
 
@@ -853,6 +863,14 @@ function xhrGet(url, onSuccess, onError, delai){
       if(data && data.code === 'unauthorized'){
         askVendorSecret('Code vendeur requis ou invalide.');
         onError('Code vendeur requis');
+        return;
+      }
+      /* 🏁 23/09 — programme arrêté (fin de contrat, article 14) : le serveur refuse tout ce
+         qui ferait vivre le programme. Un bandeau le dit une fois pour toutes, et l'export
+         du fichier client (onglet Dashboard) reste possible. */
+      if(data && data.code === 'commerce_arrete'){
+        bandeauArret(data);
+        onError(data.message || 'Programme arrêté');
         return;
       }
       onSuccess(data);
