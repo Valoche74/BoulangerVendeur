@@ -142,7 +142,27 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .kc-icon{font-size:20px;margin-bottom:10px;display:block}
 .kc-val{font-family:var(--font-titre);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-.03em;line-height:1;margin-bottom:4px}
 .kc-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.kc-t{font-size:11px;margin-top:6px;color:var(--green);font-weight:500}
+.kc-t{font-size:11px;margin-top:6px;color:var(--green);font-weight:500;line-height:1.35}
+/* 24/09 — tableau de bord refait : icône dans une pastille (plus d'emoji), tendance vs période
+   précédente, courbe par jour. Inspiré du kit DashStack qu'il a indiqué, aux couleurs de Perify. */
+.kc-chip{width:38px;height:38px;border-radius:12px;background:rgba(255,107,44,.14);color:var(--gold2);display:grid;place-items:center;margin-bottom:10px}
+.kc-chip svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.kc-chip.jaune{background:rgba(255,197,61,.14);color:var(--gold3)}
+.kc-chip.vert{background:rgba(34,197,94,.12);color:var(--green)}
+.kc-chip.bleu{background:rgba(96,165,250,.14);color:#93C5FD}
+.kc-chip.rose{background:rgba(244,114,182,.14);color:#F9A8D4}
+.kc-t.up{color:var(--green)}.kc-t.down{color:var(--red)}.kc-t.flat{color:var(--muted)}
+.kpi-grid.trois{grid-template-columns:1fr 1fr 1fr}
+.kpi-grid.trois .kc{padding:14px 12px}.kpi-grid.trois .kc-val{font-size:26px}
+.chart{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px 16px 12px;margin-bottom:16px;animation:fadeUp .4s .15s ease forwards;opacity:0}
+.chart-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.chart-t{font-family:var(--font-titre);font-size:13.5px;font-weight:800;color:var(--white)}
+.chart-l{display:flex;gap:12px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.chart-l i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.chart svg{width:100%;height:150px;display:block;overflow:visible}
+.chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
+.dash-sous{font-size:11.5px;color:var(--muted);margin:-12px 0 16px;line-height:1.5}
+.dash-sous b{color:var(--muted2);font-weight:600}
 .sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:22px 0 10px}
 .block{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   border-radius:20px;overflow:hidden;margin-bottom:16px;animation:fadeUp .4s .2s ease forwards;opacity:0}
@@ -570,8 +590,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <!-- DASHBOARD -->
 <div class="panel" id="panel-dashboard">
   <div class="period-row">
-    <button class="pb on" onclick="setPeriod(7,this)">7 jours</button>
-    <button class="pb" onclick="setPeriod(30,this)">30 jours</button>
+    <button class="pb on" onclick="setPeriod(7,this)">7 j</button>
+    <button class="pb" onclick="setPeriod(30,this)">30 j</button>
+    <button class="pb" onclick="setPeriod(90,this)">90 j</button>
     <button class="pb" onclick="setPeriod(0,this)">Tout</button>
   </div>
   <div id="dashContent">
@@ -1235,30 +1256,41 @@ function exporterExcel(btn){
 /* ══════════════════════════════════
    DASHBOARD
 ══════════════════════════════════ */
+/* ═══ 📊 TABLEAU DE BORD (refait le 24/09) ═════════════════════
+   Deux appels en parallèle : `stats` (la fenêtre, la fenêtre PRÉCÉDENTE de même longueur, la
+   courbe par jour, les cadeaux, les vues de la carte et les scans du QR — lib/stats.js) et
+   `dashboard` (la liste des derniers coupons, inchangée). 7 / 30 / 90 / Tout redemande au serveur :
+   la période précédente ne se calcule pas côté page. Rien n'est inventé : un chiffre absent
+   s'affiche à zéro, une tendance sans point de comparaison ne s'affiche pas. */
+let statsData = null;
+
 function loadDash(){
   if(!baPret) return baAlors(loadDash);
   document.getElementById('dashContent').innerHTML =
     '<div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Chargement...</div></div>';
-
-  const url = AS_URL + '?action=dashboard';
-
-  xhrGet(url,
-    function(data){
-      coupons = data.coupons || [];
-      renderDash();
-    },
-    function(err){
+  let reste = 2, erreur = null;
+  const fini = function(){
+    if(--reste) return;
+    if(!statsData){
       document.getElementById('dashContent').innerHTML =
-        '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Erreur chargement : ' + err + '<br><br><button class="rbtn" onclick="loadDash()">Réessayer</button></div>';
+        '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Erreur chargement : ' + (erreur || 'stats indisponibles') + '<br><br><button class="rbtn" onclick="loadDash()">Réessayer</button></div>';
+      return;
     }
-  );
+    renderDash();
+  };
+  xhrGet(AS_URL + '?action=stats&jours=' + period,
+    function(d){ statsData = (d && d.status === 'ok') ? d : null; if(!statsData) erreur = (d && (d.message || d.code)) || 'stats indisponibles'; fini(); },
+    function(err){ statsData = null; erreur = err; fini(); });
+  xhrGet(AS_URL + '?action=dashboard',
+    function(d){ coupons = d.coupons || []; fini(); },
+    function(){ coupons = []; fini(); });
 }
 
 function setPeriod(d, btn){
   period = d;
   document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  renderDash();
+  loadDash();
 }
 
 function filterP(items){
@@ -1272,43 +1304,111 @@ function filterP(items){
   });
 }
 
+const ICONES = {
+  passages: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8l4 4-4 4"/>',
+  clients:  '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.5-6s6 2 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c3 0 5.5 2 6 5.5"/>',
+  cartes:   '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M12 13v3M10.5 14.5h3"/>',
+  wallet:   '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 6h4"/><rect x="8.5" y="10" width="7" height="5" rx="1"/>',
+  cadeau:   '<rect x="3.5" y="9" width="17" height="11.5" rx="2"/><path d="M12 9v11.5M3.5 13.5h17M12 9c-1.4-2.8-5.5-3.2-5.5-1.2S10.2 9 12 9zm0 0c1.4-2.8 5.5-3.2 5.5-1.2S13.8 9 12 9z"/>',
+  scan:     '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM21 14v1.5M17.5 21H21M14 20.5V21"/>',
+  vue:      '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  tampon:   '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+  avis:     '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/>',
+  reseau:   '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+  mail:     '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/>',
+  attente:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  expire:   '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>'
+};
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function jjmm(jour){ const p = String(jour || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] : jour; }
+
+/* Une carte de chiffre : icône, valeur, libellé, et la tendance vs la période précédente. */
+function kpi(icone, classe, val, lbl, prec){
+  const s = statsData;
+  let tend;
+  if(!s.precedent || prec == null){
+    tend = '<div class="kc-t flat">' + (s.fenetre_jours ? 'sur ' + s.fenetre_jours + ' jours' : 'depuis le début') + '</div>';
+  } else if(prec === 0 && val === 0){
+    tend = '<div class="kc-t flat">= période précédente</div>';
+  } else if(prec === 0){
+    tend = '<div class="kc-t up">↑ nouveau (0 avant)</div>';
+  } else {
+    const d = Math.round((val - prec) / prec * 100);
+    tend = d > 0 ? '<div class="kc-t up">↑ +' + d + ' % vs ' + prec + ' avant</div>'
+         : d < 0 ? '<div class="kc-t down">↓ ' + d + ' % vs ' + prec + ' avant</div>'
+         : '<div class="kc-t flat">= période précédente (' + prec + ')</div>';
+  }
+  return '<div class="kc"><span class="kc-chip ' + classe + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONES[icone] + '</svg></span>'
+       + '<div class="kc-val">' + val + '</div><div class="kc-lbl">' + lbl + '</div>' + tend + '</div>';
+}
+
+/* La courbe : barres = passages, trait jaune = scans du QR, trait pointillé = vues de la carte. */
+function courbe(serie){
+  const n = serie.length; if(!n) return '';
+  const W = 600, H = 130, max = Math.max(1, ...serie.map(p => Math.max(p.passages, p.scans, p.vues)));
+  const pas = W / n, lb = Math.max(2, pas * 0.55);
+  const y = v => H - Math.round(v / max * (H - 10));
+  const barres = serie.map((p, i) => '<rect x="' + (i * pas + (pas - lb) / 2).toFixed(1) + '" y="' + y(p.passages) + '" width="' + lb.toFixed(1) + '" height="' + (H - y(p.passages)) + '" rx="2" fill="#FF6B2C" opacity=".9"/>').join('');
+  const ligne = (k, couleur, pointille) => '<polyline fill="none" stroke="' + couleur + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (pointille ? ' stroke-dasharray="4 4"' : '')
+    + ' points="' + serie.map((p, i) => (i * pas + pas / 2).toFixed(1) + ',' + y(p[k])).join(' ') + '"/>';
+  const grille = [0.5, 1].map(f => '<line x1="0" x2="' + W + '" y1="' + y(max * f) + '" y2="' + y(max * f) + '" stroke="rgba(255,255,255,.08)"/>').join('');
+  const etiq = '<text x="2" y="' + (y(max) - 2 < 10 ? 10 : y(max) - 2) + '" fill="rgba(255,255,255,.45)" font-size="10">' + max + '</text>';
+  const milieu = serie[Math.floor(n / 2)].jour;
+  return '<div class="chart"><div class="chart-h"><div class="chart-t">Par jour</div>'
+       + '<div class="chart-l"><span><i style="background:#FF6B2C"></i>passages</span><span><i style="background:#FFC53D"></i>scans QR</span><span><i style="background:rgba(255,255,255,.7)"></i>vues carte</span></div></div>'
+       + '<svg viewBox="0 0 ' + W + ' ' + (H + 4) + '" preserveAspectRatio="none" aria-hidden="true">' + grille + barres + ligne('scans', '#FFC53D') + ligne('vues', 'rgba(255,255,255,.7)', true) + etiq + '</svg>'
+       + '<div class="chart-x"><span>' + jjmm(serie[0].jour) + '</span><span>' + jjmm(milieu) + '</span><span>' + jjmm(serie[n - 1].jour) + '</span></div></div>';
+}
+
 function renderDash(){
+  const s = statsData, a = s.actuel, p = s.precedent || {};
   const list  = filterP(coupons);
-  const total = list.length;
-  const used  = list.filter(c => c.statut === 'Utilisé').length;
-  const expd  = list.filter(c => c.statut === 'Expiré').length;   // 🎁 15/09 — offres promo expirées : plus « en attente »
-  const wait  = total - used - expd;
-  const taux  = total > 0 ? Math.round(used / total * 100) + '%' : '—';
-
-  // Compter les gains
-  const gc = {};
-  list.forEach(c => { gc[c.gain] = (gc[c.gain] || 0) + 1; });
-  const gainsArr = Object.entries(gc).sort((a,b) => b[1]-a[1]);
-  const maxG = Math.max(...Object.values(gc), 1);
-
-  // Emoji par nom de gain
-  const emojis = {'Croissant Artisanal':'🥐','Baguette Tradition':'🥖','Pâtisserie du Jour':'🍰'};
+  const maxG  = Math.max(1, ...s.cadeaux.top.map(g => g.n));
+  const sous  = s.fenetre_jours
+    ? 'Les <b>' + s.fenetre_jours + ' derniers jours</b>' + (s.jours_observes && s.jours_observes < s.fenetre_jours ? ' (le programme n\'a que ' + s.jours_observes + ' jours d\'activité)' : '') + ', comparés aux ' + s.fenetre_jours + ' jours d\'avant.'
+    : 'Depuis le début' + (s.depuis ? ' (' + jjmm(s.depuis) + '/' + String(s.depuis).slice(0, 4) + ')' : '') + ' — <b>' + s.clients_inscrits + ' clients</b> ont une carte.';
 
   document.getElementById('dashContent').innerHTML = `
+    <div class="dash-sous">${sous}</div>
     <div class="kpi-grid">
-      <div class="kc"><span class="kc-icon">📱</span><div class="kc-val">${total}</div><div class="kc-lbl">Participations</div><div class="kc-t">↑ Total scans</div></div>
-      <div class="kc"><span class="kc-icon">✅</span><div class="kc-val">${used}</div><div class="kc-lbl">Gains réclamés</div><div class="kc-t">↑ Retours boutique</div></div>
-      <div class="kc"><span class="kc-icon">⏳</span><div class="kc-val">${wait}</div><div class="kc-lbl">En attente</div><div class="kc-t" style="color:var(--muted)">Non réclamés</div></div>
-      <div class="kc"><span class="kc-icon">📊</span><div class="kc-val">${taux}</div><div class="kc-lbl">Taux retour</div><div class="kc-t">↑ Fidélisation</div></div>
+      ${kpi('passages', '', a.passages, 'Passages', p.passages)}
+      ${kpi('clients', 'bleu', a.clients_actifs, 'Clients venus', p.clients_actifs)}
+      ${kpi('scan', 'jaune', a.scans_qr, 'Scans du QR', p.scans_qr)}
+      ${kpi('vue', 'jaune', a.vues_carte, 'Cartes ouvertes', p.vues_carte)}
+    </div>
+    ${courbe(s.serie)}
+
+    <div class="sec">Le programme</div>
+    <div class="kpi-grid">
+      ${kpi('cartes', 'vert', a.nouvelles_cartes, 'Nouvelles cartes', p.nouvelles_cartes)}
+      ${kpi('wallet', 'vert', a.cartes_wallet, 'Ajoutées au Wallet', p.cartes_wallet)}
+      ${kpi('cadeau', 'rose', a.cadeaux_reclames, 'Cadeaux récupérés', p.cadeaux_reclames)}
+      ${kpi('tampon', '', a.tampons, 'Tampons donnés', p.tampons)}
     </div>
 
-    <div class="sec">Gains distribués</div>
+    <div class="sec">Ce qui rapporte des tampons</div>
+    <div class="kpi-grid trois">
+      ${kpi('avis', 'jaune', a.avis, 'Avis', p.avis)}
+      ${kpi('reseau', 'bleu', a.reseaux, 'Réseaux', p.reseaux)}
+      ${kpi('mail', 'rose', a.emails, 'E-mails acceptés', p.emails)}
+    </div>
+
+    <div class="sec">Les cadeaux</div>
+    <div class="kpi-grid">
+      ${kpi('attente', 'jaune', s.cadeaux.en_attente, 'À récupérer', null)}
+      ${kpi('expire', '', s.cadeaux.expires, 'Expirés', null)}
+    </div>
     <div class="block">
-      ${gainsArr.length === 0
-        ? '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Aucun gain pour cette période</div>'
-        : gainsArr.map(([name, count]) => `
+      ${s.cadeaux.top.length === 0
+        ? '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Aucun cadeau récupéré sur cette période</div>'
+        : s.cadeaux.top.map(g => `
           <div class="grow">
-            <div class="ge">${emojis[name] || '🎁'}</div>
+            <div class="ge"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--gold3);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round">${ICONES.cadeau}</svg></div>
             <div style="flex:1">
-              <div class="gn">${name}</div>
-              <div class="gbw"><div class="gb" style="width:${Math.round(count/maxG*100)}%"></div></div>
+              <div class="gn">${esc(g.gain)}</div>
+              <div class="gbw"><div class="gb" style="width:${Math.round(g.n / maxG * 100)}%"></div></div>
             </div>
-            <div class="gc">${count}</div>
+            <div class="gc">${g.n}</div>
           </div>`).join('')}
     </div>
 
@@ -1318,9 +1418,9 @@ function renderDash(){
         ? '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Aucun coupon pour cette période</div>'
         : [...list].reverse().slice(0,12).map(c => `
           <div class="crow">
-            <div class="ccode">${c.code}</div>
-            <div class="cname">${c.gain}<br>
-              <span style="font-size:11px;color:var(--muted);font-weight:400">${c.prenom} · ${c.date}</span>
+            <div class="ccode">${esc(c.code)}</div>
+            <div class="cname">${esc(c.gain)}<br>
+              <span style="font-size:11px;color:var(--muted);font-weight:400">${esc(c.prenom)} · ${esc(c.date)}</span>
             </div>
             <div class="cs ${c.statut === 'Utilisé' ? 'cs-u' : c.statut === 'Expiré' ? 'cs-x' : 'cs-w'}">${c.statut === 'Utilisé' ? '✓' : c.statut === 'Expiré' ? '⌛' : '⏳'}</div>
           </div>`).join('')}
