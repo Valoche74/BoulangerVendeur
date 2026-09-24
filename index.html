@@ -62,11 +62,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   border-bottom:1px solid rgba(255,255,255,.07)}
 /* 4 onglets sur un écran de 375 px : 8 px de marge intérieure de chaque côté
    ne laissaient plus la place à « Validation ». Réduit, et la police suit. */
+/* 24/09 — les onglets sont de vrais boutons (clavier, focus), et l'icône est un SVG en traits
+   (sprite #icones) : plus d'emoji, comme les pastilles du tableau de bord. */
 .tab{flex:1;min-width:0;padding:13px 3px;text-align:center;font-size:11px;font-weight:700;
-  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  color:var(--muted);cursor:pointer;border:0;border-bottom:2px solid transparent;border-radius:0;
+  background:none;appearance:none;-webkit-appearance:none;font-family:'Inter',sans-serif;
   transition:all .2s;letter-spacing:0;text-transform:uppercase}
 .tab.on{color:var(--white);border-bottom-color:var(--gold2)}
-.tab-icon{font-size:18px;display:block;margin-bottom:4px}
+.tab-icon{display:block;width:22px;height:22px;margin:0 auto 4px}
+.tab-icon .ico{width:22px;height:22px;display:block}
+.tab.on .tab-icon{color:var(--gold2)}
 
 /* PANELS */
 .panel{display:none;padding:22px 16px 80px;max-width:480px;margin:0 auto;position:relative;z-index:1}
@@ -97,6 +102,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .result{display:none;flex-direction:column;align-items:center;text-align:center;padding:8px 0 16px}
 .result.show{display:flex}
 .res-icon{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:18px}
+.res-icon .ico{width:38px;height:38px}
 .ri-ok{background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.25);box-shadow:0 0 24px rgba(34,197,94,.1)}
 .ri-used{background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.25)}
 .ri-bad{background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.25)}
@@ -123,7 +129,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 /* ── DASHBOARD ── */
 /* 18/09 — l'export Excel du fichier client (contrat, article 14), en bas du tableau de bord */
 .exp-box{margin-top:18px;padding:16px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-.exp-t{font-size:13px;font-weight:800;color:var(--white);margin-bottom:4px}
+.exp-t{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;color:var(--white);margin-bottom:6px}
 .exp-s{font-size:12px;line-height:1.5;color:var(--muted2);margin-bottom:12px}
 .exp-btn{width:100%;padding:12px 16px;border-radius:14px;border:1px solid rgba(255,107,44,.35);background:rgba(255,107,44,.12);
   color:var(--gold2);font-family:'Inter',sans-serif;font-size:13px;font-weight:800;cursor:pointer}
@@ -182,6 +188,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .cs-w{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
 .cs-u{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
 .cs-x{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}   /* 🎁 15/09 — offre promo expirée */
+.crow .cs{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0}   /* 24/09 : une icône, plus un glyphe */
+.cs .ico{width:13px;height:13px;stroke-width:2.4}
 .rbtn{width:100%;padding:14px;margin-top:4px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   border-radius:16px;color:var(--muted);font-family:'Inter',sans-serif;
@@ -356,7 +364,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .mk-chips{display:flex;flex-wrap:wrap;gap:6px}
 .mk-chip{padding:8px 13px;border-radius:999px;border:1.5px solid rgba(255,255,255,.09);
   background:rgba(255,255,255,.04);color:var(--muted2);font-family:'Inter',sans-serif;
-  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.mk-chip .ico{width:16px;height:16px}
+/* la couleur de l'affiche : une vraie pastille de sa couleur, plus un rond emoji */
+.mk-sw{width:12px;height:12px;border-radius:50%;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
 .mk-chip.on{border-color:rgba(255,107,44,.45);background:rgba(255,107,44,.12);color:var(--gold2)}
 .mk-steps{display:flex;gap:10px;margin-top:4px}
 .mk-step{flex:1;min-width:0}
@@ -402,7 +414,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   color:var(--gold2);font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
   cursor:pointer;transition:all .2s;margin-bottom:16px}
 .btn-scan:active{background:rgba(255,107,44,.16);transform:scale(.985)}
-.btn-scan .sc-ico{font-size:19px;line-height:1}
+.btn-scan .sc-ico{display:block;width:22px;height:22px}
+.btn-scan .sc-ico .ico{width:22px;height:22px;display:block}
 .or-sep{display:flex;align-items:center;gap:12px;margin:0 0 16px;
   font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
 .or-sep::before,.or-sep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
@@ -444,8 +457,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .cl-item{display:flex;align-items:center;gap:11px;padding:13px 14px;margin-bottom:8px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;text-align:left}
 .cl-item.att{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)}
-.cl-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);
+.cl-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--gold3);
   display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.cl-ico .ico{width:18px;height:18px}
+.cl-item.att .cl-ico{color:var(--amber)}
 .cl-txt{flex:1;min-width:0}
 .cl-lib{font-size:13.5px;font-weight:700;color:var(--white);line-height:1.3}
 .cl-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -470,9 +485,62 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .cl-annuler{margin-top:10px;padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;
   color:var(--muted2);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
 .cl-annuler:disabled{opacity:.45;cursor:default}
+
+/* ── 24/09 — ICÔNES, CIBLES ET FOCUS, pour toute la page ─────────────────
+   · .ico : une icône du sprite #icones (24×24, traits de 1.9, currentColor) — le même dessin
+     que les pastilles du tableau de bord (ICONES), et plus d'emoji nulle part dans l'interface ;
+   · toute cible tactile fait 44 px au moins, même les petites pastilles (7 j, Vert, Remettre…) ;
+   · un seul état focus : visible au clavier (jaune), invisible au doigt. Les deux champs de saisie
+     gardent leur bordure orange, qui fait déjà ce travail. */
+.ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+  flex-shrink:0;display:inline-block;vertical-align:middle}
+.ico-btn{width:18px;height:18px;margin-right:8px;vertical-align:-4px}
+.ico-txt{width:16px;height:16px;margin-right:6px;vertical-align:-3px}
+.ico-vert{color:var(--green)}.ico-ambre{color:var(--amber)}
+.ico-pastille{width:30px;height:30px;border-radius:10px;background:rgba(255,107,44,.14);color:var(--gold2);
+  display:grid;place-items:center;flex-shrink:0}
+.ico-pastille .ico{width:17px;height:17px}
+.pb,.exp-btn,.mk-chip,.of-chip,.cl-btn,.cl-plus,.cl-annuler,.rbtn,.btn-reset,.btn-confirm,.mk-ghost,.scan-close,
+.of-send,.btn-validate,.mk-prod{min-height:44px}
+.pb,.of-chip,.cl-btn,.cl-annuler,.exp-btn{display:inline-flex;align-items:center;justify-content:center}
+.of-chip{justify-content:flex-start}
+.cl-btn{gap:5px}.cl-btn .ico{width:15px;height:15px;margin:0}
+.cl-annuler{gap:6px}.cl-annuler .ico{width:16px;height:16px;margin:0}
+.mk-stepper{padding:5px 8px}
+.mk-stepper button{width:44px;height:44px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--gold3);outline-offset:2px}
+.tab:focus-visible{outline-offset:-3px}
+.code-input:focus-visible,.of-input:focus-visible{outline:none}
 </style>
 </head>
 <body>
+<!-- 24/09 — LE SPRITE D'ICÔNES : un dessin par symbole, 24×24, traits de 1.9 en currentColor (règle .ico).
+     Même esprit que les pastilles du tableau de bord (ICONES, dans le script) : cadeau, scan et attente
+     y sont les MÊMES tracés — si l'un change, changer l'autre. Plus aucun emoji dans l'interface : un
+     emoji est dessiné par le téléphone, jamais deux fois pareil, et ne suit pas la couleur du texte. -->
+<svg id="icones" xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-valid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.3l2.8 2.8 5.4-5.6"/></symbol>
+  <symbol id="i-dashboard" viewBox="0 0 24 24"><path d="M3.5 20.5h17"/><rect x="5" y="11" width="3.6" height="6.5" rx="1"/><rect x="10.2" y="5" width="3.6" height="12.5" rx="1"/><rect x="15.4" y="8.5" width="3.6" height="9" rx="1"/></symbol>
+  <symbol id="i-offre" viewBox="0 0 24 24"><path d="M3.5 10v4a1.5 1.5 0 001.5 1.5h2.5l6.5 4.5v-16L7.5 8.5H5A1.5 1.5 0 003.5 10z"/><path d="M17.5 9.2a4 4 0 010 5.6M8.5 15.5l1.3 4.5"/></symbol>
+  <symbol id="i-promo" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5l-4.3-4.3-6.2 6.8"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM21 14v1.5M17.5 21H21M14 20.5V21"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-carte" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="8.5" cy="10.5" r="2.2"/><path d="M5.3 16c.5-1.8 1.7-2.7 3.2-2.7s2.7.9 3.2 2.7M14.5 10h4M14.5 13.5h4"/></symbol>
+  <symbol id="i-cadeau" viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="2"/><path d="M12 9v11.5M3.5 13.5h17M12 9c-1.4-2.8-5.5-3.2-5.5-1.2S10.2 9 12 9zm0 0c1.4-2.8 5.5-3.2 5.5-1.2S13.8 9 12 9z"/></symbol>
+  <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M10.7 4.6L3.2 17.7A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.3-2.3L13.3 4.6a1.5 1.5 0 00-2.6 0z"/><path d="M12 9.5v4.5M12 17h.01"/></symbol>
+  <symbol id="i-croix" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-sablier" viewBox="0 0 24 24"><path d="M7 3.5h10M7 20.5h10M8.5 3.5c0 4 3.5 5.3 3.5 8.5s-3.5 4.5-3.5 8.5M15.5 3.5c0 4-3.5 5.3-3.5 8.5s3.5 4.5 3.5 8.5"/></symbol>
+  <symbol id="i-attente" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10.5l4.5 4.5 4.5-4.5"/><path d="M4 16v2.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V16"/></symbol>
+  <symbol id="i-euro" viewBox="0 0 24 24"><path d="M17.5 6.8A6.5 6.5 0 006.6 10.2M17.5 17.2A6.5 6.5 0 016.6 13.8M3.5 10.2h9.5M3.5 13.8h8.5"/></symbol>
+  <symbol id="i-envoyer" viewBox="0 0 24 24"><path d="M20.5 3.5L3.5 10.3l7 2.7 2.7 7z"/><path d="M20.5 3.5L10.5 13"/></symbol>
+  <symbol id="i-calendrier" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/></symbol>
+  <symbol id="i-actualiser" viewBox="0 0 24 24"><path d="M20 12a8 8 0 01-13.7 5.6M4 12a8 8 0 0113.7-5.6"/><path d="M17.7 2.9v3.6h-3.6M6.3 21.1v-3.6h3.6"/></symbol>
+  <symbol id="i-annuler" viewBox="0 0 24 24"><path d="M8.5 7.5l-4 4 4 4"/><path d="M4.5 11.5H15a4.5 4.5 0 010 9h-3"/></symbol>
+  <symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/></symbol>
+  <symbol id="i-drapeau" viewBox="0 0 24 24"><path d="M5.5 21V3.5"/><path d="M5.5 4.5c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0v9c-2.5 1.5-5 1.5-7.5 0s-5-1.5-7.5 0"/></symbol>
+</svg>
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
 
@@ -491,10 +559,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <div class="tabs">
-  <div class="tab on" onclick="switchTab('validation',this)"><span class="tab-icon">✅</span>Validation</div>
-  <div class="tab" onclick="switchTab('dashboard',this)"><span class="tab-icon">📊</span>Dashboard</div>
-  <div class="tab" onclick="switchTab('offre',this)"><span class="tab-icon">📣</span>Offre</div>
-  <div class="tab" onclick="switchTab('promo',this)"><span class="tab-icon">🖼️</span>Promo</div>
+  <button type="button" class="tab on" onclick="switchTab('validation',this)"><span class="tab-icon"><svg class="ico" aria-hidden="true"><use href="#i-valid"/></svg></span>Validation</button>
+  <button type="button" class="tab" onclick="switchTab('dashboard',this)"><span class="tab-icon"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg></span>Dashboard</button>
+  <button type="button" class="tab" onclick="switchTab('offre',this)"><span class="tab-icon"><svg class="ico" aria-hidden="true"><use href="#i-offre"/></svg></span>Offre</button>
+  <button type="button" class="tab" onclick="switchTab('promo',this)"><span class="tab-icon"><svg class="ico" aria-hidden="true"><use href="#i-promo"/></svg></span>Promo</button>
 </div>
 
 <!-- VALIDATION -->
@@ -502,7 +570,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="err-banner" id="errBanner"></div>
 
   <div id="inputSection">
-    <button class="btn-scan" onclick="scanOuvrir()"><span class="sc-ico">⛶</span>Scanner la carte du client</button>
+    <button class="btn-scan" onclick="scanOuvrir()"><span class="sc-ico"><svg class="ico" aria-hidden="true"><use href="#i-scan"/></svg></span>Scanner la carte du client</button>
     <div class="or-sep">ou saisir le code</div>
     <label class="val-label">Code client</label>
     <input class="code-input" id="codeInput" type="tel" placeholder="000000" maxlength="6" oninput="fmtCode(this)">
@@ -514,18 +582,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 
   <div class="result" id="resValid">
-    <div class="res-icon ri-ok">✓</div>
+    <div class="res-icon ri-ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div>
     <div class="res-title rt-ok">Coupon valide !</div>
     <div class="res-prenom" id="validPrenom"></div>
     <div class="res-gain" id="gainTxt">—</div>
     <div class="res-desc">Ce coupon est authentique et non utilisé. Remettez le gain et confirmez.</div>
     <div class="code-badge" id="validCode">—</div>
-    <button class="btn-confirm" onclick="confirmUsed()">✓ Gain remis au client</button>
+    <button class="btn-confirm" onclick="confirmUsed()"><svg class="ico ico-btn" aria-hidden="true"><use href="#i-check"/></svg>Gain remis au client</button>
     <button class="btn-reset" onclick="resetVal()">Annuler</button>
   </div>
 
   <div class="result" id="resCarte">
-    <div class="res-icon ri-ok">🪪</div>
+    <div class="res-icon ri-ok"><svg class="ico" aria-hidden="true"><use href="#i-carte"/></svg></div>
     <div class="res-title rt-ok" id="clNom">Client</div>
     <div class="cl-solde"><b id="clTampons">0</b><span>tampons</span></div>
     <div class="code-badge" id="clId" style="font-size:16px">—</div>
@@ -543,7 +611,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <button class="cl-plus" type="button" onclick="tamponManuel(3,this)">+3</button>
       </div>
       <div class="cl-manuel-note">Client sans téléphone, geste commercial… Le tampon arrive aussitôt sur sa carte.</div>
-      <button class="cl-annuler" type="button" id="clAnnuler" hidden onclick="tamponAnnuler(this)">↩ Annuler ce que je viens d'ajouter</button>
+      <button class="cl-annuler" type="button" id="clAnnuler" hidden onclick="tamponAnnuler(this)"><svg class="ico" aria-hidden="true"><use href="#i-annuler"/></svg>Annuler ce que je viens d'ajouter</button>
     </div>
     <button class="btn-reset" onclick="resetVal()">Terminer</button>
   </div>
@@ -551,7 +619,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- Validé par le CLIENT à l'instant : le cadeau est à remettre, ce n'est
        surtout pas un refus. C'est le cas normal du self-redeem. -->
   <div class="result" id="resFenetre">
-    <div class="res-icon ri-ok">🎁</div>
+    <div class="res-icon ri-ok"><svg class="ico" aria-hidden="true"><use href="#i-cadeau"/></svg></div>
     <div class="res-title rt-ok">À remettre</div>
     <div class="res-prenom" id="fenPrenom"></div>
     <div class="res-gain" id="fenGain">—</div>
@@ -562,7 +630,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 
   <div class="result" id="resUsed">
-    <div class="res-icon ri-used">⚠</div>
+    <div class="res-icon ri-used"><svg class="ico" aria-hidden="true"><use href="#i-alerte"/></svg></div>
     <div class="res-title rt-used">Déjà utilisé</div>
     <div class="res-desc">Ce coupon a été validé il y a plus d'une heure.<br>Ne pas remettre le gain.</div>
     <div class="code-badge" id="usedCode">—</div>
@@ -570,7 +638,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 
   <div class="result" id="resInvalid">
-    <div class="res-icon ri-bad">✗</div>
+    <div class="res-icon ri-bad"><svg class="ico" aria-hidden="true"><use href="#i-croix"/></svg></div>
     <div class="res-title rt-bad">Code invalide</div>
     <div class="res-desc">Ce code n'existe pas. Vérifiez la saisie ou demandez l'email au client.</div>
     <button class="btn-reset" onclick="resetVal()">Réessayer</button>
@@ -579,7 +647,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- 🎁 15/09 — offre promo dont la date est passée (option A) : refusée, et on dit
        pourquoi. « Code invalide » ferait croire à une faute de frappe. -->
   <div class="result" id="resExpire">
-    <div class="res-icon ri-used">⌛</div>
+    <div class="res-icon ri-used"><svg class="ico" aria-hidden="true"><use href="#i-sablier"/></svg></div>
     <div class="res-title rt-used">Offre expirée</div>
     <div class="res-gain" id="expGain">—</div>
     <div class="res-desc">Cette offre était valable jusqu'au <b id="expFin">—</b>.<br>Ne pas remettre le gain.</div>
@@ -600,7 +668,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
   <!-- 18/09 : HORS de #dashContent, que renderDash réécrit à chaque chargement -->
   <div class="exp-box">
-    <div class="exp-t">📥 Votre fichier client</div>
+    <div class="exp-t"><span class="ico-pastille"><svg class="ico" aria-hidden="true"><use href="#i-telecharger"/></svg></span>Votre fichier client</div>
     <div class="exp-s">Tous vos clients, leurs tampons et leurs cadeaux, dans un fichier Excel. Il vous appartient :
       vous pouvez le télécharger quand vous voulez.</div>
     <button class="exp-btn" id="btnExport" onclick="exporterExcel(this)">Exporter en Excel</button>
@@ -608,10 +676,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
   <!-- 23/09 : le calculateur de marge — « est-ce que ça me rapporte ? », avec ses chiffres. -->
   <div class="exp-box">
-    <div class="exp-t">💶 Est-ce que ça vous rapporte ?</div>
+    <div class="exp-t"><span class="ico-pastille"><svg class="ico" aria-hidden="true"><use href="#i-euro"/></svg></span>Est-ce que ça vous rapporte ?</div>
     <div class="exp-s">Ce qu'un tampon vous coûte, ce qu'une visite vous rapporte, et à partir de quand le programme se paie —
       calculé avec vos prix, vos marges et ce que votre programme a vraiment fait. Rien n'est inventé.</div>
-    <a class="exp-btn" id="btnCalculateur" href="calculateur.html" style="display:block;text-align:center;text-decoration:none">Ouvrir le calculateur de marge</a>
+    <a class="exp-btn" id="btnCalculateur" href="calculateur.html" style="text-decoration:none">Ouvrir le calculateur de marge</a>
   </div>
 </div>
 
@@ -724,8 +792,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
   <span class="mk-lbl">Envoyer quand ?</span>
   <div class="mk-chips" id="mkWhens">
-    <button class="mk-chip on" onclick="mkSetWhen(this,'now')">🚀 Maintenant</button>
-    <button class="mk-chip" onclick="mkSetWhen(this,'demain')">🗓️ Demain matin</button>
+    <button class="mk-chip on" onclick="mkSetWhen(this,'now')"><svg class="ico" aria-hidden="true"><use href="#i-envoyer"/></svg>Maintenant</button>
+    <button class="mk-chip" onclick="mkSetWhen(this,'demain')"><svg class="ico" aria-hidden="true"><use href="#i-calendrier"/></svg>Demain matin</button>
   </div>
 
   <!-- 🎁 15/09 — durée de l'offre, choisie par le commerçant (validé par l'utilisateur :
@@ -746,7 +814,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </button>
   <div class="mk-count" id="mkCount">&nbsp;</div>
   <div class="mk-info" id="mkInfo" role="status" hidden></div>
-  <button class="mk-ghost" id="mkTestBtn" onclick="mkEnvoyerTest(this)">📩 M'envoyer l'aperçu d'abord</button>
+  <button class="mk-ghost" id="mkTestBtn" onclick="mkEnvoyerTest(this)"><svg class="ico ico-btn" aria-hidden="true"><use href="#i-mail"/></svg>M'envoyer l'aperçu d'abord</button>
 
   <span class="mk-lbl">Dernières campagnes</span>
   <div class="mk-hist" id="mkHist"><div class="mk-vide">—</div></div>
@@ -870,8 +938,8 @@ function bandeauArret(d){
   b.id = 'bandeauArret';
   b.style.cssText = 'position:sticky;top:0;z-index:50;background:#3b0d0d;color:#fff;padding:12px 16px;font-size:14px;line-height:1.45;border-bottom:1px solid rgba(255,255,255,.15)';
   const depuis = d && d.arrete_le ? ' depuis le ' + String(d.arrete_le).slice(0, 10).split('-').reverse().join('/') : '';
-  b.textContent = '🏁 Programme de fidélité arrêté' + depuis + '. Les clients ne gagnent plus rien et ne peuvent plus utiliser leurs cadeaux.'
-    + ' Votre fichier client reste téléchargeable dans l\'onglet Dashboard (« Exporter en Excel »).';
+  b.innerHTML = ico('drapeau', 'ico-txt') + esc('Programme de fidélité arrêté' + depuis + '. Les clients ne gagnent plus rien et ne peuvent plus utiliser leurs cadeaux.'
+    + ' Votre fichier client reste téléchargeable dans l\'onglet Dashboard (« Exporter en Excel »).');
   document.body.insertBefore(b, document.body.firstChild);
 }
 function vendorSecret(){ try{ return localStorage.getItem(SECRET_KEY) || ''; }catch(e){ return ''; } }
@@ -1121,14 +1189,14 @@ function validateCode(){
       if(data.status === 'valid'){
         document.getElementById('gainTxt').textContent   = data.gain || 'Votre gain';
         document.getElementById('validCode').textContent  = currentCode;
-        document.getElementById('validPrenom').textContent = data.prenom ? '👤 ' + data.prenom : '';
+        document.getElementById('validPrenom').innerHTML = data.prenom ? ico('personne', 'ico-txt') + esc(data.prenom) : '';
         showRes('resValid');
       } else if(data.status === 'used' && data.en_fenetre){
         /* Le client a validé lui-même il y a moins d'une heure : le cadeau est
            EN ATTENTE DE REMISE, pas refusé. Sans cette branche le vendeur voyait
            « déjà utilisé » en rouge et n'osait plus rien donner. */
         document.getElementById('fenGain').textContent   = data.gain || 'Le cadeau';
-        document.getElementById('fenPrenom').textContent = data.prenom ? '👤 ' + data.prenom : '';
+        document.getElementById('fenPrenom').innerHTML = data.prenom ? ico('personne', 'ico-txt') + esc(data.prenom) : '';
         document.getElementById('fenCode').textContent   = currentCode;
         document.getElementById('fenReste').textContent  = fmtReste(data.reste_sec);
         showRes('resFenetre');
@@ -1247,9 +1315,9 @@ function exporterExcel(btn){
     a.download = x.nom;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 60000);
-    msg.textContent = '✅ Fichier prêt : ' + x.nom;
+    msg.innerHTML = ico('check', 'ico-txt ico-vert') + esc('Fichier prêt : ' + x.nom);
   }).catch(function(e){
-    msg.textContent = '⚠️ ' + ((e && e.message) || 'Export impossible pour le moment.');
+    msg.innerHTML = ico('alerte', 'ico-txt ico-ambre') + esc((e && e.message) || 'Export impossible pour le moment.');
   }).then(function(){ btn.disabled = false; });
 }
 
@@ -1320,6 +1388,10 @@ const ICONES = {
   expire:   '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>'
 };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/* 24/09 — une icône du sprite #icones (en tête du body) : <svg class="ico …"><use href="#i-nom"/></svg>.
+   Sert aux gabarits construits ici (derniers coupons, cadeaux du client, messages) : les mêmes dessins
+   que dans le HTML, un seul endroit à changer. `cls` : ico-btn (dans un bouton), ico-txt (dans une ligne). */
+function ico(nom, cls){ return '<svg class="ico' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + nom + '"/></svg>'; }
 function jjmm(jour){ const p = String(jour || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] : jour; }
 
 /* Une carte de chiffre : icône, valeur, libellé, et la tendance vs la période précédente. */
@@ -1422,11 +1494,11 @@ function renderDash(){
             <div class="cname">${esc(c.gain)}<br>
               <span style="font-size:11px;color:var(--muted);font-weight:400">${esc(c.prenom)} · ${esc(c.date)}</span>
             </div>
-            <div class="cs ${c.statut === 'Utilisé' ? 'cs-u' : c.statut === 'Expiré' ? 'cs-x' : 'cs-w'}">${c.statut === 'Utilisé' ? '✓' : c.statut === 'Expiré' ? '⌛' : '⏳'}</div>
+            <div class="cs ${c.statut === 'Utilisé' ? 'cs-u' : c.statut === 'Expiré' ? 'cs-x' : 'cs-w'}" title="${esc(c.statut || 'En attente')}">${c.statut === 'Utilisé' ? ico('check') : c.statut === 'Expiré' ? ico('sablier') : ico('attente')}</div>
           </div>`).join('')}
     </div>
 
-    <button class="rbtn" onclick="loadDash()">↻ Actualiser</button>
+    <button class="rbtn" onclick="loadDash()">${ico('actualiser', 'ico-btn')}Actualiser</button>
   `;
 }
 /* ═══ 📣 OFFRE DU JOUR ═══════════════════════════════════════════
@@ -1681,13 +1753,13 @@ MK_PRODUITS._defaut = MK_PRODUITS.boulangerie;
 /* Les palettes d'affiche. `dark` = le haut, `mint` = le bas, `accent` = le
    bouton, `lime`/`acid` = les rayures du gros titre. */
 const MK_THEMES = {
-  green:{nom:'🟢 Vert',   dark:'#001b0a',mint:'#efffe8',accent:'#04b522',lime:'#b9ff15',acid:'#e8ff25'},
-  choco:{nom:'🟤 Choco',  dark:'#190904',mint:'#fff4dc',accent:'#b95a18',lime:'#ff9446',acid:'#ffce4a'},
-  berry:{nom:'🔴 Fraise', dark:'#250411',mint:'#fff0f3',accent:'#d71946',lime:'#ff5b78',acid:'#fff26d'},
-  blue: {nom:'🔵 Bleu',   dark:'#071326',mint:'#edf7ff',accent:'#1455d9',lime:'#36d4ff',acid:'#9cf3ff'},
+  green:{nom:'Vert',   dark:'#001b0a',mint:'#efffe8',accent:'#04b522',lime:'#b9ff15',acid:'#e8ff25'},
+  choco:{nom:'Choco',  dark:'#190904',mint:'#fff4dc',accent:'#b95a18',lime:'#ff9446',acid:'#ffce4a'},
+  berry:{nom:'Fraise', dark:'#250411',mint:'#fff0f3',accent:'#d71946',lime:'#ff5b78',acid:'#fff26d'},
+  blue: {nom:'Bleu',   dark:'#071326',mint:'#edf7ff',accent:'#1455d9',lime:'#36d4ff',acid:'#9cf3ff'},
   /* Le Bap's : noir + orange-sable, relevé sur lebaps.com — la même identité
      que leur pass Apple. */
-  baps: {nom:'🟠 Le Bap’s', dark:'#161310',mint:'#fff6ea',accent:'#C9761F',lime:'#F4A460',acid:'#FFD9A0'}
+  baps: {nom:'Le Bap’s', dark:'#161310',mint:'#fff6ea',accent:'#C9761F',lime:'#F4A460',acid:'#FFD9A0'}
 };
 /* Le thème proposé d'office, par métier. Un commerçant peut toujours en changer. */
 const MK_THEME_DEFAUT = { boulangerie:'green', baps:'baps', fleuriste:'berry', pizzeria:'berry', restaurant:'choco', primeur:'green', vape:'blue' };
@@ -1729,7 +1801,9 @@ function mkPeindreThemes(){
   const box = document.getElementById('mkThemes');
   if(!box) return;
   box.innerHTML = Object.keys(MK_THEMES).map(function(k){
-    return '<button class="mk-chip' + (k === mkS.theme ? ' on' : '') + '" onclick="mkSetTheme(this,\'' + k + '\')">' + MK_THEMES[k].nom + '</button>';
+    // 24/09 — la pastille prend la vraie couleur d'accent du thème (avant : un rond emoji, approximatif)
+    return '<button class="mk-chip' + (k === mkS.theme ? ' on' : '') + '" onclick="mkSetTheme(this,\'' + k + '\')">'
+         + '<i class="mk-sw" style="background:' + MK_THEMES[k].accent + '"></i>' + esc(MK_THEMES[k].nom) + '</button>';
   }).join('');
 }
 
@@ -2368,17 +2442,17 @@ function carteAfficher(d){
 
   attente.forEach(function(r){
     h += '<div class="cl-item">'
-       +   '<div class="cl-ico">🎁</div>'
+       +   '<div class="cl-ico">' + ico('cadeau') + '</div>'
        +   '<div class="cl-txt"><div class="cl-lib">' + esc(r.libelle) + '</div>'
        +     '<div class="cl-sub">Code ' + esc(r.code) + '</div></div>'
-       +   '<button class="cl-btn" onclick="remettre(\'' + esc(r.code) + '\',this)">✓ Remettre</button>'
+       +   '<button class="cl-btn" onclick="remettre(\'' + esc(r.code) + '\',this)">' + ico('check') + 'Remettre</button>'
        + '</div>';
   });
 
   encours.forEach(function(r){
     const min = Math.max(1, Math.round((r.expire_dans || 0) / 60));
     h += '<div class="cl-item att">'
-       +   '<div class="cl-ico">⏳</div>'
+       +   '<div class="cl-ico">' + ico('attente') + '</div>'
        +   '<div class="cl-txt"><div class="cl-lib">' + esc(r.libelle) + '</div>'
        +     '<div class="cl-sub amb">Déjà validé par le client · encore ' + min + ' min</div></div>'
        + '</div>';
@@ -2420,7 +2494,7 @@ window.tamponManuel = function(n, btn){
       manuelDernier = n;
       const a = document.getElementById('clAnnuler');
       a.hidden = false; a.disabled = false;
-      a.textContent = n === 1 ? '↩ Annuler ce tampon' : '↩ Annuler ces ' + n + ' tampons';
+      a.innerHTML = ico('annuler') + (n === 1 ? 'Annuler ce tampon' : 'Annuler ces ' + n + ' tampons');
       flash('✓ +' + n + ' tampon' + (n > 1 ? 's' : '') + ' — sa carte se met à jour');
     },
     function(err){ fini(); showErr('Erreur : ' + err); });
@@ -2448,14 +2522,14 @@ window.remettre = function(code, btn){
   xhrGet(AS_URL + '?action=use&code=' + encodeURIComponent(code),
     function(d){
       dashLoaded = false;
-      btn.textContent = '✓ Remis';
+      btn.innerHTML = ico('check') + 'Remis';
       const it = btn.closest('.cl-item');
       if(it){ it.style.opacity = '.45'; }
       flash('✓ Cadeau remis !');
     },
     function(err){
       btn.disabled = false;
-      btn.textContent = '✓ Remettre';
+      btn.innerHTML = ico('check') + 'Remettre';
       showErr('Erreur : ' + err);
     });
 };
