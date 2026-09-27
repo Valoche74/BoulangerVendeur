@@ -169,6 +169,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .chart-x{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
 .dash-sous{font-size:11.5px;color:var(--muted);margin:-12px 0 16px;line-height:1.5}
 .dash-sous b{color:var(--muted2);font-weight:600}
+.dash-reglage{font-size:11px;color:var(--muted);margin:-12px 0 16px;line-height:1.5}   /* 27/09 : cartes d'essai exclues */
 .sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:22px 0 10px}
 .block{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   border-radius:20px;overflow:hidden;margin-bottom:16px;animation:fadeUp .4s .2s ease forwards;opacity:0}
@@ -1432,16 +1433,29 @@ function courbe(serie){
        + '<div class="chart-x"><span>' + jjmm(serie[0].jour) + '</span><span>' + jjmm(milieu) + '</span><span>' + jjmm(serie[n - 1].jour) + '</span></div></div>';
 }
 
+/* 27/09 — les cartes d'essai et tout ce qui précède le lancement ne comptent pas (serveur :
+   lib/cartes-essai.js). Le serveur ne donne que la date et le NOMBRE de cartes : une ligne discrète
+   sous le sous-titre le dit, pour que personne ne prenne des chiffres « qui repartent de zéro » pour
+   une baisse. Sans réglage (tout autre commerce), rien ne s'affiche. */
+function noteReglage(r){
+  if(!r) return '';
+  const date = r.depuis ? jjmm(r.depuis) : '';
+  const txt = r.cartes_essai && date ? 'Les cartes d\'essai de Perify sont exclues — statistiques depuis le ' + date + '.'
+            : r.cartes_essai ? 'Les cartes d\'essai de Perify sont exclues.'
+            : date ? 'Statistiques depuis le ' + date + '.' : '';
+  return txt ? '<div class="dash-reglage">' + esc(txt) + '</div>' : '';
+}
+
 function renderDash(){
   const s = statsData, a = s.actuel, p = s.precedent || {};
   const list  = filterP(coupons);
   const maxG  = Math.max(1, ...s.cadeaux.top.map(g => g.n));
   const sous  = s.fenetre_jours
-    ? 'Les <b>' + s.fenetre_jours + ' derniers jours</b>' + (s.jours_observes && s.jours_observes < s.fenetre_jours ? ' (le programme n\'a que ' + s.jours_observes + ' jours d\'activité)' : '') + ', comparés aux ' + s.fenetre_jours + ' jours d\'avant.'
+    ? 'Les <b>' + s.fenetre_jours + ' derniers jours</b>' + (s.jours_observes && s.jours_observes < s.fenetre_jours ? ' (le programme n\'a que ' + s.jours_observes + ' jour' + (s.jours_observes > 1 ? 's' : '') + ' d\'activité)' : '') + (s.precedent ? ', comparés aux ' + s.fenetre_jours + ' jours d\'avant.' : '.')
     : 'Depuis le début' + (s.depuis ? ' (' + jjmm(s.depuis) + '/' + String(s.depuis).slice(0, 4) + ')' : '') + ' — <b>' + s.clients_inscrits + ' clients</b> ont une carte.';
 
   document.getElementById('dashContent').innerHTML = `
-    <div class="dash-sous">${sous}</div>
+    <div class="dash-sous">${sous}</div>${noteReglage(s.reglage)}
     <div class="kpi-grid">
       ${kpi('passages', '', a.passages, 'Passages', p.passages)}
       ${kpi('clients', 'bleu', a.clients_actifs, 'Clients venus', p.clients_actifs)}
