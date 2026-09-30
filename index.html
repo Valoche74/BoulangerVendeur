@@ -18,7 +18,7 @@
      jaune au lieu de l'or (les noms --gold* restent : deux cents règles les lisent), Plus Jakarta Sans
      pour les titres et les chiffres. L'affiche promo et l'aperçu Wallet ont leurs propres couleurs. */
   --black:#1B1F3B;--black2:#232849;--black3:#2A3057;
-  --gold:#FF6B2C;--gold2:#FF8A4C;--gold3:#FFC53D;
+  --gold:#FF6B2C;--gold2:#FF8A4C;--gold3:#FF8A4C;   /* 30/09 : --gold3 n'est plus jaune (plus de jaune, 24/09) */
   --green:#22C55E;--red:#EF4444;--amber:#F59E0B;
   --white:#FFFFFF;--muted:#9AA0BF;--muted2:#B9BED6;
   --font-titre:'Plus Jakarta Sans','Inter',sans-serif;
@@ -153,7 +153,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
    précédente, courbe par jour. Inspiré du kit DashStack qu'il a indiqué, aux couleurs de Perify. */
 .kc-chip{width:38px;height:38px;border-radius:12px;background:rgba(255,107,44,.14);color:var(--gold2);display:grid;place-items:center;margin-bottom:10px}
 .kc-chip svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.kc-chip.jaune{background:rgba(255,197,61,.14);color:var(--gold3)}
+.kc-chip.jaune{background:rgba(255,138,76,.14);color:var(--gold3)}
 .kc-chip.vert{background:rgba(34,197,94,.12);color:var(--green)}
 .kc-chip.bleu{background:rgba(96,165,250,.14);color:#93C5FD}
 .kc-chip.rose{background:rgba(244,114,182,.14);color:#F9A8D4}
@@ -1415,7 +1415,12 @@ function kpi(icone, classe, val, lbl, prec){
        + '<div class="kc-val">' + val + '</div><div class="kc-lbl">' + lbl + '</div>' + tend + '</div>';
 }
 
-/* La courbe : barres = passages, trait jaune = scans du QR, trait pointillé = vues de la carte. */
+/* La courbe : barres = passages, trait bleu clair = scans du QR, trait pointillé = vues de la carte.
+   30/09 : elle démarre à reglage.depuis quand il existe (les jours d'avant ne sont pas comptés : pas de faux zéros). */
+function serieDepuis(serie, r){
+  if(!Array.isArray(serie)) return [];
+  return (r && r.depuis) ? serie.filter(p => String(p.jour) >= r.depuis) : serie;
+}
 function courbe(serie){
   const n = serie.length; if(!n) return '';
   const W = 600, H = 130, max = Math.max(1, ...serie.map(p => Math.max(p.passages, p.scans, p.vues)));
@@ -1428,8 +1433,8 @@ function courbe(serie){
   const etiq = '<text x="2" y="' + (y(max) - 2 < 10 ? 10 : y(max) - 2) + '" fill="rgba(255,255,255,.45)" font-size="10">' + max + '</text>';
   const milieu = serie[Math.floor(n / 2)].jour;
   return '<div class="chart"><div class="chart-h"><div class="chart-t">Par jour</div>'
-       + '<div class="chart-l"><span><i style="background:#FF6B2C"></i>passages</span><span><i style="background:#FFC53D"></i>scans QR</span><span><i style="background:rgba(255,255,255,.7)"></i>vues carte</span></div></div>'
-       + '<svg viewBox="0 0 ' + W + ' ' + (H + 4) + '" preserveAspectRatio="none" aria-hidden="true">' + grille + barres + ligne('scans', '#FFC53D') + ligne('vues', 'rgba(255,255,255,.7)', true) + etiq + '</svg>'
+       + '<div class="chart-l"><span><i style="background:#FF6B2C"></i>passages</span><span><i style="background:#B8BCD0"></i>scans QR</span><span><i style="background:rgba(255,255,255,.7)"></i>vues carte</span></div></div>'
+       + '<svg viewBox="0 0 ' + W + ' ' + (H + 4) + '" preserveAspectRatio="none" aria-hidden="true">' + grille + barres + ligne('scans', '#B8BCD0') + ligne('vues', 'rgba(255,255,255,.7)', true) + etiq + '</svg>'
        + '<div class="chart-x"><span>' + jjmm(serie[0].jour) + '</span><span>' + jjmm(milieu) + '</span><span>' + jjmm(serie[n - 1].jour) + '</span></div></div>';
 }
 
@@ -1462,7 +1467,7 @@ function renderDash(){
       ${kpi('scan', 'jaune', a.scans_qr, 'Scans du QR', p.scans_qr)}
       ${kpi('vue', 'jaune', a.vues_carte, 'Cartes ouvertes', p.vues_carte)}
     </div>
-    ${courbe(s.serie)}
+    ${courbe(serieDepuis(s.serie, s.reglage))}
 
     <div class="sec">Le programme</div>
     <div class="kpi-grid">

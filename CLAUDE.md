@@ -18,7 +18,7 @@ développeur : écris-lui en français simple.
 - **Le commerce vient du registre** (`commerces.json` du site client, lu par `BA.pret()`) ; l'adresse
   du serveur est `AS_URL`. Aucune valeur en dur par commerce.
 - **Sombre, lisible en plein jour, d'une main** : direction visuelle du 23/09 — nuit `#1B1F3B`, orange
-  `#FF6B2C` / `#FF8A4C`, jaune `#FFC53D` pour les codes et chiffres, Plus Jakarta Sans pour titres et
+  `#FF6B2C` / `#FF8A4C` (plus de jaune depuis le 24/09 : `--gold3` vaut l'orange clair), Plus Jakarta Sans pour titres et
   chiffres, Inter pour le texte ; boutons ≥ 44 px ; icônes en SVG dans des pastilles (plus d'emoji
   pour les nouveaux éléments).
 - **Aucun chiffre inventé** : un compteur absent s'affiche à zéro, une tendance sans point de
