@@ -1,0 +1,6 @@
+# Fichiers gardés dans le dépôt mais jamais publiés (30/10).
+# Notes de travail : CLAUDE.md (consignes des sessions Claude).
+*.md
+# Ancien tableau de bord (juin) relié à rien : il n'envoie pas le secret vendeur, donc ne marche plus depuis le
+# 08/09, et chargeait encore ses polices chez Google. Les cadeaux se valident dans l'espace (index.html) et à la caisse.
+boulanger.html

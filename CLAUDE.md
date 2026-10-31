@@ -6,7 +6,9 @@ Ce que **le gérant** utilise derrière son comptoir, sur son téléphone, d'une
   des clients, avec un aperçu fidèle de la carte Wallet), Promo (le fabricant d'affiche + e-mail).
 - `calculateur.html` + `calculateur-moteur.js` — « est-ce que ça me rapporte ? », avec les chiffres du
   commerce (action `mesures`), jamais un chiffre inventé.
-- `kiosque.html` — la borne de caisse (annexe) ; `configurateur.html`, `boulanger.html` : anciens.
+- `kiosque.html` — la borne de caisse (annexe) ; `configurateur.html`, `boulanger.html` : anciens
+  (`boulanger.html` n'est plus publié : `.vercelignore`, 30/10 — n'y faire aucun lien).
+- Polices servies par le site (`assets/polices/`, 30/10), jamais par Google : voir le commentaire en tête de page.
 
 HTML / CSS / JS simple, sans framework ni build. Hébergé sur Vercel (déploiement à chaque push sur
 `main`). Un seul commerce en production : Le Bap's. Le propriétaire, Valentin CARRILLO, n'est pas
