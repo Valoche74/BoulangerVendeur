@@ -738,7 +738,12 @@ function config(){
     }},
     config_commerce:{
       COMMERCE:C.nom||"", SS_ID:"À CRÉER", CARTE_PREFIXE:prefixe(),
-      CLIENT_CARD_URL:`https://boulangerieavisclient.vercel.app/card.html?c=${k}&type=${C.metier||"boulangerie"}`,
+      /* 30/10/2026 — un NOUVEAU commerce n'a aucun ancien client : sa carte s'ouvre directement sur carte.perify.app
+         (l'ancienne adresse boulangerieavisclient.vercel.app ne sert plus qu'à reprendre la mémoire des clients de
+         Falman, cf. le relais de site client). ?type= reste le MÉTIER (thème,
+         roue, catalogue) — ⚠️ et la mémoire du téléphone est rangée par ?type= : un 2e commerce d'un métier déjà
+         présent (une 2e boulangerie) est BLOQUÉ tant que la mémoire n'est pas rangée par commerce. */
+      CLIENT_CARD_URL:`https://carte.perify.app/card.html?c=${k}&type=${C.metier||"boulangerie"}`,
       VALIDATOR_URL:`https://boulangerie-vendeur.vercel.app/kiosque.html?c=${k}`
     },
     /* ⚠️ Thème DÉRIVÉ d'une seule couleur. Les thèmes de theme.js ont été
