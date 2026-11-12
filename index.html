@@ -1286,19 +1286,24 @@ function validateCode(){
   );
 }
 
+/* 12/11/2026 — « Validé » ne s'affiche QUE si le serveur confirme (status « marked », la réponse des deux
+   serveurs quand le coupon est bien brûlé). Avant, une coupure réseau ou un refus affichait aussi « Validé » :
+   le coupon restait valable et le client pouvait le réutiliser. Sinon l'écran du coupon reste là, avec
+   un message pour réessayer. */
 function confirmUsed(){
   const url = AS_URL + '?action=use&code=' + encodeURIComponent(currentCode);
   xhrGet(url,
     function(data){
+      if(!data || data.status !== 'marked'){
+        showErr('Pas enregistré : le cadeau n’est pas marqué comme remis. Réessayez.' + (data && data.status === 'invalid' ? ' (code introuvable)' : ''));
+        return;
+      }
       dashLoaded = false;
       resetVal();
       flash('✓ Validé avec succès !');
     },
     function(err){
-      // On reset quand même côté UI (le code est marqué utilisé côté serveur)
-      dashLoaded = false;
-      resetVal();
-      flash('✓ Validé (vérifiez le dashboard)');
+      showErr('Pas enregistré : vérifiez la connexion, puis appuyez de nouveau sur « Gain remis au client ».');
     }
   );
 }
@@ -2606,6 +2611,12 @@ window.remettre = function(code, btn){
   btn.textContent = '…';
   xhrGet(AS_URL + '?action=use&code=' + encodeURIComponent(code),
     function(d){
+      if(!d || d.status !== 'marked'){             // 12/11/2026 : « Remis » seulement si le serveur confirme
+        btn.disabled = false;
+        btn.innerHTML = ico('check') + 'Remettre';
+        showErr('Pas enregistré : le cadeau n’est pas marqué comme remis. Réessayez.');
+        return;
+      }
       dashLoaded = false;
       btn.innerHTML = ico('check') + 'Remis';
       const it = btn.closest('.cl-item');
