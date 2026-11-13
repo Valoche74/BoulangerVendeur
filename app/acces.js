@@ -47,9 +47,11 @@
     if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Téléphone Android' : 'Tablette Android';
     return 'Ordinateur';
   }
+  /** Safari d'un iPhone OU d'un iPad (relecture du 13/11 : l'iPad se présente comme un « Macintosh » tactile, et sa
+      tablette de comptoir a, elle aussi, une appli d'écran d'accueil séparée de Safari). Jamais Chrome, Firefox, Edge. */
   function estIphoneSafari() {
     var ua = navigator.userAgent || '';
-    var ios = /iPhone|iPod/.test(ua);
+    var ios = /iPhone|iPod|iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
     return ios && !/CriOS|FxiOS|EdgiOS/.test(ua);
   }
   function estInstallee() {
@@ -132,14 +134,25 @@
       + '<div class="surface serree apercu-ecran mt-16"><img src="icones/icone-192.png" alt=""><div><div class="t">Perify Pro</div><div class="s">Espace commerçant</div></div></div>'
       + blocs
       + '<div class="encart">' + PP.ico('telephone') + '<span>' + (depuisPlus
-        ? 'Sur iPhone, l’appli posée sur l’écran d’accueil ne voit pas ce que Safari garde : il faudra la relier une fois avec votre code d’accès.'
-        : 'Faites-le <b>avant</b> de taper votre code : sur iPhone, l’appli posée sur l’écran d’accueil ne voit pas ce que Safari garde.') + '</span></div>'
+        ? 'Sur iPhone et iPad, l’appli posée sur l’écran d’accueil ne voit pas ce que Safari garde : ouvrez-la, touchez « Scanner un code de liaison », et scannez le code qu’affiche ce téléphone dans « Relier un autre téléphone ».'
+        : 'Faites-le <b>avant</b> de taper votre code : sur iPhone et iPad, l’appli posée sur l’écran d’accueil ne voit pas ce que Safari garde.') + '</span></div>'
       + '</div>';
   };
   function ecranInstaller() {
     PP.montrer('<div class="app"><main class="contenu entree">' + A.htmlInstaller(false)
       + '<button class="bouton second mt-24" data-act="continuer-sans-installer">Continuer sans installer</button></main></div>', { nom: 'E0', titre: 'Installer' });
   }
+  /* Un lien d'installation ouvert dans Safari, sur un iPhone ou un iPad (relecture du 13/11) : il relierait Safari,
+     jamais l'appli posée sur l'écran d'accueil (sa mémoire est à part). On le dit AVANT : installer d'abord, puis, dans
+     l'appli, « Scanner un code de liaison ». Le lien n'est pas consommé ici : « Continuer dans Safari » le reprend. */
+  function ecranInstallerLien(jeton) {
+    jetonInstallation = jeton;
+    PP.habillage.appliquer('perify');
+    PP.montrer('<div class="app"><main class="contenu entree">' + A.htmlInstaller(false).replace(/<div class="encart">[\s\S]*?<\/div><\/div>$/, '</div>')
+      + '<div class="encart">' + PP.ico('qr') + '<span>Vous voulez l’icône sur l’écran d’accueil ? Installez d’abord Perify Pro, ouvrez-la, touchez <b>« Scanner un code de liaison »</b>, puis scannez de nouveau le code de l’autre téléphone.</span></div>'
+      + '<button class="bouton geant perify mt-24" data-act="lien-dans-safari">Continuer dans Safari</button></main></div>', { nom: 'E0-lien', titre: 'Installer' });
+  }
+  PP.actions['lien-dans-safari'] = function () { if (jetonInstallation) relierParLien(jetonInstallation); else ecranCodeAcces(); };
   PP.actions.installer = function () {
     if (!invite) return;
     invite.prompt();
@@ -151,6 +164,7 @@
   };
 
   /* ═══ E1 à E4 — le code d'accès (une fois par téléphone) ════════════════ */
+  var jetonInstallation = null;   // le jeton d'un lien d'installation lu (#i=…), en mémoire seulement
   var relier = null;     // { par: 'code' | 'installation', code_acces | installation, commerce, code_existe } — en mémoire seulement
   var pauseE1 = null;    // fin de la pause (ms)
 
@@ -160,13 +174,15 @@
     PP.habillage.appliquer('perify');
     var plusieurs = A.boutiques().length > 0;
     var alerteStock = PP.stock.ok ? '' : '<div class="alerte neutre">' + PP.ico('alerte') + '<div><div class="t">Ce téléphone ne garde rien</div><div class="s">Il faudra retaper le code d’accès à chaque visite. Vérifiez que la navigation privée est désactivée.</div></div></div>';
+    var alerteCamera = !etat.camera ? '' : '<div class="alerte neutre" role="alert">' + PP.ico('camera') + '<div><div class="t">' + (etat.camera === 'bloquee' ? 'La caméra est bloquée' : 'Pas de caméra disponible') + '</div><div class="s">'
+      + (etat.camera === 'bloquee' ? 'Autorisez la caméra dans les réglages du téléphone, puis réessayez. Ou tapez votre code d’accès.' : 'Tapez votre code d’accès, ou ouvrez le lien de Perify sur ce téléphone.') + '</div></div></div>';
     PP.montrer('<div class="app"><main class="contenu entree">'
       + (plusieurs ? PP.nav('Retour', 'plus/boutiques', '') : '')
       + '<div class="marque-perify"><img src="icones/perify-logo-nuit.png" alt="Perify"></div>'
       + '<div class="clef">' + PP.ico('boutique') + '</div>'
       + '<h1>Votre espace commerçant</h1>'
       + '<p class="chapo">Tapez le code d’accès que Perify vous a remis. Vous ne le taperez qu’une fois sur ce téléphone.</p>'
-      + alerteStock
+      + alerteStock + alerteCamera
       + '<div id="e1-alerte"></div>'
       + '<form data-envoi="code-acces" novalidate>'
       + '<label class="libelle-champ" for="code-acces">Code d’accès</label>'
@@ -177,7 +193,8 @@
       + '<button class="bouton geant perify mt-24" type="submit" id="e1-bouton">Ouvrir ma boutique</button>'
       + '</form>'
       + '<a class="bouton-texte discret mt-8" href="mailto:contact@perify.app?subject=Code%20d%E2%80%99acc%C3%A8s%20perdu">Code perdu ? Écrivez à Perify</a>'
-      + '<div class="encart">' + PP.ico('lien') + '<span>Vous avez reçu un lien de Perify ? Ouvrez-le sur ce téléphone.</span></div>'
+      + '<button class="bouton second mt-16" data-act="scanner-liaison">' + PP.ico('qr') + 'Scanner un code de liaison</button>'
+      + '<div class="encart">' + PP.ico('lien') + '<span>Un autre téléphone de la boutique est déjà relié ? Dans « Plus », il affiche un code de liaison : scannez-le ici, puis tapez le code à 4 chiffres. Un lien reçu de Perify s’ouvre sur ce téléphone.</span></div>'
       + '<div class="rassure">' + PP.ico('cadenas') + '<span>Le code d’accès ne reste pas sur ce téléphone. Ensuite, chaque jour, vous taperez seulement 4 chiffres.</span></div>'
       + '</main></div>', { nom: 'E1', titre: 'Code d’accès', focus: false });
     var champ = document.getElementById('code-acces');
@@ -380,8 +397,10 @@
         sauver(m);
         sessionEcrire(cle, r.session);
         relier = null;
+        jetonInstallation = null;
         try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {}); } catch (e) {}
         choisir(cle);
+        versComptoirSiBoutiques();
         return ouverture();
       }
       pave.occupe = false;
@@ -426,7 +445,6 @@
       + '<button class="bouton geant perify" data-act="lien-reessayer">' + PP.ico('actualiser') + 'Réessayer</button></main></div>', { nom: 'E4-lien', titre: 'Pas de connexion' });
     jetonInstallation = jeton;
   }
-  var jetonInstallation = null;
   PP.actions['lien-reessayer'] = function () { if (jetonInstallation) relierParLien(jetonInstallation); };
   PP.actions['vers-code-acces'] = function () { ecranCodeAcces(); };
 
@@ -437,6 +455,15 @@
       + '<div class="s"><span class="tourne" aria-hidden="true"></span>Vérification du lien…</div></div></div>', { nom: 'E2-lien', titre: 'Vérification' });
     PP.appel('acces_relier', { installation: jeton }).then(function (r) { reponseRelier(r, { par: 'installation', installation: jeton }); });
   }
+  A.relierParLien = relierParLien;
+
+  /** Ouvrir une boutique mène toujours au comptoir quand on venait de « Changer de boutique » (relecture du 13/11 : on
+      retombait sur la liste des boutiques, et un débutant croyait que rien n'avait marché). */
+  function versComptoirSiBoutiques() {
+    var h = String(location.hash || '').replace(/^#\/?/, '');
+    if (h === 'plus/boutiques' || h === '') { try { history.replaceState(null, '', '#/comptoir'); } catch (e) { location.hash = '#/comptoir'; } }
+  }
+  A.versComptoirSiBoutiques = versComptoirSiBoutiques;
 
   /* ═══ E9 — la boutique est encore sur l'ancien espace (Falman) ═════════ */
   function ecranAncienEspace(r) {
@@ -505,11 +532,13 @@
         if (r.commerce) A.majIdentite(r.commerce);
         dernierCode = '';
         var att = attenteDeverrou; attenteDeverrou = null;
+        if (!att) versComptoirSiBoutiques();
         return ouverture(function () { PP.route(); if (att) att(true); });
       }
       pave.occupe = false;
       if (r.code === 'code_faux') {
         pave.erreur();
+        if (r.dernier_essai) return message('Code faux. Au prochain code faux, ce téléphone devra être relié de nouveau.');
         var n = Number(r.essais_restants);
         return message(n >= 1 ? 'Code faux. Encore ' + n + ' essai' + (n > 1 ? 's' : '') + ', puis une pause.' : 'Code faux.');
       }
@@ -576,6 +605,56 @@
   };
   A.verrouiller = function (opt) { return ecranVerrou(opt); };
 
+  /* ═══ Le code à 4 chiffres redemandé pour un geste sensible (relecture du 13/11) ═══
+     Le serveur répond `code_redemande` quand la session a plus de 10 minutes et que le geste est sensible (fichier
+     client, affiche à tous, message des cartes, retirer un téléphone, relier un téléphone). Une feuille s'ouvre AU-DESSUS
+     de l'écran (rien de ce qui est tapé ou choisi n'est perdu) ; les 4 chiffres ouvrent une session neuve, et le geste
+     repart tout seul (le serveur ne l'avait pas fait). « Annuler » : rien n'est fait. → Promise<boolean> */
+  var confirmation = null;
+  A.confirmerCode = function () {
+    if (confirmation) return confirmation.promesse;
+    var resoudre;
+    var promesse = new Promise(function (ok) { resoudre = ok; });
+    confirmation = { promesse: promesse };
+    var avant = PP.paveActif;
+    var fin = function (v) {
+      var a = document.getElementById('pp-code-voile'), f = document.getElementById('pp-code');
+      if (a) a.remove(); if (f) f.remove();
+      PP.paveActif = avant;
+      confirmation = null;
+      resoudre(v);
+    };
+    var id = PP.etat.identite || {};
+    var pave = new PP.Pave({ longueur: 4, masque: true, serre: true, libelle: 'Code à 4 chiffres', quandComplet: function (code, p) {
+      p.occupe = true; p.majCases(); dire('<span class="tourne" aria-hidden="true"></span>&nbsp;Vérification…', true);
+      PP.appel('acces_ouvrir', { appareil: (PP.etat.appareil || {}).jeton || '', code: code }).then(function (r) {
+        if (r.status === 'ok' && r.session) {
+          sessionEcrire(PP.etat.cle, r.session);
+          if (r.commerce) A.majIdentite(r.commerce);
+          return fin(true);
+        }
+        p.occupe = false;
+        if (r.code === 'code_faux') { p.erreur(); return dire(r.dernier_essai ? 'Code faux. Au prochain code faux, ce téléphone devra être relié de nouveau.' : 'Code faux.' + (Number(r.essais_restants) >= 1 ? ' Encore ' + Number(r.essais_restants) + ' essai' + (Number(r.essais_restants) > 1 ? 's' : '') + ', puis une pause.' : '')); }
+        if (r.code === 'pause') { p.vider(); p.activer(false); return dire('Trop d’essais. Réessayez dans ' + PP.date.duree(r.reste_sec) + '.'); }
+        if (r.code === 'appareil_retire' || r.code === 'appareil_inconnu' || r.code === 'code_absent') { fin(false); return ecranPlusRelie(r.code === 'code_absent' ? 'code_absent' : (r.pourquoi || '')); }
+        p.vider();
+        dire(r.reseau ? 'Pas de réseau. Vérifiez le Wi-Fi ou les données mobiles, puis retapez le code.' : 'Un souci est survenu. Réessayez.');
+      });
+    } });
+    function dire(t, info) { var m = document.getElementById('pp-code-message'); if (m) { m.className = 'message' + (info ? ' info' : ''); m.innerHTML = t; } }
+    var v = document.createElement('div'); v.className = 'voile code'; v.id = 'pp-code-voile';
+    var f = document.createElement('div'); f.className = 'feuille code'; f.id = 'pp-code'; f.setAttribute('role', 'dialog'); f.setAttribute('aria-modal', 'true');
+    f.innerHTML = '<div class="poignee"></div><div class="verrou">' + PP.tuileLogo(id, 'moyen')
+      + '<div class="t centre">Tapez votre code à 4 chiffres</div><p class="consigne">Pour ce geste, le code est redemandé.</p>'
+      + pave.htmlCasesBloc() + '<div class="message" id="pp-code-message" aria-live="assertive"></div>' + pave.htmlTouches()
+      + '<button class="bouton-texte discret mt-8" data-act="code-annuler">Annuler</button></div>';
+    document.body.appendChild(v); document.body.appendChild(f);
+    var t = f.querySelector('.t'); if (t) { t.setAttribute('tabindex', '-1'); try { t.focus({ preventScroll: true }); } catch (e) {} }
+    confirmation.annuler = function () { fin(false); };
+    return promesse;
+  };
+  PP.actions['code-annuler'] = function () { if (confirmation && confirmation.annuler) confirmation.annuler(); };
+
   /** Verrouiller (Plus) : la session se ferme, les 4 chiffres seront demandés. */
   A.fermerSession = function () {
     var cle = PP.etat.cle;
@@ -592,6 +671,7 @@
     if (m) {
       var jeton = m[1];
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+      if (estIphoneSafari() && !estInstallee()) return ecranInstallerLien(jeton);
       return relierParLien(jeton);
     }
     var mem = memoire();

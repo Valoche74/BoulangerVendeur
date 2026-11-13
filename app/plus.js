@@ -26,6 +26,7 @@
       + '<h2 class="titre-section">Outils</h2><div class="liste">'
       + ligne('plus/calculateur', 'calcul', 'Est-ce que ça me rapporte ?', 'Le calculateur, en touchant des choix')
       + ligne('', 'telecharger', 'Votre fichier client', 'Un tableau Excel de vos clients', '', 'exporter')
+      + ligne('inscrire', 'ajouter', 'Inscrire un nouveau client', 'Une carte neuve, que le client scanne')
       + (id.antigaspi ? ligne('plus/anti-gaspi', 'panier', 'Paniers anti-gaspi', 'Vos invendus du jour, à petit prix') : '')
       + ligne('plus/lecteur', 'sanscontact', 'Lecteur de cartes sans contact', 'Pour une tablette de caisse', '<span class="v doux">' + (lecteur ? 'Allumé' : 'Éteint') + '</span>')
       + '</div>'
@@ -85,9 +86,13 @@
         + '<div class="liste mt-16">' + l.map(function (a) {
           var c = a.ce_telephone || a.id === moi;
           var vu = a.vu_le ? ' · vu ' + PP.date.relatif(a.vu_le) : '';
-          return '<div class="rangee"><div class="vignette icone">' + ico('telephone') + '</div><div><div class="t">' + esc(a.nom || 'Téléphone') + '</div><div class="s">Relié le ' + PP.date.jjmm(a.relie_le) + esc(vu) + (a.par === 'installation' ? ' · par un lien' : '') + '</div></div>'
+          // Relecture du 13/11 : les codes faux des 30 derniers jours se voient (quelqu'un essaie-t-il des codes ?).
+          var nf = Math.max(0, Number(a.codes_faux_30j) || 0);
+          var faux = nf ? '<div class="ligne-erreur">' + nf + ' code' + (nf > 1 ? 's' : '') + ' faux ces 30 jours</div>' : '';
+          return '<div class="rangee"><div class="vignette icone">' + ico('telephone') + '</div><div><div class="t">' + esc(a.nom || 'Téléphone') + '</div><div class="s">Relié le ' + PP.date.jjmm(a.relie_le) + esc(vu) + (a.par === 'installation' ? ' · par un lien' : '') + '</div>' + faux + '</div>'
             + (c ? '<span class="etiquette marque">Ce téléphone</span>' : '<button class="bouton petit danger" data-act="p-retirer" data-id="' + esc(a.id) + '" data-nom="' + esc(a.nom || 'Téléphone') + '">Retirer</button>') + '</div>';
         }).join('') + '</div>'
+        + '<p class="note">Un téléphone que vous ne connaissez pas, ou beaucoup de codes faux ? Retirez-le, puis changez le code à 4 chiffres.</p>'
         + '<button class="bouton second mt-24" data-act="aller" data-route="plus/relier">' + ico('qr') + 'Relier un autre téléphone</button>', { nav: PP.nav('Plus', 'plus', '') }), { nom: 'P2', titre: 'Téléphones reliés' });
     });
   };
@@ -123,7 +128,7 @@
       var fin = Date.parse(r.expire_le) || (Date.now() + 15 * 60000);
       P.lien = lien;
       PP.montrer(PP.cadre('plus', '<h1 class="titre-ecran">Relier un autre téléphone</h1>'
-        + '<div class="encart">' + ico('telephone') + '<span>Sur l’autre téléphone : scannez ce code, puis tapez le code à 4 chiffres de la boutique.</span></div>'
+        + '<div class="encart">' + ico('telephone') + '<span>Sur l’autre téléphone, ouvrez Perify Pro, touchez « Scanner un code de liaison » et visez ce code. Puis tapez le code à 4 chiffres de la boutique. Sans l’appli, l’appareil photo l’ouvre aussi.</span></div>'
         + '<div class="qr mt-24" id="p-qr" role="img" aria-label="QR code du lien d’installation"></div>'
         + '<p class="compte-rebours" id="p-rebours" aria-live="off"></p>'
         + '<div class="pile mt-16"><button class="bouton second" data-act="p-copier">' + ico('copier') + 'Copier le lien</button></div>'
@@ -200,7 +205,9 @@
     PP.comptoir.aRemettre = null; PP.comptoir.carte = null; PP.comptoir.catalogue = null; PP.comptoir.panneau = null;
     PP.chiffres.oublier(); PP.annonces.oublier();
     if (PP.calculateur) PP.calculateur.oublier();
-    if (PP.acces.session()) { location.hash = '#/comptoir'; PP.route(); } else PP.acces.verrouiller();
+    // Ouvrir une boutique mène toujours au comptoir, même après ses 4 chiffres (relecture du 13/11).
+    if (PP.acces.session()) { location.hash = '#/comptoir'; PP.route(); }
+    else { try { history.replaceState(null, '', '#/comptoir'); } catch (e) {} PP.acces.verrouiller(); }
   };
 
   /* ═══ P6 — mettre sur l'écran d'accueil ═══════════════════════════════ */

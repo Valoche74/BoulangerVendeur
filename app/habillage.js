@@ -33,11 +33,14 @@
   }
   function contraste(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
   var SUCCES = '#1A7F37', REFUS = '#B42318';
+  /* « Pas enregistré » (R4) a son fond à lui : la nuit Perify (relecture du 13/11 — son rose pâle d'avant se confondait
+     avec la teinte claire de « Déjà validé », à 1,03:1). Gardé ici pour que la garde le compare aussi. */
+  var PAS_ENREGISTRE = '#1B1F3B';
 
   /** La couleur de « Déjà validé par le client » : la teinte claire du commerce, sauf si elle se confondait avec le
-      vert ou le rouge des résultats (moins de 3:1 entre les deux fonds) ; alors une surface blanche. */
+      vert, le rouge ou la nuit de « Pas enregistré » (moins de 3:1 entre les deux fonds) ; alors une surface blanche. */
   function fondDejaValide(h) {
-    return (contraste(h.marqueClair, SUCCES) >= 3 && contraste(h.marqueClair, REFUS) >= 3) ? h.marqueClair : '#FFFFFF';
+    return (contraste(h.marqueClair, SUCCES) >= 3 && contraste(h.marqueClair, REFUS) >= 3 && contraste(h.marqueClair, PAS_ENREGISTRE) >= 3) ? h.marqueClair : '#FFFFFF';
   }
 
   PP.habillage = {
@@ -56,6 +59,7 @@
     },
     banniere: function (metier) { return BANNIERE[metier] ? 'https://wallet-service-chi.vercel.app/api/bandeau?type=' + encodeURIComponent(metier) : ''; },
     contraste: contraste,
-    fondDejaValide: fondDejaValide
+    fondDejaValide: fondDejaValide,
+    FOND_PAS_ENREGISTRE: PAS_ENREGISTRE
   };
 })();

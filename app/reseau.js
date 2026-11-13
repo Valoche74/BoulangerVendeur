@@ -80,6 +80,15 @@
           return { status: 'error', code: 'rejouer' };   // l'écran demande d'appuyer de nouveau
         });
       }
+      /* Relecture du 13/11 : un geste sensible (fichier client, affiche, message des cartes, téléphones) avec une session
+         de plus de 10 minutes → `code_redemande`. Le serveur n'a RIEN fait : les 4 chiffres sont redemandés dans une feuille
+         au-dessus de l'écran, puis le même geste repart une fois, avec la session neuve. Annulé : « appuyez de nouveau ». */
+      if (r.code === 'code_redemande' && SANS_COMMERCE.indexOf(action) < 0 && !opt.dejaRejoue && PP.acces && PP.acces.confirmerCode) {
+        return PP.acces.confirmerCode().then(function (ok) {
+          if (!ok) return { status: 'error', code: 'rejouer' };
+          return PP.appel(action, donnees, { delai: opt.delai, fichier: opt.fichier, dejaRejoue: true });
+        });
+      }
       return r;
     });
   };

@@ -56,7 +56,8 @@
     var d = decimales == null ? (Math.round(n) === n ? 0 : 2) : decimales;
     return Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) + ' €';
   };
-  PP.codeLisible = function (code) { var c = String(code || ''); return c.length === 6 ? c.slice(0, 3) + ' ' + c.slice(3) : c; };
+  // Une espace insécable entre les deux groupes : « 123 456 » ne se coupe jamais en deux lignes (relecture du 13/11).
+  PP.codeLisible = function (code) { var c = String(code || ''); return c.length === 6 ? c.slice(0, 3) + '\u00A0' + c.slice(3) : c; };
 
   /* ── Les pictogrammes (traits 24 × 24, couleur du texte) ── */
   var P = {
@@ -351,5 +352,9 @@
     }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
   } catch (e) {}
 
-  PP.estTablette = function () { return window.matchMedia && window.matchMedia('(min-width: 900px)').matches; };
+  /* La mise en page « caisse » de la tablette (relecture du 13/11) : assez large ET assez haute — un grand iPhone tourné à
+     l'horizontale ou une tablette très basse gardent la mise en page du téléphone (le bouton du résultat restait caché) ;
+     une tablette tenue debout (744 px et plus, 900 px de haut) a la sienne. La même requête que dans app.css. */
+  PP.REQUETE_TABLETTE = '(min-width: 900px) and (min-height: 640px), (min-width: 744px) and (min-height: 900px)';
+  PP.estTablette = function () { return !!(window.matchMedia && window.matchMedia(PP.REQUETE_TABLETTE).matches); };
 })();

@@ -41,21 +41,25 @@
       + '<a class="bouton petit" href="mailto:contact@perify.app">' + ico('courrier') + 'Écrire à Perify</a></div></div>';
     var listeAR = (!inactif && C.aRemettre && C.aRemettre.length) ? C.aRemettre : [];
     var nfc = PP.lecteur && PP.lecteur.allume() ? '<span class="nfc">' + ico('sanscontact') + 'Sans contact : prêt</span>' : '';
-    var tuile = inactif ? '' : '<button class="tuile-scan' + (listeAR.length && !PP.estTablette() ? ' compacte' : '') + '" data-act="scanner">' + ico('scan') + '<span class="grand">Scanner</span><span class="petit">La carte du client ou son code cadeau</span>' + nfc + '</button>';
-    var bas = '<div id="c-bas">' + (C.enAttente ? '<div class="etat-verif">' + '<span class="tourne" aria-hidden="true"></span>' + esc(C.enAttente) + '</div>' : C.pave.htmlTouches()) + '</div>';
+    var tuile = inactif ? '' : '<button class="tuile-scan' + (listeAR.length && !PP.estTablette() ? ' compacte' : '') + '" id="c-tuile" data-act="scanner">' + ico('scan') + '<span class="grand">Scanner</span><span class="petit">La carte du client ou son code cadeau</span>' + nfc + '</button>';
+    // Le réseau est revenu avec un code déjà tapé : un bouton le vérifie (jamais tout seul, relecture du 13/11).
+    var verif = (!inactif && !C.enAttente && opt.verifier && C.pave.code.length === 6) ? '<button class="bouton geant verifier" data-act="c-reessayer">' + ico('check') + 'Vérifier ce code cadeau</button>' : '';
+    var bas = '<div id="c-bas">' + (C.enAttente ? '<div class="etat-verif">' + '<span class="tourne" aria-hidden="true"></span>' + esc(C.enAttente) + '</div>' : verif + C.pave.htmlTouches()) + '</div>';
+    // Un client sans carte : l'inscrire, depuis le comptoir (relecture du 13/11 ; avant, seulement après une carte inconnue).
+    var inscrire = inactif ? '' : '<button class="bouton-texte lien-inscrire" data-act="aller" data-route="inscrire">' + ico('ajouter') + 'Carte neuve ? Inscrire le client</button>';
 
     if (PP.estTablette()) {
       var droite = C.panneau ? panneauResultat(C.panneau) : (PP.tablette ? PP.tablette.journalHtml() : '');
       PP.montrer('<div class="app tablette-comptoir">' + PP.entete() + '<main class="caisse">'
-        + '<div class="colonne-scan">' + alerte + tuile + blocARemettre(listeAR) + '</div>'
+        + '<div class="colonne-scan">' + alerte + tuile + '<div id="c-ar">' + blocARemettre(listeAR) + '</div>' + inscrire + '</div>'
         + '<div class="bloc-code"><h1 class="t">' + (inactif ? 'Code cadeau' : 'Ou tapez le code cadeau') + '</h1>' + C.pave.htmlCasesBloc() + bas + '</div>'
         + '<div class="colonne-droite" id="c-droite">' + droite + '</div>'
         + '</main>' + PP.onglets('comptoir') + '</div>', { nom: 'comptoir', titre: 'Comptoir', focus: false });
       if (C.panneau && C.panneau.apres) C.panneau.apres();
     } else {
-      PP.montrer(PP.cadre('comptoir', alerte + blocARemettre(listeAR) + tuile
+      PP.montrer(PP.cadre('comptoir', alerte + '<div id="c-ar">' + blocARemettre(listeAR) + '</div>' + tuile
         + '<h1 class="ou' + (listeAR.length ? ' serre' : '') + '">' + (inactif ? 'Code cadeau' : 'ou tapez le code cadeau') + '</h1>'
-        + C.pave.htmlCasesBloc() + bas, { classeContenu: 'comptoir' }), { nom: 'comptoir', titre: 'Comptoir', focus: false });
+        + C.pave.htmlCasesBloc() + bas + inscrire, { classeContenu: 'comptoir' }), { nom: 'comptoir', titre: 'Comptoir', focus: false, garderDefilement: !!opt.garderDefilement });
     }
     if (!inactif) relireARemettre();
   };
@@ -64,8 +68,9 @@
     if (!liste.length) return '';
     var n = liste.length;
     var lignes = liste.slice(0, 2).map(function (c, i) { return ligneARemettre(c, i); }).join('');
+    // « Voir tout » : toujours quand il y en a plus de 2 ; sur un écran court (les lignes s'y cachent), toujours aussi.
     return '<section class="a-remettre" aria-label="Cadeaux à remettre"><div class="tete">' + ico('cadeau') + '<span class="t">' + n + ' cadeau' + (n > 1 ? 'x' : '') + ' à remettre</span>'
-      + (n > 2 ? '<button class="bouton-texte" data-act="aller" data-route="a-remettre">Voir tout</button>' : '<span></span>') + '</div>' + lignes + '</section>';
+      + '<button class="bouton-texte' + (n > 2 ? '' : ' voir-court') + '" data-act="aller" data-route="a-remettre">Voir tout</button></div>' + lignes + '</section>';
   }
   function ligneARemettre(c, i) {
     var min = Math.max(1, Math.round((Number(c.reste_sec) || 0) / 60));
@@ -84,13 +89,33 @@
         relectureEnCours = false;
         var avant = JSON.stringify(C.aRemettre || []);
         C.aRemettre = (r && r.status === 'ok' && Array.isArray(r.cadeaux)) ? r.cadeaux.filter(function (c) { return c && c.code; }) : (r.reseau ? C.aRemettre : null);
-        if (PP.etat.ecran === 'comptoir' && JSON.stringify(C.aRemettre || []) !== avant && C.pave && !C.pave.code && !C.enAttente) C.ecran();
+        if (PP.etat.ecran === 'comptoir' && JSON.stringify(C.aRemettre || []) !== avant && C.pave && !C.pave.code && !C.enAttente) majARemettre();
       });
     };
+    C.relire = lire;   // pour les essais : relire tout de suite
     if (C.aRemettre === null || C.aRemettre === undefined) lire();
     PP.minuteur(lire, C.RELECTURE_MS, true);
   }
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && PP.etat.ecran === 'comptoir' && PP.acces.session()) { C.aRemettre = null; C.ecran(); } });
+  /* Relecture du 13/11 : quand la liste change, seul le bloc « À remettre » est redessiné — le pavé ne bouge pas sous le
+     doigt et le défilement reste où il est (avant, tout le comptoir était redessiné et la page remontait). */
+  function majARemettre() {
+    var bloc = document.getElementById('c-ar');
+    if (!bloc || C.horsLigne || (PP.etat.identite || {}).etat === 'arrete') return;
+    var liste = (C.aRemettre && C.aRemettre.length) ? C.aRemettre : [];
+    bloc.innerHTML = blocARemettre(liste);
+    var t = document.getElementById('c-tuile');
+    if (t && !PP.estTablette()) t.classList.toggle('compacte', liste.length > 0);
+    var ou = document.querySelector('.comptoir .ou');
+    if (ou) ou.classList.toggle('serre', liste.length > 0);
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && PP.etat.ecran === 'comptoir' && PP.acces.session()) { C.aRemettre = null; C.ecran({ code: C.pave ? C.pave.code : '' }); } });
+  /* Le réseau revient pendant que le comptoir dit « Pas de réseau » : l'alerte disparaît, le code déjà tapé reste, et un
+     bouton le vérifie (rien ne part tout seul). Avant, la pastille disait « En ligne » sous une alerte « Pas de réseau ». */
+  window.addEventListener('online', function () {
+    if (!C.horsLigne || PP.etat.ecran !== 'comptoir') return;
+    C.horsLigne = false;
+    C.ecran({ code: C.dernierCode || '', verifier: true });
+  });
 
   PP.actions['ouvrir-a-remettre'] = function (el) {
     var c = (C.aRemettre || [])[Number(el.getAttribute('data-i'))];
@@ -145,12 +170,18 @@
     var le = r.gagne_le ? ', le ' + r.gagne_le : '';
     return p ? verbe + ' par ' + p + le : (r.gagne_le ? verbe + ' le ' + r.gagne_le : '');
   }
+  /** « Fermer » : jamais pendant un enregistrement (relecture du 13/11 — le vendeur passait au client suivant pendant
+      que la réponse du premier arrivait, et elle remplaçait son écran). */
+  function boutonFermer(o) { return o.envoi ? '<span></span>' : '<button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button>'; }
   function panneauResultat(o) {
-    return '<section class="panneau-res r-' + o.ton + '" aria-live="polite"><div class="res-haut"><div class="fermer-l"><button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button></div>'
+    if (o.brut) return o.brut;
+    return '<section class="panneau-res r-' + o.ton + '" aria-live="polite"><div class="res-haut"><div class="fermer-l">' + boutonFermer(o) + '</div>'
       + '<div class="res-icone">' + ico(o.icone) + '</div><h2 class="res-titre" data-focus>' + esc(o.titre) + '</h2><p class="res-consigne">' + o.consigne + '</p></div>'
       + (o.corps ? '<div class="corps">' + o.corps + '</div>' : '') + '<div class="bas">' + o.boutons + '</div></section>';
   }
+  var ecranOp = 0;   // change à chaque résultat affiché ou fermé : une réponse tardive sait si son écran est encore là
   function afficher(o) {
+    ecranOp++;
     if (PP.estTablette()) {
       C.panneau = o;
       if (PP.etat.ecran === 'comptoir' && document.getElementById('c-droite') && C.pave) {
@@ -163,13 +194,17 @@
       } else C.ecran();
       return;
     }
-    PP.montrer('<div class="resultat r-' + o.ton + '"><div class="res-haut"><div class="fermer-l"><button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button></div>'
+    PP.montrer('<div class="resultat r-' + o.ton + '"><div class="res-haut"><div class="fermer-l">' + boutonFermer(o) + '</div>'
       + '<div class="res-icone">' + ico(o.icone) + '</div><h1 class="res-titre">' + esc(o.titre) + '</h1><p class="res-consigne">' + o.consigne + '</p></div>'
       + (o.corps ? '<div class="res-corps"><div class="surface">' + o.corps + '</div></div>' : '')
       + '<div class="res-bas">' + o.boutons + '</div></div>', { nom: o.nom, titre: o.titre });
     if (o.apres) o.apres();
   }
-  C.retour = function () { C.panneau = null; C.enAttente = ''; PP.allerRoute('comptoir'); if (PP.etat.ecran !== 'comptoir') C.ecran(); };
+  C.retour = function () { ecranOp++; C.panneau = null; C.enAttente = ''; PP.allerRoute('comptoir'); if (PP.etat.ecran !== 'comptoir') C.ecran(); };
+  /** La réponse de « Remis au client » / « C'est donné » arrive : son écran d'envoi est-il toujours là ? */
+  function toujoursLa(op) {
+    return op === ecranOp && (PP.etat.ecran === 'R2' || PP.etat.ecran === 'R5-envoi' || (PP.estTablette() && PP.etat.ecran === 'comptoir'));
+  }
   PP.actions['c-fermer'] = function () { C.retour(); };
   PP.actions['client-suivant'] = function () { C.retour(); };
   PP.actions['retaper'] = function () { C.retour(); };
@@ -182,7 +217,7 @@
     var boutons = etat === 'envoi'
       ? '<button class="bouton geant occupe" disabled aria-busy="true"><span class="tourne" aria-hidden="true"></span>Enregistrement…</button><p class="note centre">Un instant : nous enregistrons le code cadeau.</p>'
       : '<button class="bouton geant" data-act="remis-client">' + ico('check') + 'Remis au client</button><button class="bouton-texte discret" data-act="client-suivant">Pas maintenant</button>';
-    afficher({ nom: etat === 'envoi' ? 'R2' : 'R1', ton: 'valide', icone: 'check', titre: 'Code cadeau valide', consigne: 'Donnez le cadeau, puis appuyez sur « Remis au client ».',
+    afficher({ nom: etat === 'envoi' ? 'R2' : 'R1', envoi: etat === 'envoi', ton: 'valide', icone: 'check', titre: 'Code cadeau valide', consigne: 'Donnez le cadeau, puis appuyez sur « Remis au client ».',
       corps: blocCadeau(r.gain, qui(r, PP.accord(r.gain, 'Gagné')), code), boutons: boutons });
   }
   /** L'accord du participe avec le cadeau : « Frites remises », « Tacos remis », « Boisson gagnée ». */
@@ -197,16 +232,23 @@
   PP.majuscule = function (t) { t = String(t || ''); return t.charAt(0).toUpperCase() + t.slice(1); };
   PP.genre = function (gain) { return /^(frites|boisson|tartelette|baguette|pizza|part|formule|viennoiserie|boule|crêpe|gaufre)/i.test(String(gain || '').trim()) ? 'f' : 'm'; };
 
+  /* Chaque envoi garde SON code : si l'écran a changé quand la réponse arrive (tablette : un autre code tapé, un autre
+     onglet), le résultat est dit par un petit bandeau, sans toucher à l'écran du client suivant (relecture du 13/11). */
   PP.actions['remis-client'] = function () {
-    if (!courant) return;
+    if (!courant || courant.envoi) return;
     var code = courant.code, r = courant.r;
     valide(code, r, 'envoi');
+    courant.envoi = true;
+    var op = ecranOp;
     PP.appel('use', { code: code }).then(function (u) {
+      var la = toujoursLa(op);
       if (PP.reseau.marque(u)) {
         PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' ' + PP.accord(r.gain || 'Cadeau', 'remis'), s: 'Code cadeau ' + PP.codeLisible(code), ok: true, type: 'remis' });
+        if (!la) return PP.toast('Code cadeau ' + PP.codeLisible(code) + ' : enregistré.');
         return enregistre(PP.codeLisible(code), (r.gain || 'Cadeau'), r.prenom, 'use');
       }
-      nonEnregistre(u, 'use');
+      if (!la) return PP.toast('Code cadeau ' + PP.codeLisible(code) + ' : pas enregistré. Retapez-le.', true);
+      nonEnregistre(u, 'use', code, r);
     });
   };
 
@@ -224,10 +266,12 @@
       } });
   }
 
-  /* R4 — pas enregistré : le code cadeau peut encore servir */
-  function nonEnregistre(u, par) {
-    var r = courant ? courant.r : {};
-    var code = courant ? courant.code : '';
+  /* R4 — pas enregistré : le code cadeau peut encore servir. Le code et le cadeau sont ceux de L'ENVOI, jamais ceux du
+     résultat affiché à ce moment-là (relecture du 13/11). */
+  function nonEnregistre(u, par, code, r) {
+    r = r || {};
+    code = code || '';
+    courant = { code: code, r: r };
     var consigne = par === 'remis'
       ? (u && u.reseau ? 'Le réseau n’a pas répondu. Le cadeau reste dans « À remettre » : réessayez.' : 'Le serveur n’a pas confirmé. Le cadeau reste dans « À remettre » : réessayez.')
       : u && u.code === 'rejouer' ? 'Le code à 4 chiffres a été redemandé. Le code cadeau peut encore servir : appuyez sur « Réessayer ».'
@@ -244,7 +288,7 @@
     var reste = Math.max(0, Number(r.reste_sec) || 0), fen = Number(r.window_sec) || 3600;
     var min = Math.max(1, Math.ceil(reste / 60));
     var circ = 169.65, dash = (circ * (1 - Math.min(1, reste / fen))).toFixed(1);
-    afficher({ nom: etat === 'envoi' ? 'R5-envoi' : 'R5', ton: 'deja', icone: 'cadeau', titre: 'Déjà validé par le client', consigne: 'Le client l’a validé sur son téléphone. Donnez-lui le cadeau.',
+    afficher({ nom: etat === 'envoi' ? 'R5-envoi' : 'R5', envoi: etat === 'envoi', ton: 'deja', icone: 'cadeau', titre: 'Déjà validé par le client', consigne: 'Le client l’a validé sur son téléphone. Donnez-lui le cadeau.',
       corps: blocCadeau(r.gain, qui(r, PP.accord(r.gain, 'Gagné')), '')
         + '<div class="minuteur"><svg class="rond" viewBox="0 0 64 64" aria-hidden="true"><circle class="fond-rond" cx="32" cy="32" r="27" fill="none" stroke-width="7"/><circle class="arc" cx="32" cy="32" r="27" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="169.65" stroke-dashoffset="' + dash + '" transform="rotate(-90 32 32)"/></svg>'
         + '<div><div class="t">Encore ' + min + ' minute' + (min > 1 ? 's' : '') + '</div><div class="s">Après, le cadeau n’est plus valable.</div></div></div>',
@@ -253,16 +297,21 @@
         : '<button class="bouton geant" data-act="c-est-donne">' + ico('check') + 'C’est donné</button>' });
   }
   PP.actions['c-est-donne'] = function () {
-    if (!courant) return;
+    if (!courant || courant.envoi) return;
     var code = courant.code, r = courant.r;
     dejaValide(code, r, 'envoi');
+    courant.envoi = true;
+    var op = ecranOp;
     PP.appel('remis', { code: code }).then(function (u) {
+      var la = toujoursLa(op);
       if (PP.reseau.marque(u)) {
         PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' ' + PP.accord(r.gain || 'Cadeau', 'remis'), s: 'Validé par le client', ok: true, type: 'remis' });
         C.aRemettre = (C.aRemettre || []).filter(function (c) { return c.code !== code; });
+        if (!la) return PP.toast(PP.majuscule(PP.accord(r.gain || 'Cadeau', 'remis')) + ' : c’est noté.');
         return enregistre('', r.gain || 'Cadeau', r.prenom, 'remis', !!u.deja);
       }
-      nonEnregistre(u, 'remis');
+      if (!la) return PP.toast((r.gain || 'Cadeau') + ' : pas noté. Il reste dans « À remettre ».', true);
+      nonEnregistre(u, 'remis', code, r);
     });
   };
 
@@ -316,7 +365,7 @@
   var toile = null, ctx = null;
   function arreterCamera() {
     actif = false;
-    if (boucle) cancelAnimationFrame(boucle);
+    if (boucle) { cancelAnimationFrame(boucle); clearTimeout(boucle); }
     boucle = null;
     if (flux) { try { flux.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
     flux = null; lampe = false;
@@ -330,20 +379,29 @@
       document.head.appendChild(s);
     });
   }
-  PP.actions.scanner = function () {
-    C.panneau = null;
+  /* Deux usages du scanner : au comptoir (carte ou code cadeau), et avant toute boutique ouverte, pour relier ce
+     téléphone avec le code de liaison qu'un autre téléphone de la boutique affiche (« Plus › Relier un autre
+     téléphone »). Sur iPhone, c'est le seul moyen de relier l'appli posée sur l'écran d'accueil sans taper le code
+     d'accès : un lien ouvert depuis un message ou l'appareil photo s'ouvre dans Safari, qui ne partage rien avec elle. */
+  C.modeScan = 'comptoir';
+  PP.actions['scanner-liaison'] = function () { C.modeScan = 'liaison'; ouvrirScanner(); };
+  PP.actions.scanner = function () { C.modeScan = 'comptoir'; C.panneau = null; ouvrirScanner(); };
+  PP.actions['liaison-fermer'] = function () { arreterCamera(); C.modeScan = 'comptoir'; PP.acces.ecranCodeAcces(); };
+  function ouvrirScanner() {
+    var liaison = C.modeScan === 'liaison';
+    var fermer = liaison ? 'liaison-fermer' : 'c-fermer';
     PP.montrer('<div class="scanner"><video id="s-video" playsinline muted autoplay></video><div class="voile-scan"></div>'
-      + '<div class="haut"><h1 class="t">Scanner</h1><button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button></div>'
+      + '<div class="haut"><h1 class="t">' + (liaison ? 'Code de liaison' : 'Scanner') + '</h1><button class="fermer" data-act="' + fermer + '">' + ico('x') + 'Fermer</button></div>'
       + '<div class="viseur" aria-hidden="true"><i></i><i></i><i></i><i></i></div>'
-      + '<p class="consigne" id="s-consigne">Visez le QR code de la carte ou du code cadeau</p>'
-      + '<p class="sous" id="s-sous">La lecture se fait toute seule, sans appuyer.</p>'
+      + '<p class="consigne" id="s-consigne">' + (liaison ? 'Visez le code affiché par l’autre téléphone de la boutique' : 'Visez le QR code de la carte ou du code cadeau') + '</p>'
+      + '<p class="sous" id="s-sous">' + (liaison ? 'Sur ce téléphone-là : « Plus », puis « Relier un autre téléphone ».' : 'La lecture se fait toute seule, sans appuyer.') + '</p>'
       + '<div class="actions" id="s-actions"><button class="bouton-verre cache" data-act="lampe" id="s-lampe" aria-pressed="false">' + ico('lampe') + 'Lampe</button>'
-      + '<button class="bouton-verre" data-act="c-fermer">' + ico('clavier') + 'Taper le code</button></div></div>', { nom: 'S1', titre: 'Scanner' });
+      + '<button class="bouton-verre" data-act="' + fermer + '">' + (liaison ? ico('gauche') + 'Retour' : ico('clavier') + 'Taper le code') + '</button></div></div>', { nom: liaison ? 'S1-liaison' : 'S1', titre: liaison ? 'Code de liaison' : 'Scanner' });
     PP.quitter.push(arreterCamera);
     var md = navigator.mediaDevices;
-    if (!md || !md.getUserMedia) return cameraIndisponible();
+    if (!md || !md.getUserMedia) return liaison ? liaisonSansCamera('absente') : cameraIndisponible();
     md.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false }).then(function (s) {
-      if (PP.etat.ecran !== 'S1') { s.getTracks().forEach(function (t) { t.stop(); }); return; }
+      if (PP.etat.ecran !== 'S1' && PP.etat.ecran !== 'S1-liaison') { s.getTracks().forEach(function (t) { t.stop(); }); return; }
       flux = s;
       var v = document.getElementById('s-video');
       v.srcObject = s;
@@ -362,10 +420,17 @@
       });
     }).catch(function (e) {
       var n = e && e.name;
-      if (n === 'NotAllowedError' || n === 'SecurityError' || n === 'PermissionDeniedError') cameraBloquee();
+      var bloquee = n === 'NotAllowedError' || n === 'SecurityError' || n === 'PermissionDeniedError';
+      if (C.modeScan === 'liaison') return liaisonSansCamera(bloquee ? 'bloquee' : 'absente');
+      if (bloquee) cameraBloquee();
       else cameraIndisponible();
     });
-  };
+  }
+  function liaisonSansCamera(pourquoi) {
+    arreterCamera();
+    C.modeScan = 'comptoir';
+    PP.acces.ecranCodeAcces({ camera: pourquoi });
+  }
   function lire() {
     if (!actif) return;
     var v = document.getElementById('s-video');
@@ -393,6 +458,7 @@
     suite(null);
   }
   function trouve(texte) {
+    if (C.modeScan === 'liaison') return trouveLiaison(texte);
     if (navigator.vibrate) { try { navigator.vibrate(35); } catch (e) {} }
     arreterCamera();
     var val = texte;
@@ -402,6 +468,20 @@
     else C.identifier({ card_id: val.slice(0, 24) });
   }
   C.trouve = trouve;
+  /** Le code de liaison : le lien d'installation de Perify Pro (…/app/#i=…). Tout autre QR est refusé, sans rien envoyer. */
+  function trouveLiaison(texte) {
+    var m = /^https:\/\/pro\.perify\.app\/app\/#i=([A-Za-z0-9_-]{20,200})$/.exec(String(texte || '').trim());
+    if (!m) {
+      var c = document.getElementById('s-consigne');
+      if (c) c.textContent = 'Ce n’est pas un code de liaison. Visez celui de l’autre téléphone de la boutique.';
+      boucle = setTimeout(function () { boucle = null; if (actif) lire(); }, 1200);
+      return;
+    }
+    if (navigator.vibrate) { try { navigator.vibrate(35); } catch (e) {} }
+    arreterCamera();
+    C.modeScan = 'comptoir';
+    PP.acces.relierParLien(m[1]);
+  }
   PP.actions.lampe = function (el) {
     if (!flux) return;
     var piste = flux.getVideoTracks()[0];
@@ -415,15 +495,16 @@
     arreterCamera();
     PP.montrer(PP.cadre('comptoir', '<div class="clef">' + ico('camera') + '</div><h1 class="titre-ecran centre">La caméra est bloquée</h1>'
       + '<p class="chapo centre">Perify Pro a besoin de la caméra pour lire les cartes. Vous pouvez l’autoriser dans les réglages.</p>'
-      + '<h2 class="titre-section serre">Sur iPhone</h2><ol class="etapes">'
-      + '<li><span>Ouvrez <b>Réglages</b>, puis <b>Safari</b>.</span></li>'
+      + '<h2 class="titre-section serre">Sur iPhone ou iPad</h2><ol class="etapes">'
+      + '<li><span>Dans Safari, touchez <b>aA</b> ou <b>•••</b> près de l’adresse, puis <b>« Réglages du site web »</b>.</span></li>'
       + '<li><span>Touchez <b>Caméra</b>, puis choisissez <b>« Autoriser »</b>.</span></li>'
       + '<li><span>Revenez ici et touchez « Réessayer ».</span></li></ol>'
-      + '<p class="note">Appli posée sur l’écran d’accueil : Réglages, puis Perify Pro, puis Caméra.</p>'
+      + '<p class="note">Toujours bloquée, ou l’appli est sur l’écran d’accueil ? Ouvrez <b>Réglages</b>, puis <b>Apps</b>, puis <b>Safari</b>, puis <b>Caméra</b>, et choisissez « Autoriser ».</p>'
       + '<h2 class="titre-section serre">Sur Android</h2><ol class="etapes">'
-      + '<li><span>Touchez le <b>cadenas</b> à gauche de l’adresse.</span></li>'
+      + '<li><span>Touchez l’icône à gauche de l’adresse (cadenas ou réglages).</span></li>'
       + '<li><span>Touchez <b>Autorisations</b>, puis <b>Caméra</b>, et choisissez <b>« Autoriser »</b>.</span></li>'
       + '<li><span>Revenez ici et touchez « Réessayer ».</span></li></ol>'
+      + '<p class="note">L’appli est sur l’écran d’accueil ? Appuyez longuement sur son icône, touchez <b>« Infos sur l’appli »</b>, puis Autorisations, puis Caméra.</p>'
       + '<div class="encart">' + ico('clavier') + '<span>En attendant, le code cadeau à 6 chiffres se tape au clavier : rien n’est bloqué.</span></div>'
       + '<div class="pile mt-24"><button class="bouton geant" data-act="scanner">' + ico('camera') + 'Réessayer</button>'
       + '<button class="bouton second" data-act="c-fermer">' + ico('clavier') + 'Taper le code à la place</button></div>',
@@ -471,6 +552,7 @@
   C.ecranCarte = function () {
     if (!C.carte) return PP.allerRoute('comptoir');
     if (C.carte.status === 'new') return carteAActiver();
+    var tablette = PP.estTablette();
     var d = C.carte, cl = d.client || {};
     var solde = Number(cl.points_solde) || 0;
     var cat = C.catalogue || [];
@@ -500,16 +582,31 @@
     }));
     var bulle = C.bulle ? '<div class="bulle" role="status">' + ico('check') + '<div><div class="t">' + C.bulle.n + ' tampon' + (C.bulle.n > 1 ? 's' : '') + ' ajouté' + (C.bulle.n > 1 ? 's' : '') + '</div><div class="s">'
       + solde + ' tampon' + (solde > 1 ? 's' : '') + (vise ? ' sur ' + vise.tampons : '') + '</div></div><button class="bouton" data-act="k-annuler">Annuler</button></div>' : '';
-    PP.montrer(PP.cadre('comptoir', '<div class="surface"><div class="client-tete"><h1 class="prenom">' + esc((cl.prenom || '').trim() || 'Client fidèle') + '</h1><div class="numero">Carte ' + esc(C.carteId) + '</div></div>'
+    var corps = '<div class="surface"><div class="client-tete"><h1 class="prenom">' + esc((cl.prenom || '').trim() || 'Client fidèle') + '</h1><div class="numero">Carte ' + esc(C.carteId) + '</div></div>'
       + '<div class="solde"><b class="chiffres">' + solde + '</b><span>tampon' + (solde > 1 ? 's' : '') + (vise ? ' sur ' + vise.tampons : '') + '</span></div>'
       + grille + (phrase ? '<div class="prochain">' + vignetteCadeau(vise.libelle) + '<span>' + esc(phrase) + '</span></div>' : '') + '</div>'
       + (lignes.length ? '<h2 class="titre-section">À remettre maintenant</h2><div class="liste">' + lignes.join('') + '</div>' : '')
       + '<h2 class="titre-section">Ajouter des tampons à la main</h2><p class="note">Pour un client sans téléphone, ou un geste commercial.</p>'
       + '<div class="plus-tampons"><button class="bouton second-marque" data-act="k-tampon" data-n="1">+1</button><button class="bouton second-marque" data-act="k-tampon" data-n="2">+2</button><button class="bouton second-marque" data-act="k-tampon" data-n="3">+3</button></div>'
       + '<div id="k-erreur" aria-live="polite"></div>'
-      + '<button class="bouton second mt-24" data-act="client-suivant">Client suivant</button>' + bulle,
-    { nav: PP.nav('Comptoir', 'comptoir', 'Carte du client') }), { nom: C.bulle ? 'K2' : 'K1', titre: 'Carte du client', garderDefilement: !!C.bulle });
-    if (!C.catalogue) chargerCatalogue().then(function (c) { if (c && PP.etat.ecran === 'K1') C.ecranCarte(); });
+      + '<button class="bouton second mt-24" data-act="client-suivant">Client suivant</button>' + bulle;
+    if (tablette) {
+      /* Sur la tablette, la carte du client s'ouvre dans la colonne de droite : le pavé reste là (relecture du 13/11). */
+      var html = '<section class="panneau-res panneau-carte" aria-label="Carte du client"><div class="carte-fermer"><button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button></div><div class="corps">' + corps + '</div></section>';
+      C.panneau = { brut: html, carte: true };
+      var droite = PP.etat.ecran === 'comptoir' ? document.getElementById('c-droite') : null;
+      if (droite) {
+        var garde = droite.querySelector('.corps') ? droite.querySelector('.corps').scrollTop : 0;
+        droite.innerHTML = html;
+        // « Lecture de la carte… » laisse la place au pavé : il reste prêt pour le client suivant.
+        var basT = document.getElementById('c-bas');
+        if (basT && !basT.querySelector('[data-pave]') && C.pave) { C.enAttente = ''; C.pave.vider(); basT.innerHTML = C.pave.htmlTouches(); }
+        if (C.bulle) { var cc = droite.querySelector('.corps'); if (cc) cc.scrollTop = garde; }
+      } else C.ecran();
+    } else {
+      PP.montrer(PP.cadre('comptoir', corps, { nav: PP.nav('Comptoir', 'comptoir', 'Carte du client') }), { nom: C.bulle ? 'K2' : 'K1', titre: 'Carte du client', garderDefilement: !!C.bulle });
+    }
+    if (!C.catalogue) chargerCatalogue().then(function (c) { if (c && (PP.etat.ecran === 'K1' || (C.panneau && C.panneau.carte))) C.ecranCarte(); });
   };
   /** « des Frites », « un Tacos », « une Boisson » : le libellé du catalogue, avec son article. */
   PP.article = function (lib) {

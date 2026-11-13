@@ -249,10 +249,13 @@ a { color: var(--marque-encre); }
 .r-valide .res-haut { background: var(--succes); }
 .r-refus .res-haut { background: var(--refus); }
 .r-deja .res-haut { background: var(--deja-fond); color: var(--encre); }
-.r-deja .fermer, .r-alerte .fermer { background: rgb(22 23 29 / 0.07); }
+.r-deja .fermer { background: rgb(22 23 29 / 0.07); }
 .r-deja .res-icone { background: var(--surface); color: var(--marque-encre); }
-.r-alerte .res-haut { background: var(--refus-clair); color: var(--encre); }
-.r-alerte .res-icone { background: var(--surface); color: var(--refus); }
+/* « Pas enregistré » (R4) : un fond nuit à lui (relecture du 13/11). Le rose pâle d'avant se confondait avec la teinte
+   claire de « Déjà validé par le client » (1,03:1) : l'un dit « donnez », l'autre « rien n'est fait ». */
+.r-alerte .res-haut { background: var(--perify-nuit); color: #fff; }
+.r-alerte .res-icone { background: rgb(255 255 255 / 0.16); color: #fff; }
+.r-alerte .fermer { background: rgb(255 255 255 / 0.16); }
 .res-corps { margin: -28px var(--e-4) 0; position: relative; }
 .res-corps, .res-bas { width: calc(100% - 2 * var(--e-4)); max-width: 560px; margin-left: auto; margin-right: auto; }
 .cadeau { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--e-4); align-items: center; }
@@ -265,6 +268,8 @@ a { color: var(--marque-encre); }
 .code-rappel.seul { margin-top: 0; padding-top: 0; border-top: 0; }
 .code-rappel b { color: var(--encre); font-weight: 700; font-size: var(--t-22); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
 .res-bas { margin-top: auto; padding: var(--e-5) 0 calc(28px + var(--bas-sur)); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e-2); }
+/* Relecture du 13/11 : le gros bouton du résultat reste TOUJOURS à l'écran, même sur un petit téléphone (il colle en bas). */
+.resultat .res-bas { position: sticky; bottom: 0; z-index: 2; background: var(--fond); box-shadow: 0 0 0 100vmax var(--fond); clip-path: inset(0 -100vmax); padding-top: var(--e-4); }
 .minuteur { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--e-4); align-items: center; margin-top: var(--e-4); padding-top: var(--e-4); border-top: 1px solid var(--trait); }
 .minuteur .rond { width: 64px; height: 64px; }
 .minuteur .rond .fond-rond { stroke: var(--trait); }
@@ -519,14 +524,14 @@ a { color: var(--marque-encre); }
 
 /* ── Tablette (900 px et plus) : la même appli, en grand ─────────────────── */
 .caisse { display: none; }
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 640px), (min-width: 744px) and (min-height: 900px) {
   .entete, .nav { max-width: none; padding-left: 24px; padding-right: 24px; }
   .contenu { max-width: 1100px; padding-left: 24px; padding-right: 24px; }
   .onglets { grid-template-columns: repeat(4, minmax(0, 150px)); justify-content: center; }
   .deux-colonnes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; align-items: start; }
   .deux-colonnes > * { min-width: 0; }
   .comptoir-tel { display: none; }
-  .caisse { flex: 1; display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr) minmax(0, 1fr); gap: 20px; padding: 4px 24px 20px; min-height: 0; width: 100%; }
+  .caisse { flex: 1; display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 20px; padding: 4px 24px 20px; min-height: 0; width: 100%; }
   .caisse > * { min-width: 0; }
   .caisse .colonne-scan { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
   .caisse .tuile-scan { flex: 1; min-height: 0; border-radius: 28px; gap: 10px; }
@@ -537,7 +542,15 @@ a { color: var(--marque-encre); }
   .caisse .bloc-code { display: flex; flex-direction: column; background: var(--surface); border-radius: 28px; padding: 18px; box-shadow: var(--ombre-douce); }
   .caisse .bloc-code .t { font-weight: 700; font-size: var(--t-20); text-align: center; margin-bottom: 12px; }
   .caisse .case { height: 60px; background: var(--fond); }
+  /* Relecture du 13/11 : le pavé remplit sa colonne (le bloc qui le porte est une colonne flexible). */
+  .caisse #c-bas { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .caisse .pave { flex: 1; grid-template-rows: repeat(4, minmax(52px, 1fr)); margin-top: 14px; }
+  .caisse .bloc-code { min-height: 0; overflow-y: auto; }
+  /* La colonne de droite : le résultat (ou la carte du client) défile dedans, son bouton reste visible. */
+  .caisse .colonne-droite { display: flex; flex-direction: column; min-height: 0; }
+  .caisse .colonne-droite > * { flex: 1 1 auto; min-height: 0; }
+  .panneau-res .corps { flex: 1 1 auto; }
+  .panneau-res .bas { flex: none; }
   .caisse .touche { min-height: 0; background: var(--fond); box-shadow: none; font-size: 30px; }
   .caisse .touche.mot { font-size: var(--t-17); }
   .journal { display: flex; flex-direction: column; background: var(--surface); border-radius: 28px; padding: 18px 0 8px; box-shadow: var(--ombre-douce); overflow: hidden; min-height: 0; }
@@ -590,8 +603,92 @@ a { color: var(--marque-encre); }
 .mt-24 { margin-top: var(--e-5) !important; }
 .mt-32 { margin-top: var(--e-6) !important; }
 .contenu.entree, .contenu.verrou { max-width: 480px; }
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 640px), (min-width: 744px) and (min-height: 900px) {
   .caisse .tuile-scan .nfc .ico { width: 22px; height: 22px; margin: 0; }
   .caisse .tuile-scan .nfc { margin-top: 18px; }
 }
 .tampons { max-width: 480px; }
+
+/* ── Relecture du 13/11 : corrections du parcours et du rendu ─────────────── */
+
+/* La barre de retour, sous 360 px : le titre central se cache (« ‹ Comptoir » ne déborde plus dessus). */
+@media (max-width: 359px) {
+  .nav { grid-template-columns: minmax(0, 1fr) max-content; }
+  .nav .titre-nav { display: none; }
+}
+
+/* « N cadeaux à remettre » : « Voir tout » apparaît aussi quand l'écran est court (les lignes se cachent alors). */
+.a-remettre .voir-court { display: none; }
+.lien-inscrire { margin-top: var(--e-2); }
+.comptoir .bouton.verifier { margin-top: var(--e-3); }
+
+/* Écran court (iPhone SE, Safari avec ses barres, Android moyen) : le pavé entier tient au-dessus des onglets. */
+@media (max-height: 760px) {
+  .comptoir .tuile-scan { flex-direction: row; min-height: 84px; gap: var(--e-4); padding: var(--e-3) var(--e-5); border-radius: 22px; }
+  .comptoir .tuile-scan .ico { width: 44px; height: 44px; margin: 0; }
+  .comptoir .tuile-scan .grand { font-size: var(--t-28); }
+  .comptoir .tuile-scan .petit { display: none; }
+  .comptoir .ou { margin: var(--e-4) 0 10px; }
+  .comptoir .case { height: 56px; }
+  .comptoir .pave { gap: 6px; margin-top: var(--e-3); }
+  .comptoir .touche { min-height: 50px; }
+  .comptoir .a-remettre .rangee { display: none; }
+  .comptoir .a-remettre .voir-court { display: flex; }
+  .comptoir .a-remettre .tete { padding: 4px 6px 4px 16px; }
+  .onglet { min-height: 52px; }
+  .contenu.verrou { justify-content: flex-start; padding-top: var(--e-2); }
+  .verrou .tuile-logo.grand { width: 72px; height: 72px; border-radius: 20px; font-size: 32px; margin: 0 auto 8px; }
+  .verrou .tuile-logo.moyen { margin: 0 auto 8px; }
+  .verrou .consigne { margin: 2px 0 var(--e-3); }
+  .cases.quatre { grid-template-columns: repeat(4, 56px); }
+  .verrou .case { height: 56px; }
+  .verrou .pave .touche { min-height: 50px; }
+  .verrou .pave { gap: 6px; margin-top: var(--e-2); }
+  .verrou .message { min-height: 40px; margin-top: 4px; }
+  .res-icone { width: 72px; height: 72px; margin: 0 auto 10px; }
+  .res-icone .ico { width: 42px; height: 42px; }
+  .res-titre { font-size: var(--t-28); }
+  .res-consigne { font-size: var(--t-17); margin-top: 6px; }
+  .res-haut { padding-bottom: 40px; }
+}
+/* Message sur la carte : l'aperçu serré juste sous le champ (relecture du 13/11). */
+.apercu { padding-top: 12px; }
+.apercu .ecran-verrouille { padding: 12px 10px; }
+@media (max-height: 620px) {
+  .entete { min-height: 52px; }
+  .onglets { padding-top: 4px; padding-bottom: calc(4px + var(--bas-sur)); }
+  .comptoir .tuile-scan { min-height: 56px; padding-top: 6px; padding-bottom: 6px; }
+  .comptoir .tuile-scan .ico { width: 36px; height: 36px; }
+  .comptoir .ou { margin: 8px 0 4px; font-size: var(--t-16); }
+  .comptoir .a-remettre { margin-bottom: 6px; }
+  .comptoir .pave { gap: 5px; margin-top: 10px; }
+  .comptoir .cases { gap: 6px; }
+  .comptoir .case { height: 52px; }
+  .comptoir .touche, .verrou .pave .touche { min-height: 48px; }
+  .verrou .case { height: 52px; }
+  .verrou h1, .verrou .nom-boutique { font-size: var(--t-22); }
+}
+
+/* Tablette tenue debout (744 à 899 px de large) : Scanner et pavé en haut, le résultat ou le journal en dessous. */
+@media (min-width: 744px) and (max-width: 899px) and (min-height: 900px) {
+  .caisse { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+  .caisse .colonne-droite { grid-column: 1 / -1; }
+}
+
+/* La carte du client sur la tablette : dans la colonne de droite, le pavé reste là. */
+.panneau-carte .corps { padding: 8px 20px 20px; }
+.panneau-carte .carte-fermer { display: flex; justify-content: flex-end; padding: 16px 16px 0; min-height: 48px; }
+.panneau-carte .fermer { background: rgb(22 23 29 / 0.07); color: var(--encre); }
+.panneau-carte .surface { box-shadow: none; padding: 0; }
+.panneau-carte .bulle { bottom: 0; }
+
+/* Le code à 4 chiffres redemandé pour un geste sensible : une feuille au-dessus de l'écran, qui ne le remplace pas. */
+.voile.code { z-index: 30; }
+.feuille.code { z-index: 31; }
+.feuille.code .verrou { padding-top: 0; }
+.feuille.code .consigne { margin-bottom: var(--e-3); }
+.feuille.code .t { font-size: var(--t-22); }
+.feuille.code .case, .feuille.code .touche { background: var(--fond); box-shadow: none; }
+.feuille.code .case { box-shadow: inset 0 0 0 1.5px var(--bord-champ); }
+.feuille.code .case.active { box-shadow: inset 0 0 0 3px var(--marque-encre); }
+.feuille.code .message { min-height: 40px; }
