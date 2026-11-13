@@ -187,7 +187,9 @@
   }
   /** L'accord du participe avec le cadeau : « Frites remises », « Tacos remis », « Boisson gagnée ». */
   PP.accord = function (gain, participe) {
-    var f = PP.genre(gain) === 'f', pl = /[sx]$/i.test(String(gain || '').trim().split(/\s+/)[0] || '');
+    var mot = String(gain || '').trim().split(/\s+/)[0] || '';
+    // « Tacos » est un singulier qui finit par s.
+    var f = PP.genre(gain) === 'f', pl = /[sx]$/i.test(mot) && !/^tacos$/i.test(mot);
     var base = participe.replace(/s$/, '');
     if (participe === 'remis') return f ? (pl ? 'remises' : 'remise') : 'remis';
     return base + (f ? 'e' : '') + (pl ? 's' : '');
@@ -201,7 +203,7 @@
     valide(code, r, 'envoi');
     PP.appel('use', { code: code }).then(function (u) {
       if (PP.reseau.marque(u)) {
-        PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' remis', s: 'Code cadeau ' + PP.codeLisible(code), ok: true, type: 'remis' });
+        PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' ' + PP.accord(r.gain || 'Cadeau', 'remis'), s: 'Code cadeau ' + PP.codeLisible(code), ok: true, type: 'remis' });
         return enregistre(PP.codeLisible(code), (r.gain || 'Cadeau'), r.prenom, 'use');
       }
       nonEnregistre(u, 'use');
@@ -213,7 +215,7 @@
     var consigne = par === 'use' ? 'Le code cadeau ' + esc(codeLisible) + ' est utilisé. Il ne pourra plus servir.'
       : deja ? 'C’était déjà noté sur un autre téléphone.' : 'Le cadeau est noté comme donné.';
     afficher({ nom: 'R3', ton: 'valide', icone: 'check', titre: 'C’est enregistré', consigne: consigne,
-      corps: blocCadeau(gain, PP.majuscule(PP.accord(gain, par === 'use' ? 'remis' : 'donné')) + (prenom ? ' à ' + prenom : '') + ', aujourd’hui à ' + PP.date.heure(Date.now()), ''),
+      corps: blocCadeau(gain, PP.majuscule(PP.accord(gain, 'remis')) + (prenom ? ' à ' + prenom : '') + ', aujourd’hui à ' + PP.date.heure(Date.now()), ''),
       boutons: '<div class="barre-temps" aria-hidden="true"><i id="barre-retour"></i></div><p class="note centre">Retour au comptoir dans 3 secondes.</p><button class="bouton geant" data-act="client-suivant">Client suivant</button>',
       apres: function () {
         var b = document.getElementById('barre-retour');
@@ -256,7 +258,7 @@
     dejaValide(code, r, 'envoi');
     PP.appel('remis', { code: code }).then(function (u) {
       if (PP.reseau.marque(u)) {
-        PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' donné', s: 'Validé par le client', ok: true, type: 'remis' });
+        PP.journal.ajouter({ t: (r.gain || 'Cadeau') + ' ' + PP.accord(r.gain || 'Cadeau', 'remis'), s: 'Validé par le client', ok: true, type: 'remis' });
         C.aRemettre = (C.aRemettre || []).filter(function (c) { return c.code !== code; });
         return enregistre('', r.gain || 'Cadeau', r.prenom, 'remis', !!u.deja);
       }
@@ -559,7 +561,7 @@
     el.innerHTML = '<span class="tourne" aria-hidden="true"></span>';
     PP.appel(action, { code: code }).then(function (r) {
       if (PP.reseau.marque(r)) {
-        PP.journal.ajouter({ t: gain + (action === 'use' ? ' remis' : ' donné'), s: action === 'use' ? 'Code cadeau ' + PP.codeLisible(code) : 'Validé par le client', ok: true, type: 'remis' });
+        PP.journal.ajouter({ t: gain + ' ' + PP.accord(gain, 'remis'), s: action === 'use' ? 'Code cadeau ' + PP.codeLisible(code) : 'Validé par le client', ok: true, type: 'remis' });
         el.outerHTML = '<span class="etiquette ok">' + ico('check') + 'Remis</span>';
         return;
       }
