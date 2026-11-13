@@ -14,6 +14,8 @@
   var REJOUABLES = ['check', 'stats', 'dashboard', 'a_remettre', 'fid_identify', 'fid_client', 'mesures', 'catalogue',
     'mk_list', 'mk_count', 'wallet_offre_etat', 'acces_appareils', 'ag_list'];
   var SANS_COMMERCE = ['acces_relier', 'acces_ouvrir'];
+  /* Les actions que le serveur ne ferme jamais (la carte du client les appelle sans rien) : elles partent sans session. */
+  var PUBLIQUES = ['catalogue', 'fid_activate', 'fid_client', 'ag_list'];
 
   /** L'adresse du serveur de la boutique : celle que le serveur a donnée au moment du lien, si elle est bien chez
       Perify ; sinon l'adresse construite à partir de la clé de la boutique. */
@@ -65,22 +67,42 @@
     });
   }
 
+  /** La session du jour est finie : les 4 chiffres sont redemandés, puis une lecture repart toute seule ; un geste
+      (qui consomme ou envoie) ne repart jamais seul : l'écran demande d'appuyer de nouveau. */
+  function apresRedemande(action, donnees, opt) {
+    return PP.acces.redemander().then(function (ok) {
+      if (!ok) return { status: 'error', code: 'session_expiree' };
+      if (REJOUABLES.indexOf(action) >= 0) return PP.appel(action, donnees, { delai: opt.delai, fichier: opt.fichier, dejaRejoue: true });
+      return { status: 'error', code: 'rejouer' };   // l'écran demande d'appuyer de nouveau
+    });
+  }
+  /* Une boutique est ouverte mais sa session est finie SUR le téléphone (4 h du matin passé,
+     tablette restée allumée, rien n'a reverrouillé l'écran). Avant, l'action partait sans session : le serveur répondait
+     « réservé », et l'écran disait « Carte inconnue » pour une vraie carte ou « Un souci est survenu ». Désormais rien ne
+     part : les 4 chiffres d'abord. */
+  function sessionManquante(action, opt) {
+    return SANS_COMMERCE.indexOf(action) < 0 && PUBLIQUES.indexOf(action) < 0 && !opt.sansSession && !opt.dejaRejoue
+      && !!PP.etat.cle && !!PP.acces && !!PP.acces.session && !!PP.acces.redemander && !PP.acces.session();
+  }
+
   /** appel(action, données, { delai, fichier }) → Promise d'une réponse (jamais rejetée). */
   PP.appel = function (action, donnees, opt) {
     opt = opt || {};
     donnees = donnees || {};
+    if (sessionManquante(action, opt)) return apresRedemande(action, donnees, opt);
     return brut(action, donnees, opt).then(function (r) {
       PP.etat.reseauOk = !r.reseau;
       if (PP.majPastille) PP.majPastille();
       if (r.code === 'commerce_arrete' && PP.acces && PP.acces.marquerArrete) PP.acces.marquerArrete(r);
-      if (r.code === 'session_expiree' && SANS_COMMERCE.indexOf(action) < 0 && !opt.dejaRejoue && PP.acces && PP.acces.redemander) {
-        return PP.acces.redemander().then(function (ok) {
-          if (!ok) return { status: 'error', code: 'session_expiree' };
-          if (REJOUABLES.indexOf(action) >= 0) return PP.appel(action, donnees, { delai: opt.delai, fichier: opt.fichier, dejaRejoue: true });
-          return { status: 'error', code: 'rejouer' };   // l'écran demande d'appuyer de nouveau
-        });
+      /* « Réservé » SANS `reserve` : le serveur n'a reçu aucune session (elle a disparu entre-temps). Pour l'appli, c'est
+         une session finie : jamais « Carte inconnue » ni « Un souci ». (`reserve` = un outil de Perify : on ne redemande rien.) */
+      if (r.code === 'unauthorized' && !r.reserve && SANS_COMMERCE.indexOf(action) < 0 && PUBLIQUES.indexOf(action) < 0) {
+        r = { status: 'error', code: 'session_expiree' };
       }
-      /* Relecture du 13/11 : un geste sensible (fichier client, affiche, message des cartes, téléphones) avec une session
+      if (r.code === 'session_expiree' && SANS_COMMERCE.indexOf(action) < 0 && !opt.dejaRejoue && PP.acces && PP.acces.redemander) {
+        return apresRedemande(action, donnees, opt);
+      }
+      /* Un geste sensible (fichier client, affiche, message des cartes, téléphones) avec une session
          de plus de 10 minutes → `code_redemande`. Le serveur n'a RIEN fait : les 4 chiffres sont redemandés dans une feuille
          au-dessus de l'écran, puis le même geste repart une fois, avec la session neuve. Annulé : « appuyez de nouveau ». */
       if (r.code === 'code_redemande' && SANS_COMMERCE.indexOf(action) < 0 && !opt.dejaRejoue && PP.acces && PP.acces.confirmerCode) {
@@ -97,6 +119,7 @@
      répond « marked ». Une coupure, un refus, un délai : ce n'est PAS un succès. */
   PP.reseau = {
     REJOUABLES: REJOUABLES,
+    PUBLIQUES: PUBLIQUES,
     adresse: adresse,
     marque: function (r) { return !!r && r.status === 'marked'; },
     ok: function (r) { return !!r && r.status === 'ok'; }

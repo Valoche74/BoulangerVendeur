@@ -251,7 +251,7 @@ a { color: var(--marque-encre); }
 .r-deja .res-haut { background: var(--deja-fond); color: var(--encre); }
 .r-deja .fermer { background: rgb(22 23 29 / 0.07); }
 .r-deja .res-icone { background: var(--surface); color: var(--marque-encre); }
-/* « Pas enregistré » (R4) : un fond nuit à lui (relecture du 13/11). Le rose pâle d'avant se confondait avec la teinte
+/* « Pas enregistré » (R4) : un fond nuit à lui. Le rose pâle d'avant se confondait avec la teinte
    claire de « Déjà validé par le client » (1,03:1) : l'un dit « donnez », l'autre « rien n'est fait ». */
 .r-alerte .res-haut { background: var(--perify-nuit); color: #fff; }
 .r-alerte .res-icone { background: rgb(255 255 255 / 0.16); color: #fff; }
@@ -268,7 +268,7 @@ a { color: var(--marque-encre); }
 .code-rappel.seul { margin-top: 0; padding-top: 0; border-top: 0; }
 .code-rappel b { color: var(--encre); font-weight: 700; font-size: var(--t-22); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
 .res-bas { margin-top: auto; padding: var(--e-5) 0 calc(28px + var(--bas-sur)); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e-2); }
-/* Relecture du 13/11 : le gros bouton du résultat reste TOUJOURS à l'écran, même sur un petit téléphone (il colle en bas). */
+/* Le gros bouton du résultat reste TOUJOURS à l'écran, même sur un petit téléphone (il colle en bas). */
 .resultat .res-bas { position: sticky; bottom: 0; z-index: 2; background: var(--fond); box-shadow: 0 0 0 100vmax var(--fond); clip-path: inset(0 -100vmax); padding-top: var(--e-4); }
 .minuteur { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--e-4); align-items: center; margin-top: var(--e-4); padding-top: var(--e-4); border-top: 1px solid var(--trait); }
 .minuteur .rond { width: 64px; height: 64px; }
@@ -542,7 +542,7 @@ a { color: var(--marque-encre); }
   .caisse .bloc-code { display: flex; flex-direction: column; background: var(--surface); border-radius: 28px; padding: 18px; box-shadow: var(--ombre-douce); }
   .caisse .bloc-code .t { font-weight: 700; font-size: var(--t-20); text-align: center; margin-bottom: 12px; }
   .caisse .case { height: 60px; background: var(--fond); }
-  /* Relecture du 13/11 : le pavé remplit sa colonne (le bloc qui le porte est une colonne flexible). */
+  /* Le pavé remplit sa colonne (le bloc qui le porte est une colonne flexible). */
   .caisse #c-bas { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .caisse .pave { flex: 1; grid-template-rows: repeat(4, minmax(52px, 1fr)); margin-top: 14px; }
   .caisse .bloc-code { min-height: 0; overflow-y: auto; }
@@ -609,7 +609,7 @@ a { color: var(--marque-encre); }
 }
 .tampons { max-width: 480px; }
 
-/* ── Relecture du 13/11 : corrections du parcours et du rendu ─────────────── */
+/* ── Corrections du parcours et du rendu ───────────────────────────────── */
 
 /* La barre de retour, sous 360 px : le titre central se cache (« ‹ Comptoir » ne déborde plus dessus). */
 @media (max-width: 359px) {
@@ -651,7 +651,7 @@ a { color: var(--marque-encre); }
   .res-consigne { font-size: var(--t-17); margin-top: 6px; }
   .res-haut { padding-bottom: 40px; }
 }
-/* Message sur la carte : l'aperçu serré juste sous le champ (relecture du 13/11). */
+/* Message sur la carte : l'aperçu serré juste sous le champ. */
 .apercu { padding-top: 12px; }
 .apercu .ecran-verrouille { padding: 12px 10px; }
 @media (max-height: 620px) {

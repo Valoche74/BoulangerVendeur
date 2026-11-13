@@ -103,7 +103,7 @@
       + '<label class="libelle-champ" for="a-message">Votre message</label>'
       + '<textarea class="zone-texte" id="a-message" maxlength="' + MAX + '" rows="2" data-saisie="a-message" placeholder="' + esc(exemples[0]) + '"></textarea>'
       + '<div class="compteur" id="a-compteur"><span>Au-delà de 40 caractères, le texte rétrécit sur l’iPhone.</span><b>0 / ' + MAX + '</b></div>'
-      // Relecture du 13/11 : l'aperçu vient JUSTE sous le champ (on le voit changer en écrivant, clavier ouvert) ; les
+      // L'aperçu vient JUSTE sous le champ (on le voit changer en écrivant, clavier ouvert) ; les
       // idées passent dessous.
       + '<h2 class="libelle-champ mt-16">Ce que vos clients verront</h2>'
       + '<div class="surface serree apercu"><div class="ecran-verrouille" aria-hidden="true"><div class="notif">' + PP.tuileLogo(id) + '<div><div class="l1"><span class="t">' + esc(id.nom_court || id.nom || '') + '</span><span class="h">maintenant</span></div><div class="m" id="a-notif">' + esc(exemples[0]) + '</div></div></div></div>'
@@ -272,7 +272,7 @@
       + '<p class="chapo">Choisissez en quelques touches. Le texte de l’affiche s’écrit tout seul.</p>'
       + '<div class="deux-colonnes"><div>'
       + '<img class="affiche-apercu mt-20" id="a-affiche" alt="Aperçu de l’affiche : ' + esc(t.titre) + ', valable jusqu’au ' + esc(fin.jjmm) + '">'
-      + '<p class="note centre">C’est l’image que recevront vos clients.</p></div><div>'
+      + '<p class="note centre">Vos clients reçoivent un e-mail avec le titre et l’offre de cette affiche.</p></div><div>'
       + '<h2 class="titre-section">Le produit</h2><div class="produits">' + l.map(function (p) {
         var on = p.id === mk.pid;
         return '<button class="produit" data-act="a-produit" data-id="' + p.id + '" aria-pressed="' + on + '">' + (on ? '<span class="coche">' + ico('check') + '</span>' : '') + '<img src="' + esc(p.img) + '" alt="">' + esc(p.nom) + '</button>';
@@ -415,14 +415,23 @@
       feuilleFin('Pas envoyée', e && e.message === 'reseau' ? 'Le serveur tarde à répondre. Réessayez : cette affiche ne sera créée qu’une fois.' : 'L’affiche n’a pas pu être préparée. Réessayez dans un instant.');
     });
   };
-  function confirme(emp, id, nb, deja) {
+  /* Le serveur répond « ok » même quand des e-mails n'ont pas pu partir (et marque quand même l'affiche « envoyée ») : on
+     compte ce qui est vraiment parti. Rien → « Pas envoyée », rien n'est gardé : l'affiche pourra repartir (sous un nouveau
+     numéro). Une partie seulement → on le dit, et la même affiche ne repart pas (les premiers l'ont déjà reçue). */
+  function confirme(emp, id, nb, deja, destinataires) {
     nb = Number(nb) || 0;
+    var dest = Number(destinataires) || 0;
+    if (nb === 0) {
+      memoriser(emp, { id: null, statut: 'perdu' });
+      return feuilleFin('Pas envoyée', 'Aucun e-mail n’est parti. Réessayez dans un moment. Si cela continue, écrivez à Perify.');
+    }
     memoriser(emp, { id: id, statut: 'envoye', nb: nb, envoyee: Date.now() });
+    if (!deja && dest > nb) return feuilleFin('Envoi incomplet', nb + ' e-mail' + (nb > 1 ? 's' : '') + ' sur ' + dest + (nb > 1 ? ' sont partis' : ' est parti') + '. Écrivez à Perify pour les autres : cette affiche ne repartira pas d’ici.');
     feuilleFin(deja ? 'Déjà envoyée' : 'C’est parti', (deja ? 'Cette affiche était déjà partie à ' : 'Envoyée à ') + nb + ' client' + (nb > 1 ? 's' : '') + '.', true);
   }
   function lancer(id, emp) {
     PP.appel('mk_send', { id: id }).then(function (r) {
-      if (r.status === 'ok' || r.status === 'already') return confirme(emp, id, r.status === 'ok' ? r.nb_envoyes : r.nb, r.status === 'already');
+      if (r.status === 'ok' || r.status === 'already') return confirme(emp, id, r.status === 'ok' ? r.nb_envoyes : r.nb, r.status === 'already', r.destinataires);
       if (r.status === 'quota') return feuilleFin('Pas envoyée aujourd’hui', 'Trop d’e-mails sont déjà partis aujourd’hui. Réessayez demain.');
       if (r.status === 'unknown') { memoriser(emp, { id: null, statut: 'perdu' }); return feuilleFin('Pas envoyée', 'L’affiche n’a pas été retrouvée. Réessayez.'); }
       if (r.reseau) return verifier(id, emp, Date.now() + VERIF_MS);   // pas de réponse ≠ pas d'envoi
@@ -442,7 +451,9 @@
     el.disabled = true; var html = el.innerHTML; el.innerHTML = '<span class="tourne" aria-hidden="true"></span>Envoi de l’aperçu…';
     obtenirCampagne(emp).then(function (id) { return PP.appel('mk_test', { id: id }); }).then(function (d) {
       el.disabled = false; el.innerHTML = html;
-      if (d.status === 'ok') return info('<div class="message-ok" role="status">' + ico('check') + '<span>Aperçu envoyé à votre adresse e-mail.</span></div>');
+      /* L'aperçu part à l'adresse que le serveur a choisie (pas forcément celle du commerçant) : on affiche celle-là. */
+      var a = String(d.test_envoye_a || '');
+      if (d.status === 'ok') return info('<div class="message-ok" role="status">' + ico('check') + '<span>' + (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(a) ? 'Aperçu envoyé à ' + esc(a) + '.' : 'Aperçu envoyé.') + '</span></div>');
       if (d.status === 'unknown') memoriser(emp, { id: null, statut: 'perdu' });
       info('<div class="message-erreur" role="alert">' + ico('alerte') + '<div><b>Aperçu pas envoyé.</b>' + (d.reseau ? 'Le réseau n’a pas répondu. Réessayez.' : 'Réessayez dans un instant.') + '</div></div>');
     }).catch(function () {

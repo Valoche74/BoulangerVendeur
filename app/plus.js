@@ -86,7 +86,7 @@
         + '<div class="liste mt-16">' + l.map(function (a) {
           var c = a.ce_telephone || a.id === moi;
           var vu = a.vu_le ? ' · vu ' + PP.date.relatif(a.vu_le) : '';
-          // Relecture du 13/11 : les codes faux des 30 derniers jours se voient (quelqu'un essaie-t-il des codes ?).
+          // Les codes faux des 30 derniers jours se voient (quelqu'un essaie-t-il des codes ?).
           var nf = Math.max(0, Number(a.codes_faux_30j) || 0);
           var faux = nf ? '<div class="ligne-erreur">' + nf + ' code' + (nf > 1 ? 's' : '') + ' faux ces 30 jours</div>' : '';
           return '<div class="rangee"><div class="vignette icone">' + ico('telephone') + '</div><div><div class="t">' + esc(a.nom || 'Téléphone') + '</div><div class="s">Relié le ' + PP.date.jjmm(a.relie_le) + esc(vu) + (a.par === 'installation' ? ' · par un lien' : '') + '</div>' + faux + '</div>'
@@ -119,7 +119,8 @@
       if (PP.etat.ecran !== 'P3') return;
       var lien = String((r && r.lien) || '');
       if (r.status !== 'ok' || !/^https:\/\/pro\.perify\.app\/app\/#i=[A-Za-z0-9_-]+$/.test(lien)) {
-        var txt = r.code === 'trop_de_liens' ? '<b>Trop de liens en attente.</b>Attendez qu’ils expirent (15 minutes), ou utilisez-en un.'
+        var txt = r.code === 'trop_de_liens' && r.codes_faux ? '<b>Trop de codes faux tapés avec des liens aujourd’hui.</b>Réessayez demain, ou reliez l’autre téléphone avec le code d’accès.'
+          : r.code === 'trop_de_liens' ? '<b>Trop de liens en attente.</b>Attendez qu’ils expirent (15 minutes), ou utilisez-en un.'
           : r.reseau ? '<b>Le lien n’a pas pu être préparé.</b>Le réseau n’a pas répondu. Réessayez.' : '<b>Le lien n’a pas pu être préparé.</b>Réessayez dans un instant.';
         PP.montrer(PP.cadre('plus', '<h1 class="titre-ecran">Relier un autre téléphone</h1><div class="message-erreur" role="alert">' + ico('alerte') + '<div>' + txt + '</div></div>'
           + '<button class="bouton second mt-16" data-act="aller" data-route="plus/relier">' + ico('actualiser') + 'Réessayer</button>', { nav: nav }), { nom: 'P3', titre: 'Relier un téléphone' });
@@ -170,8 +171,11 @@
       p.occupe = true; p.majCases(); dire('<span class="tourne" aria-hidden="true"></span>&nbsp;Un instant…', true);
       PP.appel('acces_code_changer', { code_actuel: actuel, code_nouveau: code }).then(function (r) {
         if (r.status === 'ok') { PP.toast('Nouveau code enregistré.'); return PP.allerRoute('plus'); }
-        if (r.code === 'code_faux') { var n = Number(r.essais_restants); return P.ecranCode(1, null, null, 'Le code actuel n’est pas le bon.' + (n >= 1 ? ' Encore ' + n + ' essai' + (n > 1 ? 's' : '') + ', puis une pause.' : '')); }
-        if (r.code === 'pause') return P.ecranCode(1, null, null, 'Trop d’essais. Réessayez dans ' + PP.date.duree(r.reste_sec) + '.');
+        /* Le code actuel compte sur le compteur de CE téléphone : au dernier essai (14 codes faux sur 30 jours, ou le 9e
+           d'affilée), le prochain code faux le retire. On le dit, comme sur l'écran du code de chaque jour. */
+        var dernier = r.dernier_essai ? ' Au prochain code faux, ce téléphone devra être relié de nouveau.' : '';
+        if (r.code === 'code_faux') { var n = Number(r.essais_restants); return P.ecranCode(1, null, null, 'Le code actuel n’est pas le bon.' + (dernier || (n >= 1 ? ' Encore ' + n + ' essai' + (n > 1 ? 's' : '') + ', puis une pause.' : ''))); }
+        if (r.code === 'pause') return P.ecranCode(1, null, null, 'Trop d’essais. Réessayez dans ' + PP.date.duree(r.reste_sec) + '.' + dernier);
         if (r.code === 'code_trop_facile') return P.ecranCode(2, actuel, null, 'Ce code est trop facile à deviner. Choisissez-en un autre.');
         if (r.code === 'appareil_retire') return PP.acces.ecranPlusRelie(r.pourquoi || '');
         p.occupe = false; p.vider();
@@ -205,7 +209,7 @@
     PP.comptoir.aRemettre = null; PP.comptoir.carte = null; PP.comptoir.catalogue = null; PP.comptoir.panneau = null;
     PP.chiffres.oublier(); PP.annonces.oublier();
     if (PP.calculateur) PP.calculateur.oublier();
-    // Ouvrir une boutique mène toujours au comptoir, même après ses 4 chiffres (relecture du 13/11).
+    // Ouvrir une boutique mène toujours au comptoir, même après ses 4 chiffres.
     if (PP.acces.session()) { location.hash = '#/comptoir'; PP.route(); }
     else { try { history.replaceState(null, '', '#/comptoir'); } catch (e) {} PP.acces.verrouiller(); }
   };

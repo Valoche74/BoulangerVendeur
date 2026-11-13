@@ -33,7 +33,7 @@
   }
   function contraste(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
   var SUCCES = '#1A7F37', REFUS = '#B42318';
-  /* « Pas enregistré » (R4) a son fond à lui : la nuit Perify (relecture du 13/11 — son rose pâle d'avant se confondait
+  /* « Pas enregistré » (R4) a son fond à lui : la nuit Perify (son rose pâle d'avant se confondait
      avec la teinte claire de « Déjà validé », à 1,03:1). Gardé ici pour que la garde le compare aussi. */
   var PAS_ENREGISTRE = '#1B1F3B';
 

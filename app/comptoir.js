@@ -32,6 +32,7 @@
     var id = PP.etat.identite || {};
     var arrete = id.etat === 'arrete';
     var hors = C.horsLigne || (typeof navigator.onLine === 'boolean' && !navigator.onLine);
+    C.dessineHorsLigne = hors;   // pour l'écouteur « online » : l'alerte s'en va dès que le réseau revient
     var inactif = arrete || hors;
     C.pave = new PP.Pave({ longueur: 6, libelle: 'Code cadeau', quandComplet: verifier, inactif: inactif, code: opt.code || '' });
     var alerte = '';
@@ -42,10 +43,10 @@
     var listeAR = (!inactif && C.aRemettre && C.aRemettre.length) ? C.aRemettre : [];
     var nfc = PP.lecteur && PP.lecteur.allume() ? '<span class="nfc">' + ico('sanscontact') + 'Sans contact : prêt</span>' : '';
     var tuile = inactif ? '' : '<button class="tuile-scan' + (listeAR.length && !PP.estTablette() ? ' compacte' : '') + '" id="c-tuile" data-act="scanner">' + ico('scan') + '<span class="grand">Scanner</span><span class="petit">La carte du client ou son code cadeau</span>' + nfc + '</button>';
-    // Le réseau est revenu avec un code déjà tapé : un bouton le vérifie (jamais tout seul, relecture du 13/11).
+    // Le réseau est revenu avec un code déjà tapé : un bouton le vérifie (jamais tout seul).
     var verif = (!inactif && !C.enAttente && opt.verifier && C.pave.code.length === 6) ? '<button class="bouton geant verifier" data-act="c-reessayer">' + ico('check') + 'Vérifier ce code cadeau</button>' : '';
     var bas = '<div id="c-bas">' + (C.enAttente ? '<div class="etat-verif">' + '<span class="tourne" aria-hidden="true"></span>' + esc(C.enAttente) + '</div>' : verif + C.pave.htmlTouches()) + '</div>';
-    // Un client sans carte : l'inscrire, depuis le comptoir (relecture du 13/11 ; avant, seulement après une carte inconnue).
+    // Un client sans carte : l'inscrire, depuis le comptoir (avant, seulement après une carte inconnue).
     var inscrire = inactif ? '' : '<button class="bouton-texte lien-inscrire" data-act="aller" data-route="inscrire">' + ico('ajouter') + 'Carte neuve ? Inscrire le client</button>';
 
     if (PP.estTablette()) {
@@ -67,14 +68,17 @@
   function blocARemettre(liste) {
     if (!liste.length) return '';
     var n = liste.length;
-    var lignes = liste.slice(0, 2).map(function (c, i) { return ligneARemettre(c, i); }).join('');
+    var lignes = liste.slice(0, 2).map(function (c) { return ligneARemettre(c); }).join('');
     // « Voir tout » : toujours quand il y en a plus de 2 ; sur un écran court (les lignes s'y cachent), toujours aussi.
     return '<section class="a-remettre" aria-label="Cadeaux à remettre"><div class="tete">' + ico('cadeau') + '<span class="t">' + n + ' cadeau' + (n > 1 ? 'x' : '') + ' à remettre</span>'
       + '<button class="bouton-texte' + (n > 2 ? '' : ' voir-court') + '" data-act="aller" data-route="a-remettre">Voir tout</button></div>' + lignes + '</section>';
   }
-  function ligneARemettre(c, i) {
+  /* Chaque ligne porte le CODE de son cadeau, jamais sa place dans la liste : la liste en mémoire est relue toutes les
+     30 s, parfois sans redessiner les lignes (un code est en cours de frappe) ; une place aurait alors désigné le cadeau
+     d'un autre client. */
+  function ligneARemettre(c) {
     var min = Math.max(1, Math.round((Number(c.reste_sec) || 0) / 60));
-    return '<button class="rangee" data-act="ouvrir-a-remettre" data-i="' + i + '">' + vignetteCadeau(c.gain, 'vignette icone')
+    return '<button class="rangee" data-act="ouvrir-a-remettre" data-code="' + esc(c.code) + '">' + vignetteCadeau(c.gain, 'vignette icone')
       + '<div><div class="t">' + esc(c.gain || 'Cadeau') + (c.prenom ? ' · ' + esc(c.prenom) : '') + '</div><div class="s">encore ' + min + ' min</div></div>'
       + '<span class="chevron">' + ico('droite') + '</span></button>';
   }
@@ -96,8 +100,8 @@
     if (C.aRemettre === null || C.aRemettre === undefined) lire();
     PP.minuteur(lire, C.RELECTURE_MS, true);
   }
-  /* Relecture du 13/11 : quand la liste change, seul le bloc « À remettre » est redessiné — le pavé ne bouge pas sous le
-     doigt et le défilement reste où il est (avant, tout le comptoir était redessiné et la page remontait). */
+  /* Quand la liste change, seul le bloc « À remettre » est redessiné — le pavé ne bouge pas sous le doigt et le
+     défilement reste où il est (avant, tout le comptoir était redessiné et la page remontait). */
   function majARemettre() {
     var bloc = document.getElementById('c-ar');
     if (!bloc || C.horsLigne || (PP.etat.identite || {}).etat === 'arrete') return;
@@ -111,15 +115,21 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && PP.etat.ecran === 'comptoir' && PP.acces.session()) { C.aRemettre = null; C.ecran({ code: C.pave ? C.pave.code : '' }); } });
   /* Le réseau revient pendant que le comptoir dit « Pas de réseau » : l'alerte disparaît, le code déjà tapé reste, et un
      bouton le vérifie (rien ne part tout seul). Avant, la pastille disait « En ligne » sous une alerte « Pas de réseau ». */
+  /* Aussi quand le comptoir a été dessiné hors ligne sans requête ratée (ouvert sans réseau, « Client suivant » ou
+     « Fermer sans enregistrer » pendant la coupure) : avant, l'alerte et le pavé grisé restaient jusqu'à « Réessayer ». */
   window.addEventListener('online', function () {
-    if (!C.horsLigne || PP.etat.ecran !== 'comptoir') return;
+    if (!(C.horsLigne || C.dessineHorsLigne) || PP.etat.ecran !== 'comptoir') return;
     C.horsLigne = false;
     C.ecran({ code: C.dernierCode || '', verifier: true });
   });
 
   PP.actions['ouvrir-a-remettre'] = function (el) {
-    var c = (C.aRemettre || [])[Number(el.getAttribute('data-i'))];
-    if (c) dejaValide(c.code, { gain: c.gain, prenom: c.prenom, reste_sec: c.reste_sec, en_fenetre: true });
+    var code = el.getAttribute('data-code');
+    var c = (C.aRemettre || []).filter(function (x) { return x && x.code === code; })[0];
+    if (c) return dejaValide(c.code, { gain: c.gain, prenom: c.prenom, reste_sec: c.reste_sec, en_fenetre: true });
+    // Le cadeau n'est plus à remettre (donné sur un autre téléphone, ou plus valable) : on le dit, et la liste se met à jour.
+    PP.toast('Ce cadeau n’est plus à remettre.', true);
+    if (PP.etat.ecran === 'C1b') C.ecranARemettre(); else majARemettre();
   };
   PP.actions['c-reessayer'] = function () {
     C.horsLigne = false;
@@ -170,8 +180,8 @@
     var le = r.gagne_le ? ', le ' + r.gagne_le : '';
     return p ? verbe + ' par ' + p + le : (r.gagne_le ? verbe + ' le ' + r.gagne_le : '');
   }
-  /** « Fermer » : jamais pendant un enregistrement (relecture du 13/11 — le vendeur passait au client suivant pendant
-      que la réponse du premier arrivait, et elle remplaçait son écran). */
+  /** « Fermer » : jamais pendant un enregistrement (le vendeur passait au client suivant pendant que la réponse du
+      premier arrivait, et elle remplaçait son écran). */
   function boutonFermer(o) { return o.envoi ? '<span></span>' : '<button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button>'; }
   function panneauResultat(o) {
     if (o.brut) return o.brut;
@@ -233,7 +243,7 @@
   PP.genre = function (gain) { return /^(frites|boisson|tartelette|baguette|pizza|part|formule|viennoiserie|boule|crêpe|gaufre)/i.test(String(gain || '').trim()) ? 'f' : 'm'; };
 
   /* Chaque envoi garde SON code : si l'écran a changé quand la réponse arrive (tablette : un autre code tapé, un autre
-     onglet), le résultat est dit par un petit bandeau, sans toucher à l'écran du client suivant (relecture du 13/11). */
+     onglet), le résultat est dit par un petit bandeau, sans toucher à l'écran du client suivant. */
   PP.actions['remis-client'] = function () {
     if (!courant || courant.envoi) return;
     var code = courant.code, r = courant.r;
@@ -267,7 +277,7 @@
   }
 
   /* R4 — pas enregistré : le code cadeau peut encore servir. Le code et le cadeau sont ceux de L'ENVOI, jamais ceux du
-     résultat affiché à ce moment-là (relecture du 13/11). */
+     résultat affiché à ce moment-là. */
   function nonEnregistre(u, par, code, r) {
     r = r || {};
     code = code || '';
@@ -591,7 +601,7 @@
       + '<div id="k-erreur" aria-live="polite"></div>'
       + '<button class="bouton second mt-24" data-act="client-suivant">Client suivant</button>' + bulle;
     if (tablette) {
-      /* Sur la tablette, la carte du client s'ouvre dans la colonne de droite : le pavé reste là (relecture du 13/11). */
+      /* Sur la tablette, la carte du client s'ouvre dans la colonne de droite : le pavé reste là. */
       var html = '<section class="panneau-res panneau-carte" aria-label="Carte du client"><div class="carte-fermer"><button class="fermer" data-act="c-fermer">' + ico('x') + 'Fermer</button></div><div class="corps">' + corps + '</div></section>';
       C.panneau = { brut: html, carte: true };
       var droite = PP.etat.ecran === 'comptoir' ? document.getElementById('c-droite') : null;
@@ -635,19 +645,29 @@
       if (e) e.innerHTML = '<div class="message-erreur" role="alert">' + ico('alerte') + '<div><b>Tampon pas ajouté.</b>' + (r.reseau ? 'Le réseau n’a pas répondu. Réessayez.' : r.code === 'rejouer' ? 'Appuyez de nouveau.' : 'Réessayez.') + '</div></div>';
     });
   };
+  /* « Annuler » n'annule QUE le tampon que cet écran vient d'ajouter : fid_undo, seul, annule la dernière opération de la
+     carte, quelle qu'elle soit (un passage, un échange de tampons contre un cadeau…). L'appli envoie donc ce qu'elle
+     veut annuler (si_type, si_points) : si la carte a bougé depuis, le serveur ne touche à rien (« nothing »). */
+  PP.annulerTampon = function (cardId, n) {
+    return PP.appel('fid_undo', { card_id: cardId, si_type: 'bouton', si_points: n }).then(function (r) {
+      var fait = r.status === 'ok' && Number(r.annule) === n;
+      return { r: r, fait: fait, autre: r.status === 'ok' && !fait, bouge: r.status === 'nothing' };
+    });
+  };
   PP.actions['k-annuler'] = function (el) {
-    if (!C.carteId) return;
+    if (!C.carteId || !C.bulle) return;
+    var n = Number(C.bulle.n) || 1, carte = C.carteId;
     el.disabled = true;
-    PP.appel('fid_undo', { card_id: C.carteId }).then(function (r) {
-      if (r.status === 'ok') {
-        PP.journal.ajouter({ t: 'Tampon annulé', s: 'Carte ' + C.carteId, ok: true, type: 'annule', card_id: C.carteId });
+    PP.annulerTampon(carte, n).then(function (a) {
+      if (a.fait || a.autre || a.bouge) {
+        if (a.fait) PP.journal.ajouter({ t: 'Tampon annulé', s: 'Carte ' + carte, ok: true, type: 'annule', card_id: carte });
         C.bulle = null;
-        PP.toast('Annulé : le solde est relu.');
+        PP.toast(a.fait ? 'Annulé : le solde est relu.' : a.autre ? 'Une autre opération a été annulée : vérifiez la carte.' : 'Rien n’est annulé : la carte a changé depuis.', !a.fait);
         // Le solde revient du serveur, jamais d'un calcul sur le téléphone.
-        return C.identifier({ card_id: C.carteId }, { silencieux: true });
+        return C.identifier({ card_id: carte }, { silencieux: true });
       }
       el.disabled = false;
-      PP.toast(r.reseau ? 'Pas de réseau : rien n’est annulé.' : 'Annulation refusée.', true);
+      PP.toast(a.r.reseau ? 'Pas de réseau : rien n’est annulé.' : 'Annulation refusée.', true);
     });
   };
   function remettreLigne(el, action) {

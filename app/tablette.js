@@ -11,7 +11,10 @@
 
   T.journalHtml = function () {
     var j = PP.journal.lire();
-    var dernierTampon = j.filter(function (l) { return l.type === 'tampon' && !l.annule; })[0];
+    /* « Annuler le dernier tampon » : seulement quand la DERNIÈRE ligne du journal est ce tampon. Avant, le bouton passait,
+       après une annulation, au tampon d'avant (souvent la carte d'un autre client). Le serveur, lui, ne l'annule que si
+       c'est encore la dernière opération de la carte (PP.annulerTampon). */
+    var dernierTampon = (j[0] && j[0].type === 'tampon' && !j[0].annule && j[0].annulable !== false && j[0].card_id) ? j[0] : null;
     var lignes = j.slice(0, 8).map(function (l) {
       return '<div class="rangee"><span class="heure">' + esc(l.h || (l.ts ? PP.date.heure(l.ts) : '')) + '</span><div><div class="t">' + esc(l.t) + '</div><div class="s">' + esc(l.s || '') + '</div></div>'
         + '<span class="etiquette ' + (l.ok ? 'ok' : 'ko') + '" aria-label="' + (l.ok ? 'Fait' : 'Refusé') + '">' + ico(l.ok ? 'check' : 'x') + '</span></div>';
@@ -31,17 +34,21 @@
     var l = j.filter(function (x) { return x.ts === ts; })[0];
     if (!l || !l.card_id) return;
     el.disabled = true; el.innerHTML = '<span class="tourne" aria-hidden="true"></span>Annulation…';
-    PP.appel('fid_undo', { card_id: l.card_id }).then(function (r) {
-      if (r.status === 'ok') {
+    PP.annulerTampon(l.card_id, Number(l.n) || 1).then(function (a) {
+      if (a.fait || a.autre || a.bouge) {
         var j2 = PP.journal.lire();
-        j2.forEach(function (x) { if (x.ts === ts) { x.annule = true; x.t = x.t + ' (annulé)'; x.ok = false; } });
+        j2.forEach(function (x) {
+          if (x.ts !== ts) return;
+          if (a.fait) { x.annule = true; x.t = x.t + ' (annulé)'; x.ok = false; }
+          else x.annulable = false;   // la carte a bougé depuis : ce tampon ne s'annule plus d'ici
+        });
         PP.stock.ecrire(PP.journal.cle(), j2);
-        PP.toast('Tampon annulé.');
+        PP.toast(a.fait ? 'Tampon annulé.' : a.autre ? 'Une autre opération a été annulée : vérifiez la carte.' : 'Rien n’est annulé : la carte a changé depuis. Ouvrez-la pour corriger.', !a.fait);
         T.majJournal();
         return;
       }
       el.disabled = false; el.innerHTML = ico('annuler') + 'Annuler le dernier tampon';
-      PP.toast(r.reseau ? 'Pas de réseau : rien n’est annulé.' : 'Annulation refusée.', true);
+      PP.toast(a.r.reseau ? 'Pas de réseau : rien n’est annulé.' : 'Annulation refusée.', true);
     });
   };
 })();
